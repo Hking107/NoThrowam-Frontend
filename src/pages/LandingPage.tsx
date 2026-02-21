@@ -1,4 +1,4 @@
-import { Navbar } from "../components/Navbar";
+//import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
 import { SuccessStories } from "../components/SuccessStories";
 import { ActorCards } from "../components/ActorCards";
@@ -9,7 +9,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text">
       {/* 1. Header & Navigation */}
-      <Navbar />
+      {/* <Navbar /> */}
 
       {/* Main Content Area */}
       <main className="grow">
