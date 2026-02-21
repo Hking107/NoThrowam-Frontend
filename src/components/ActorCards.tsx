@@ -17,7 +17,7 @@ export function ActorCards() {
             Choose Your Path
           </h2>
           <p className="text-sub">
-            Whether you are selling, buying, or managing operations, NoThrowan
+            Whether you are selling, buying, or managing operations, NoThrowam
             has a dedicated portal for your needs.
           </p>
         </div>

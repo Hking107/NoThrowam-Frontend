@@ -1,12 +1,13 @@
 export const landingData = {
   header: {
-    logoText: "NoThrowan",
+    logoText: "NoThrowam",
     links: [
       { name: "Home", href: "#hero" },
       { name: "About", href: "#about" },
       { name: "Contact", href: "#contact" },
     ],
-    signInText: "Sign In / Register",
+    signInText: "Sign In",
+    registerText: "Register",
   },
   hero: {
     title: {
@@ -14,8 +15,8 @@ export const landingData = {
       fr: "Transformer les Déchets au Cameroun.",
     },
     subtitle: {
-      en: "Join NoThrowan to clean our communities together.",
-      fr: "Rejoignez NoThrowan pour nettoyer nos communautés ensemble.",
+      en: "Join NoThrowam to clean our communities together.",
+      fr: "Rejoignez NoThrowam pour nettoyer nos communautés ensemble.",
     },
     ctaText: {
       en: "Report Waste",
@@ -24,7 +25,7 @@ export const landingData = {
     imageCaption: "Douala Street View",
     // Placeholder image that fits the "African vibe / clean street" description
     imageUrl:
-      "https://images.unsplash.com/photo-1549880181-59a44fc41a20?q=80&w=2670&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1594386479412-fa62932f4cdc?q=80&w=1117&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   successStories: {
     sectionTitle: "Success Stories",
@@ -73,6 +74,6 @@ export const landingData = {
     },
   },
   footer: {
-    copyright: "© 2026 NoThrowan. All rights reserved.",
+    copyright: "© 2026 NoThrowam. All rights reserved.",
   },
 };
