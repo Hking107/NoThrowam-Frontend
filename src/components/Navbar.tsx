@@ -2,9 +2,11 @@ import { useState } from "react";
 import { User, Menu, X, UserPlus } from "lucide-react";
 import { landingData } from "../constants/landingData";
 import { Logo } from "./Logo";
+import {  useNavigate } from "react-router-dom";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate(); // Add navigate hook
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-brand-surface/90 backdrop-blur-md border-b border-black/5">
@@ -34,11 +36,17 @@ export function Navbar() {
 
             {/* Desktop Action Buttons */}
             <div className="flex items-center gap-4 border-l border-black/10 pl-6 lg:pl-8">
-              <button className="text-brand-green font-bold hover:text-[#005f48] transition-colors flex items-center gap-2">
+              <button
+                className="text-brand-green font-bold hover:text-[#005f48] transition-colors flex items-center gap-2"
+                onClick={() => navigate("/signin")} // Add navigation for Sign In
+              >
                 <User size={18} />
                 <span>{landingData.header.signInText}</span>
               </button>
-              <button className="btn-primary flex items-center gap-2 py-2 px-5">
+              <button
+                onClick={() => navigate("/signup")} // Add navigation for Register
+                className="btn-primary flex items-center gap-2 py-2 px-5"
+              >
                 <UserPlus size={18} />
                 <span>{landingData.header.registerText}</span>
               </button>
@@ -73,11 +81,23 @@ export function Navbar() {
               </a>
             ))}
             <div className="pt-4 border-t border-black/5 flex flex-col gap-3">
-              <button className="w-full flex items-center justify-center gap-2 text-brand-green font-bold py-2 hover:bg-brand-green/5 rounded-md transition-colors">
+              <button
+                className="w-full flex items-center justify-center gap-2 text-brand-green font-bold py-2 hover:bg-brand-green/5 rounded-md transition-colors"
+                onClick={() => {
+                  navigate("/signin"); // Add navigation for Sign In (Mobile)
+                  setIsMenuOpen(false);
+                }}
+              >
                 <User size={18} />
                 <span>{landingData.header.signInText}</span>
               </button>
-              <button className="btn-primary w-full flex items-center justify-center gap-2">
+              <button
+                className="btn-primary w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  navigate("/register"); // Add navigation for Register (Mobile)
+                  setIsMenuOpen(false);
+                }}
+              >
                 <UserPlus size={18} />
                 <span>{landingData.header.registerText}</span>
               </button>
