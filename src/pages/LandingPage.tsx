@@ -3,6 +3,7 @@ import { Hero } from "../components/Hero";
 import { SuccessStories } from "../components/SuccessStories";
 import { ActorCards } from "../components/ActorCards";
 import { Footer } from "../components/Footer";
+import { CtaSection } from "../components/CtaSection";
 
 export function LandingPage() {
   return (
@@ -23,6 +24,7 @@ export function LandingPage() {
       </main>
 
       {/* Standard Footer */}
+      <CtaSection />
       <Footer />
     </div>
   );
