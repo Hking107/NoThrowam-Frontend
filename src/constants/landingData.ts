@@ -1,12 +1,13 @@
 export const landingData = {
   header: {
-    logoText: "NoThrowan",
+    logoText: "NoThrowam",
     links: [
       { name: "Home", href: "#hero" },
       { name: "About", href: "#about" },
       { name: "Contact", href: "#contact" },
     ],
-    signInText: "Sign In / Register",
+    signInText: "Sign In",
+    registerText: "Register",
   },
   hero: {
     title: {
@@ -14,8 +15,8 @@ export const landingData = {
       fr: "Transformer les Déchets au Cameroun.",
     },
     subtitle: {
-      en: "Join NoThrowan to clean our communities together.",
-      fr: "Rejoignez NoThrowan pour nettoyer nos communautés ensemble.",
+      en: "Join NoThrowam to clean our communities together.",
+      fr: "Rejoignez NoThrowam pour nettoyer nos communautés ensemble.",
     },
     ctaText: {
       en: "Report Waste",
@@ -73,6 +74,6 @@ export const landingData = {
     },
   },
   footer: {
-    copyright: "© 2026 NoThrowan. All rights reserved.",
+    copyright: "© 2026 NoThrowam. All rights reserved.",
   },
 };

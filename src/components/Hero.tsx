@@ -32,7 +32,7 @@ export function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40">
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-brand-yellow/90 backdrop-blur-sm text-brand-text font-bold px-4 py-1.5 rounded-full text-sm mb-6 shadow-sm">
-            <MapPin size={16} /> Welcome to the NoThrowan Initiative
+            <MapPin size={16} /> Welcome to the NoThrowam Initiative
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-shadow-sm">
