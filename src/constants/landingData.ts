@@ -92,6 +92,33 @@ export const landingData = {
     },
   },
   footer: {
+    description: {
+      en: "NoThrowam is a community-driven initiative dedicated to transforming waste management in Cameroon through technology and collaboration.",
+      fr: "NoThrowam est une initiative communautaire dédiée à la transformation de la gestion des déchets au Cameroun par la technologie et la collaboration.",
+    },
+    quickLinks: [
+      { name: "About Us", href: "#about" },
+      { name: "Success Stories", href: "#stories" },
+      { name: "Community", href: "#actors" },
+      { name: "How it Works", href: "#how-it-works" },
+      { name: "Careers", href: "#careers" },
+    ],
+    legalLinks: [
+      { name: "Terms of Service", href: "#terms" },
+      { name: "Privacy Policy", href: "#privacy" },
+      { name: "Cookie Policy", href: "#cookies" },
+    ],
+    contactInfo: {
+      address: "123 Green Avenue, Akwa, Douala, Cameroon",
+      email: "hello@nothrowam.cm",
+      phone: "+237 600 000 000",
+    },
+    socialLinks: {
+      facebook: "#",
+      twitter: "#",
+      instagram: "#",
+      linkedin: "#",
+    },
     copyright: "© 2026 NoThrowam. All rights reserved.",
   },
 };
