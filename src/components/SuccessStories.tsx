@@ -32,7 +32,7 @@ export function SuccessStories() {
               </div>
 
               {/* Content */}
-              <div className="flex flex-col flex-grow justify-between">
+              <div className="flex flex-col grow justify-between">
                 <div>
                   <h3 className="text-xl font-bold mb-2 text-brand-text group-hover:text-brand-green transition-colors">
                     {story.title}

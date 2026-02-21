@@ -11,7 +11,7 @@ export function LandingPage() {
       <Navbar />
 
       {/* Main Content Area */}
-      <main className="flex-grow">
+      <main className="grow">
         {/* 2. Hero Section (Guest Flow) */}
         <Hero />
 
