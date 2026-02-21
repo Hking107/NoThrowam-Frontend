@@ -68,4 +68,397 @@
   .text-sub {
     @apply text-lg sm:text-xl text-brand-text/80;
   }
+
+  /* ── How-To-Use Section ── */
+  .how-to-section {
+    @apply relative bg-brand-surface py-20 md:py-28 overflow-hidden;
+  }
+
+  .how-to-header {
+    @apply text-center px-4 mb-16 md:mb-24;
+  }
+
+  .how-to-stage {
+    @apply relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* The phone container — sticky in center */
+  .phone-column {
+    @apply absolute inset-0 flex items-start justify-center pointer-events-none z-10;
+  }
+
+  .phone-sticky {
+    @apply sticky top-1/2 -translate-y-1/2 flex items-center justify-center;
+  }
+
+  .phone-wrapper {
+    @apply relative w-64 sm:w-72 md:w-80 lg:w-96;
+  }
+
+  .phone-image {
+    @apply w-full h-auto drop-shadow-2xl;
+  }
+
+  /* Step number inside the phone screen */
+  .phone-step-number {
+    @apply absolute inset-0 flex items-center justify-center
+           text-6xl sm:text-7xl md:text-8xl font-black
+           text-brand-green select-none pointer-events-none;
+    /* Nudge down slightly to account for phone notch */
+    padding-top: 2rem;
+  }
+
+  /* Track containing all step panels */
+  .steps-track {
+    @apply relative z-20;
+  }
+
+  .step-panel {
+    @apply min-h-[80vh] flex items-center;
+  }
+
+  /* Odd steps (1, 3) → text on the left */
+  .step-left {
+    @apply justify-start;
+  }
+
+  /* Even steps (2, 4) → text on the right */
+  .step-right {
+    @apply justify-end;
+  }
+
+  .step-text-block {
+    @apply max-w-sm md:max-w-md p-6 md:p-8 rounded-2xl
+           bg-white/80 backdrop-blur-md shadow-xl
+           border border-brand-green/10;
+  }
+
+  .step-badge {
+    @apply inline-block bg-brand-green/10 text-brand-green text-sm font-bold
+           px-3 py-1 rounded-full mb-3;
+  }
+
+  .step-title {
+    @apply text-xl md:text-2xl font-bold text-brand-text mb-2;
+  }
+
+  .step-description {
+    @apply text-brand-text/70 leading-relaxed text-sm md:text-base;
+  }
+
+  /* ── Timeline Extensions ── */
+  .progress-track {
+    @apply absolute left-1/2 top-0 bottom-0 w-px bg-brand-green/20 -translate-x-1/2 z-0 hidden lg:block;
+  }
+
+  .progress-fill {
+    @apply absolute top-0 left-0 right-0 bg-brand-green origin-top scale-y-0 transition-transform duration-100;
+    height: 100%;
+  }
+
+  /* Phone Glows */
+  .phone-glow {
+    @apply absolute inset-[-20%] bg-brand-green/10 blur-3xl rounded-full -z-10 opacity-60;
+  }
+
+  .phone-screen-glow {
+    @apply absolute inset-[12%] bg-brand-green/5 blur-xl rounded-2xl opacity-0;
+  }
+
+  /* Phone Dots Indicator */
+  .phone-dots {
+    @apply absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5 z-20;
+  }
+
+  .phone-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-brand-green/20 transition-all duration-300;
+  }
+
+  .phone-dot.active {
+    @apply w-4 bg-brand-green;
+  }
+}
+
+/* ============================================================
+   HOW-TO-USE — Upgraded scroll-pinned section
+   ============================================================ */
+
+/* --- Section wrapper ---------------------------------------- */
+.how-to-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Header above the pinned stage -------------------------- */
+.how-to-header {
+  text-align: center;
+  padding: 6rem 1.5rem 3rem;
+}
+
+/* ============================================================
+   PINNED STAGE
+   Full-viewport height, holds phone + text panels together.
+   GSAP pins this element while user scrolls through all steps.
+
+   FIX: Changed from `display: grid` to `display: flex`.
+   The grid caused .progress-track and .steps-track (both position:absolute)
+   to still participate in grid auto-placement, creating an implicit second
+   row — visible as an unwanted horizontal line across the page.
+   With flexbox, only the in-flow .phone-column participates in layout.
+   ============================================================ */
+.how-to-stage {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ============================================================
+   PROGRESS TRACK
+   Thin vertical bar on the far left
+   ============================================================ */
+.progress-track {
+  position: absolute;
+  left: 2rem;
+  top: 15%;
+  height: 70%;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--color-brand-green, #007a5e);
+  transform-origin: top center;
+  transform: scaleY(0);
+  border-radius: 99px;
+}
+
+/* ============================================================
+   PHONE COLUMN — center column
+   ============================================================ */
+.phone-column {
+  grid-column: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.phone-sticky {
+  /* Will-change for GPU compositing */
+  will-change: transform, opacity;
+}
+
+.phone-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ambient glow behind the phone */
+.phone-glow {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 122, 94, 0.35) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(20px);
+}
+
+/* The phone image — significantly larger than before */
+.phone-image {
+  position: relative;
+  z-index: 1;
+  /* Tall enough to be a real hero element */
+  height: clamp(420px, 72vh, 680px);
+  width: auto;
+  object-fit: contain;
+  /* Subtle drop shadow for depth */
+  filter: drop-shadow(0 32px 64px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 8px 24px rgba(0, 122, 94, 0.2));
+}
+
+/* Screen ambient glow (overlay on the screen area) */
+.phone-screen-glow {
+  position: absolute;
+  /* Approximate screen position — tweak to match your /phone.png */
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52%;
+  height: 62%;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(0, 122, 94, 0.25) 0%,
+    transparent 75%
+  );
+  border-radius: 24px;
+  opacity: 0.4;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Step number displayed on phone screen */
+.phone-step-number {
+  position: absolute;
+  /* Centred over the screen — adjust top/left for your image */
+  top: 46%;
+  left: 49%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #fff;
+  line-height: 1;
+  /* Frosted text effect */
+  text-shadow:
+    0 0 40px rgba(255, 255, 255, 0.6),
+    0 0 80px rgba(0, 122, 94, 0.4);
+  pointer-events: none;
+}
+
+/* Step dot indicators at bottom of phone */
+.phone-dots {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+}
+
+.phone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition:
+    background 0.3s,
+    transform 0.3s;
+}
+
+.phone-dot.active {
+  background: #fff;
+  transform: scale(1.4);
+}
+
+/* ============================================================
+   STEP PANELS
+   Each panel is absolutely positioned to fill the stage;
+   they stack visually but only the active one's text is visible
+   (controlled by GSAP opacity).
+   ============================================================ */
+.steps-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.step-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  /* Left panels sit in col 1, right panels in col 3 */
+}
+
+.step-left {
+  justify-content: flex-start;
+  padding-left: clamp(3rem, 8vw, 8rem);
+  /* nudge right of the progress bar */
+  padding-left: max(4rem, 8vw);
+}
+
+.step-right {
+  justify-content: flex-end;
+  padding-right: clamp(3rem, 8vw, 8rem);
+}
+
+/* ============================================================
+   TEXT BLOCK
+   ============================================================ */
+.step-text-block {
+  max-width: 340px;
+  pointer-events: auto;
+  /* starts invisible — GSAP controls opacity */
+  opacity: 0;
+}
+
+.step-badge {
+  display: inline-block;
+  padding: 0.3em 0.9em;
+  border-radius: 99px;
+  background: rgba(0, 122, 94, 0.15);
+  border: 1px solid rgba(0, 122, 94, 0.35);
+  color: var(--color-brand-green, #007a5e);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.step-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+  color: var(--color-brand-text, #1a1a2e);
+}
+
+.step-description {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  line-height: 1.7;
+  color: var(--color-text-sub, #6b7280);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .how-to-stage {
+    grid-template-columns: 1fr;
+  }
+
+  /* On mobile, text panels stack below the phone */
+  .step-panel {
+    align-items: flex-end;
+    padding-bottom: 2rem;
+  }
+
+  .step-left,
+  .step-right {
+    justify-content: center;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .step-text-block {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .progress-track {
+    display: none;
+  }
+
+  .phone-image {
+    height: clamp(300px, 55vh, 420px);
+  }
 }
