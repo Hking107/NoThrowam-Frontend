@@ -1,0 +1,79 @@
+import { useState } from "react";
+import { User, Menu, X } from "lucide-react";
+import { landingData } from "../constants/landingData";
+import { Logo } from "./Logo";
+
+export function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <nav className="sticky top-0 z-50 w-full bg-brand-surface/90 backdrop-blur-md border-b border-black/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Branding */}
+          <div className="shrink-0">
+            <a href="#" className="focus:outline-none">
+              <Logo />
+            </a>
+          </div>
+
+          {/* Desktop Navigation Navigation */}
+          <div className="hidden md:flex flex-1 items-center justify-center gap-8">
+            {landingData.header.links.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-brand-text/80 hover:text-brand-green font-medium transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center">
+            <button className="btn-primary flex items-center gap-2">
+              <User size={18} />
+              <span>{landingData.header.signInText}</span>
+            </button>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-brand-text p-2 focus:outline-none focus:ring-2 focus:ring-brand-green rounded-md"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-b border-black/5 absolute w-full shadow-lg">
+          <div className="px-4 pt-2 pb-6 space-y-4">
+            {landingData.header.links.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="block px-3 py-2 rounded-md text-base font-medium text-brand-text/80 hover:text-brand-green hover:bg-brand-green/5"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.name}
+              </a>
+            ))}
+            <div className="pt-4 border-t border-black/5">
+              <button className="btn-primary w-full flex items-center justify-center gap-2">
+                <User size={18} />
+                <span>{landingData.header.signInText}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
