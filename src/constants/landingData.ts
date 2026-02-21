@@ -73,6 +73,24 @@ export const landingData = {
       icon: "clipboard-check",
     },
   },
+  ctaSection: {
+    title: {
+      en: "Ready to make Cameroon cleaner?",
+      fr: "Prêt à rendre le Cameroun plus propre ?",
+    },
+    subtitle: {
+      en: "Join thousands of citizens and organizations working together for a sustainable future.",
+      fr: "Rejoignez des milliers de citoyens et d'organisations travaillant ensemble pour un avenir durable.",
+    },
+    primaryCtaText: {
+      en: "Join Now",
+      fr: "Rejoindre",
+    },
+    secondaryCtaText: {
+      en: "Contact Us",
+      fr: "Contactez-nous",
+    },
+  },
   footer: {
     copyright: "© 2026 NoThrowam. All rights reserved.",
   },
