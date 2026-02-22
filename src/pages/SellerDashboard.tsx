@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useEffect, useState } from 'react'; 
 import { 
   LayoutDashboard, List, ShoppingBag, Wallet, BarChart3, Backpack,
   Settings, Bell, Plus, TrendingUp, TrendingDown, 
@@ -10,7 +10,7 @@ import WasteScannerModal from '../components/WasteScannerModal';
 import MyListingsModal from '../components/MyListing';
 import ProductModal from '../components/ProductModal'; 
 
-// --- DÉFINITION DES TYPES ---
+
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -32,11 +32,256 @@ interface TableRowProps {
 }
 
 const SellerDashboard: React.FC = () => {
-
+ 
+  const [userEmail, setUserEmail] = useState<string>("Chargement...");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false); 
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/signin";
+  };
 
+  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token"); 
+        if (!token) {
+          setUserEmail("Non connecté");
+          return;
+        }
+
+        const response = await fetch("/api/v0/auth/me/", {
+          method: "GET",
+          headers: {
+            "accept": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "69420"
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserEmail(data.email || data.username || "Utilisateur"); 
+        } else {
+          setUserEmail("Erreur de session");
+        }
+      } catch (error) {
+        console.error("Erreur réseau :", error);
+        setUserEmail("Erreur réseau");
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+  
+
+
+const [chartData, setChartData] = useState({ /* ... */ });
+
+  // NOUVEAU : State pour les Stats Cards
+  const [dashboardStats, setDashboardStats] = useState({
+    isLoading: true,
+    totalEarnings: 0,
+    totalWeight: 0,
+    activeListings: 0
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch("/api/v0/waste-posts/my/", {
+          method: "GET",
+          headers: {
+            "accept": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "69420",
+            "X-CSRFTOKEN": "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ"
+          }
+        });
+
+        if (response.ok) {
+          const posts = await response.json(); // Ton tableau JSON
+
+          // --- 1. CALCUL DES STATS CARDS ---
+          let sumEarnings = 0;
+          let sumWeight = 0;
+          let activeCount = 0;
+
+          posts.forEach((post: any) => {
+            // Additionner les prix
+            if (post.price !== null) {
+              sumEarnings += Number(post.price);
+            }
+            // Additionner le poids (quantity est une string genre "1.00")
+            if (post.quantity !== null) {
+              sumWeight += parseFloat(post.quantity);
+            }
+            // Compter les annonces actives (qui ne sont ni brouillon ni rejetées)
+            // Tu peux ajuster 'AVAILABLE', 'PUBLISHED', etc., selon ce que ton backend utilise pour les vraies annonces actives.
+            activeCount++;
+          });
+
+          setDashboardStats({
+            isLoading: false,
+            totalEarnings: sumEarnings,
+            totalWeight: sumWeight,
+            activeListings: activeCount
+          });
+
+
+          // --- 2. CALCUL DU GRAPHIQUE (Code précédent) ---
+          const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+          const currentDate = new Date();
+          const last6Months = [];
+          const monthlyTotals = [0, 0, 0, 0, 0, 0];
+
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+            last6Months.push(monthNames[d.getMonth()]);
+          }
+
+          posts.forEach((post: any) => {
+            if (post.created_at && post.price !== null) {
+              const postDate = new Date(post.created_at);
+              const monthDiff = (currentDate.getFullYear() - postDate.getFullYear()) * 12 + (currentDate.getMonth() - postDate.getMonth());
+
+              if (monthDiff >= 0 && monthDiff < 6) {
+                monthlyTotals[5 - monthDiff] += Number(post.price); 
+              }
+            }
+          });
+
+          const maxTotal = Math.max(...monthlyTotals, 100); 
+          const xPoints = [0, 20, 40, 60, 80, 100]; 
+          
+          const points = monthlyTotals.map((total, index) => {
+            const x = xPoints[index];
+            const y = 35 - ((total / maxTotal) * 30);
+            return { x, y, value: total };
+          });
+
+          let curvePath = `M ${points[0].x},${points[0].y}`;
+          for (let i = 1; i < points.length; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const cpX = (prev.x + curr.x) / 2;
+            curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
+          }
+
+          setChartData({
+            path: curvePath,
+            fillPath: `${curvePath} L 100,40 L 0,40 Z`,
+            highlight: points[5], 
+            months: last6Months
+          });
+        }
+      } catch (error) {
+        console.error("Erreur de graphe:", error);
+        // En cas d'erreur, on arrête le chargement quand même
+        setDashboardStats(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+useEffect(() => {
+  // 1. Generate 6 random points across the X-axis (0, 20, 40, 60, 80, 100)
+  const points = [0, 20, 40, 60, 80, 100].map(x => {
+    // SVG Y-axis is inverted (0 is top, 40 is bottom). 
+    // We want random points between 5 and 35 to keep it inside the viewbox.
+    const y = Math.floor(Math.random() * 30) + 5; 
+    
+    // Calculate a fake dollar value based on the height (higher point = higher $)
+    const value = Math.floor((40 - y) * 35); 
+    
+    return { x, y, value };
+  });
+
+  // 2. Build the smooth curve path
+  let curvePath = `M ${points[0].x},${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const cpX = (prev.x + curr.x) / 2; // Control point X (halfway between points)
+    
+    // Cubic bezier curve command
+    curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
+  }
+
+  // 3. Pick a point to highlight (e.g., the 5th point / May)
+  const highlightPoint = points[4];
+
+  // 4. Update the state
+  setChartData({
+    path: curvePath,
+    fillPath: `${curvePath} L 100,40 L 0,40 Z`, // Draw to bottom corners to close the fill
+    highlight: highlightPoint
+  });
+}, []); // Empty array ensures this runs once per page load
+
+useEffect(() => {
+  const fetchAndCalculateStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch("/api/v0/waste-posts/", {
+          method: "GET",
+          headers: {
+            "accept": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "69420"
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const posts = Array.isArray(data) ? data : (data.results || []);
+
+          // 3. DO THE MATH
+          let earnings = 0;
+          let weight = 0;
+          let activeCount = 0;
+
+          posts.forEach((post: any) => {
+            const status = (post.status || "").toLowerCase();
+            
+            // Count Active Listings
+            if (status === 'active' || status === 'pending') {
+              activeCount += 1;
+            }
+
+            // Calculate Earnings and Weight (Usually, you only count 'sold' items for earnings)
+            // Adjust the condition below if you want to sum up ALL items instead of just sold ones
+            if (status === 'sold') {
+              // Convert to numbers before adding (fallback to 0 if null)
+              earnings += parseFloat(post.price || post.estimated_price || 0);
+              weight += parseFloat(post.quantity || post.weight || 0);
+            }
+          });
+
+          // Update the state with our final calculations
+          setDashboardStats({
+            totalEarnings: earnings,
+            totalWeight: weight,
+            activeListings: activeCount,
+            isLoading: false
+          });
+
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        setDashboardStats(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchAndCalculateStats();
+  }, []);
   return (
     <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
       
@@ -73,13 +318,7 @@ const SellerDashboard: React.FC = () => {
               My Listings
             </button>
             
-            <a href="#" className="flex items-center justify-between px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
-              <div className="flex items-center gap-3">
-                <ShoppingBag size={20} />
-                Orders
-              </div>
-              {/* <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span> */}
-            </a>
+            
             
            <button 
             onClick={() => setIsProductModalOpen(true)}
@@ -100,19 +339,18 @@ const SellerDashboard: React.FC = () => {
 
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-              <img src="https://i.pravatar.cc/150?img=32" alt="Alex Morgan" className="w-full h-full object-cover" />
+              <img src="" alt="" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">User user</p>
+              {/* On remplace "User user" par la variable d'état */}
+              <p className="text-sm font-bold text-gray-900">{userEmail}</p>
               <p className="text-xs text-gray-500">Premium Seller</p>
             </div>
           </div>
-
-          <a href="#" className="flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-gray-50 rounded-xl font-medium mb-4">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
             <LogOut size={20} />
             Log out
-          </a>
-          
+          </button>
         </div>
       </aside>
 
@@ -143,10 +381,31 @@ const SellerDashboard: React.FC = () => {
           </header>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={<DollarSign size={20} className="text-green-600"/>} bg="bg-green-100" title="Total Earnings" value="$1,240.50" trend="+12%" positive={true} />
-            <StatCard icon={<Scale size={20} className="text-blue-600"/>} bg="bg-blue-100" title="Weight Recycled" value="450 kg" trend="+5%" positive={true} />
-            <StatCard icon={<FileText size={20} className="text-orange-600"/>} bg="bg-orange-100" title="Active Listings" value="12" trend="0%" positive={null} />
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              icon={<DollarSign size={20} className="text-green-600"/>} 
+              bg="bg-green-100" 
+              title="Total Earnings" 
+              value={dashboardStats.isLoading ? "..." : "22,000 FCFA"} 
+              trend="+12%" // Trend usually requires historical data, leaving static for now
+              positive={true} 
+            />
+            <StatCard 
+              icon={<Scale size={20} className="text-blue-600"/>} 
+              bg="bg-blue-100" 
+              title="Weight Recycled" 
+              value={dashboardStats.isLoading ? "..." : `120 kg`} 
+              trend="+5%" 
+              positive={true} 
+            />
+            <StatCard 
+              icon={<FileText size={20} className="text-orange-600"/>} 
+              bg="bg-orange-100" 
+              title="Active Listings" 
+              value={dashboardStats.isLoading ? "..." : "7"} 
+              trend="0%" 
+              positive={null} 
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -194,7 +453,7 @@ const SellerDashboard: React.FC = () => {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-sm text-gray-400">Total</span>
-                    <span className="text-2xl font-bold text-gray-900">450kg</span>
+                    <span className="text-2xl font-bold text-gray-900">120kg</span>
                   </div>
                 </div>
 
@@ -259,11 +518,11 @@ const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, trend, posi
       <div className={`p-3 rounded-xl ${bg}`}>
         {icon}
       </div>
-      <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${positive === true ? 'bg-green-100 text-green-700' : positive === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+      {/* <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${positive === true ? 'bg-green-100 text-green-700' : positive === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
         {positive === true && <TrendingUp size={12} />}
         {positive === false && <TrendingDown size={12} />}
         {trend}
-      </div>
+      </div> */}
     </div>
     <div className="mt-4 z-10 relative">
       <p className="text-gray-500 text-sm font-medium">{title}</p>
@@ -307,3 +566,4 @@ const TableRow: React.FC<TableRowProps> = ({ date, type, icon, id, weight, price
 };
 
 export default SellerDashboard;
+
