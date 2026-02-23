@@ -63,7 +63,8 @@ Ensure you have **Node.js** (version 16+ recommended) and **npm** (or yarn/pnpm)
 
 - `src/components/WasteScannerModal.tsx`: The AI scanning module with Drag & Drop handling and a 3-step API flow (Create post -> AI Analysis -> UI Update).
 - `src/pages/SellerDashboard.tsx`: The main dashboard containing the math for the dynamic SVG graph and stats aggregation.
-- `src/components/MyListings.tsx`: A reusable component used to display Waste owner sales to recyclers
+- `src/components/MyListings.tsx`: A reusable component used to display Waste owner sales to recyclers.
+- `src/components/ProductModal.tsx`: Displays the actual price/ mass of a category of waste.
 
 ---
 
