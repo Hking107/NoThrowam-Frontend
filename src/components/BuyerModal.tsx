@@ -15,7 +15,6 @@ interface PotentialBuyersModalProps {
   onClose: () => void;
 }
 
-// --- DONNÉES FICTIVES DES ACHETEURS ---
 const mockBuyers: Buyer[] = [
   { id: 'B-01', name: 'EcoPlast Industries', rating: 4.8, distance: '12 km', priceOffered: '125.00 FCFA', verified: true },
   { id: 'B-02', name: 'RecycleTech SARL', rating: 4.5, distance: '5 km', priceOffered: '120.00 FCFA', verified: true },
