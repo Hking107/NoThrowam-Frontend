@@ -6,9 +6,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
     server: {
     proxy: {
-      // Dès que l'URL commence par /api, Vite l'envoie vers ngrok !
       '/api': {
-        target: 'https://tuberless-acrimoniously-marquis.ngrok-free.dev',
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
         secure: false,
       }
