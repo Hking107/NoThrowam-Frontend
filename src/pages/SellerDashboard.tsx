@@ -78,7 +78,7 @@ const SellerDashboard: React.FC = () => {
   
 
 
-const [chartData, setChartData] = useState({ /* ... */ });
+const [chartData, setChartData] = useState({});
 
   // NOUVEAU : State pour les Stats Cards
   const [dashboardStats, setDashboardStats] = useState({
