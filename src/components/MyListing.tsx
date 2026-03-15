@@ -19,7 +19,6 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
     const fetchMyListings = async () => {
       setIsLoading(true);
       try {
-        // On récupère le token de l'utilisateur connecté (ou tu peux le coder en dur pour tester)
         const token = localStorage.getItem("token") ; 
         
         const response = await fetch('/api/v0/waste-posts/my/', {
@@ -27,13 +26,12 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
           headers: {
             'accept': 'application/json',
             'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true' // Très important pour que ngrok ne bloque pas la requête
+            'ngrok-skip-browser-warning': 'true' 
           }
         });
 
         if (response.ok) {
           const data = await response.json();
-          // Si ton backend renvoie { results: [...] }, on prend data.results, sinon data
           setListings(data.results ? data.results : data);
         } else {
           console.error("Erreur serveur :", response.status);
@@ -41,16 +39,14 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
       } catch (error) {
         console.error("Erreur réseau :", error);
       } finally {
-        setIsLoading(false); // On arrête le chargement quoi qu'il arrive
+        setIsLoading(false); 
       }
     };
 
     fetchMyListings();
-  }, []); // Le tableau vide [] signifie "Exécuter une seule fois au démarrage"
+  }, []); 
 
-  // 3. ADAPTATION DU STYLE SELON LE STATUT
   const getStatusStyle = (s: string) => {
-    // On sécurise avec toLowerCase() au cas où l'API renvoie "active", "ACTIVE", etc.
     switch(s?.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-700 border-green-200';
       case 'pending': return 'bg-orange-100 text-orange-700 border-orange-200';
