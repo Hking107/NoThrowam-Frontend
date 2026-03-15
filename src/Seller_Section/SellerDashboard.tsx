@@ -6,9 +6,9 @@ import {
   LogOut
 } from 'lucide-react';
 
-import WasteScannerModal from '../components/WasteScannerModal';
-import MyListingsModal from '../components/MyListing';
-import ProductModal from '../components/ProductModal'; 
+import WasteScannerModal from './WasteScannerModal';
+import MyListingsModal from './MyListing';
+import ProductModal from './ProductModal'; 
 
 
 

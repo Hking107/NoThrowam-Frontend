@@ -1,26 +1,30 @@
-import { LandingPage } from "./pages/LandingPage";
-import HomePage from "./pages/HomePage";
-import SellerDashboard from "./pages/SellerDashboard";
-import { Navigate } from "react-router-dom";
-import { SignIn } from "./pages/SignIn";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { LandingPage } from "./pages/LandingPage";
+import { SignIn } from "./pages/SignIn";
+import { Signup } from "./pages/Signup";
+import { Seller_SI } from "./pages/Up/Seller_SI";
+import CustomerMain from "./Customer_Section/CustomerMain";
+import ManagerMain from "./Manager_Section/ManagerMain";
+import SellerDashboard from "./Seller_Section/SellerDashboard";
+// import ManagerMain from "./Manager_Section/ManagerMain";
+// import CustomerMain from "./Customer_Section/CustomerMain";
 
 function App() {
   return (
-  <Router>
+    <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} /> 
-        {/* <Route path="/" element={</>} /> */}
+        <Route path="/" element={<LandingPage />} />
+        {/* <Route path="/" element={<ManagerMain/>} /> */}
+        {/* <Route path="/" element={<CustomerMain/>} /> */}
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/dashboard_seller" element={<SellerDashboard />} />
-        {/* <Route path="/manager" element={<Manager_SI />} />
-        <Route path="/seller" element={<Seller_SI />} />
-        <Route path="/signup" element={<Signup />} > */}
-        {/* </Route> */}
+        <Route path="/customer" element={<CustomerMain/>} />
+        <Route path="/manager" element={<ManagerMain />} />
+        <Route path="/dashboard_seller" element={<SellerDashboard/>} />
+        <Route path="/signup" element={<Signup />} >
+        </Route>
       </Routes>
     </Router>
   );
-
 }
 
 export default App;
