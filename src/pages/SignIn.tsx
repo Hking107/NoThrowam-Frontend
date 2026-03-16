@@ -47,12 +47,14 @@ export const SignIn = () => {
 
       // Example: Save token
       localStorage.setItem("token", data.access);
+      localStorage.setItem("role",data.role);
 
+    // alert("Login successful 🎉");
     } catch (err) {
       setError("Invalid email or password");
     } finally {
       setLoading(false);
-      navigate("/dashboard_seller"); // Redirect to dashboard after login
+      navigate("/dashboard_seller"); 
     }
   };
 

@@ -1,14 +1,9 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import React, { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { Camera } from 'lucide-react';
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min); // Ensure minimum is a whole number
-  max = Math.floor(max); // Ensure maximum is a whole number
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 interface WasteScannerModalProps {
   onClose: () => void;
+  onPublish?: (data: any) => void; 
 }
 
 // Fonction utilitaire pour convertir un fichier en Base64
@@ -21,8 +16,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose }) => {
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublish }) => {  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -35,14 +29,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose }) => {
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
   
-  const randomImages = [
-    "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1550503192-3bc5505c2194?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?auto=format&fit=crop&w=400&q=80"
-  ];
+  
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -74,93 +61,160 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleAnalyze = async () => {
-    if (!selectedFile) return;
-    setIsAnalyzing(true);
+  // const handleAnalyze = async () => {
+  //   if (!selectedFile) return;
+  //   setIsAnalyzing(true);
 
-    try {
-      // 1. Récupération du token
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Vous n'êtes pas connecté !");
-        setIsAnalyzing(false);
-        return;
-      }
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       alert("Vous n'êtes pas connecté !");
+  //       setIsAnalyzing(false);
+  //       return;
+  //     }
 
-      // 2. Conversion de l'image en Base64
-      const base64Image = await fileToBase64(selectedFile);
-// --- ÉTAPE 1 : CRÉATION DU POST ---
-      const createResponse = await fetch("/api/v0/waste-posts/create/", {
-        method: "POST",
-        headers: {
-          "accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "69420",
-          'X-CSRFTOKEN': 'lFHtmFYGSV2FRtbjijvzoXrqugh0RSep42P7mzweSJk0sYrrbruu3DWDVM5VtruW'
-        },
-        body: JSON.stringify({
-          // Supprime image_url et utilise 'image' avec le base64
-          image: base64Image.split(',')[1], // N'oublie pas d'enlever le préfixe si ton backend plante avec !
-          quantity: getRandomInt(1, 100), 
-          unit: "kg",
-          latitude: getRandomInt(3, 9) + "." + getRandomInt(1000, 9999), 
-          longitude: getRandomInt(-5, 5) + "." + getRandomInt(1000, 9999), 
-        })
-      });
-      // --- ÉTAPE 1 : CRÉATION DU POST ---
+  //     const base64Image = await fileToBase64(selectedFile);
+
+  //     const createResponse = await fetch("/api/v0/waste-posts/create/", {
+  //       method: "POST",
+  //       headers: {
+  //         "accept": "application/json",
+  //         "Content-Type": "application/json",
+  //         "Authorization": `Bearer ${token}`,
+  //         "ngrok-skip-browser-warning": "69420",
+  //         'X-CSRFTOKEN': 'lFHtmFYGSV2FRtbjijvzoXrqugh0RSep42P7mzweSJk0sYrrbruu3DWDVM5VtruW'
+  //       },
+  //       body: JSON.stringify({
+  //         image: base64Image.split(',')[1], 
+  //         quantity: getRandomInt(1, 100), 
+  //         unit: "kg",
+  //         latitude: getRandomInt(3, 9) + "." + getRandomInt(1000, 9999), 
+  //         longitude: getRandomInt(-5, 5) + "." + getRandomInt(1000, 9999), 
+  //       })
+  //     });
       
 
-      if (!createResponse.ok) {
-        throw new Error(`Erreur lors de la création du post: ${createResponse.status}`);
-      }
+  //     if (!createResponse.ok) {
+  //       throw new Error(`Erreur lors de la création du post: ${createResponse.status}`);
+  //     }
 
-      const createData = await createResponse.json();
-      const postId = createData.id; // On récupère l'ID généré par le backend
+  //     const createData = await createResponse.json();
+  //     const postId = createData.id; // On récupère l'ID généré par le backend
 
-      if (!postId) {
-        throw new Error("L'API n'a pas renvoyé d'ID pour le post.");
-      }
+  //     if (!postId) {
+  //       throw new Error("L'API n'a pas renvoyé d'ID pour le post.");
+  //     }
 
-      // --- ÉTAPE 2 : ANALYSE DU POST ---
-      const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
-        method: "POST",
-        headers: {
-          "accept": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "69420"
-        },
-        // Un body vide est parfois requis par fetch pour les requêtes POST, même s'il n'y a pas de données
-        body: "" 
-      });
+  //     // --- ÉTAPE 2 : ANALYSE DU POST ---
+  //     const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
+  //       method: "POST",
+  //       headers: {
+  //         "accept": "application/json",
+  //         "Authorization": `Bearer ${token}`,
+  //         "ngrok-skip-browser-warning": "69420"
+  //       },
+  //       // Un body vide est parfois requis par fetch pour les requêtes POST, même s'il n'y a pas de données
+  //       body: "" 
+  //     });
 
-      if (!analyzeResponse.ok) {
-        throw new Error(`Erreur lors de l'analyse IA: ${analyzeResponse.status}`);
-      }
+  //     if (!analyzeResponse.ok) {
+  //       throw new Error(`Erreur lors de l'analyse IA: ${analyzeResponse.status}`);
+  //     }
 
-      const analyzeData = await analyzeResponse.json();
+  //     const analyzeData = await analyzeResponse.json();
 
-      // --- ÉTAPE 3 : MISE À JOUR DE L'UI ---
-      // On utilise les champs retournés par ton endpoint d'analyse
-      setAiResult({
-        category: analyzeData.category || 'Inconnu', 
-        price: analyzeData.price || 0,
-        sorted: analyzeData.sorted, 
-        action: analyzeData.sorted ? "Validé pour recyclage" : (analyzeData.rejection_reason || "Déchet non conforme"),
-        description: analyzeData.description || ""
-      });
+  //     setAiResult({
+  //       category: analyzeData.category || 'Inconnu', 
+  //       price: analyzeData.price || 0,
+  //       sorted: analyzeData.sorted, 
+  //       action: analyzeData.sorted ? "Validé pour recyclage" : (analyzeData.rejection_reason || "Déchet non conforme"),
+  //       description: analyzeData.description || ""
+  //     });
 
-    } catch (error) {
-      console.error(error);
-      alert('Erreur lors de la communication avec le serveur.');
-    } finally {
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert('Erreur lors de la communication avec le serveur.');
+  //   } finally {
+  //     setIsAnalyzing(false);
+  //   }
+  // };
+
+  const handleAnalyze = async () => {
+  if (!selectedFile) return;
+  setIsAnalyzing(true);
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Session expirée. Veuillez vous reconnecter.");
       setIsAnalyzing(false);
+      return;
     }
-  };
 
+    const base64Image = await fileToBase64(selectedFile);
+    const imagePayload = base64Image.split(',')[1];
+
+    console.log("Création du post en cours...");
+    const createResponse = await fetch("/api/v0/waste-posts/create/", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        quantity: Math.floor(Math.random() * 100) + 1, 
+        unit: "kg",
+        latitude: 3.8480,
+        longitude: 11.5021,
+      })
+    });
+
+    if (!createResponse.ok) {
+      const errorData = await createResponse.json();
+      throw new Error(errorData.detail || `Erreur création: ${createResponse.status}`);
+    }
+
+    const { id: postId } = await createResponse.json();
+
+    if (!postId) {
+      throw new Error("L'API n'a pas renvoyé d'ID valide.");
+    }
+
+    console.log(`Analyse IA pour le post #${postId}...`);
+    const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+      }
+    });
+
+    if (!analyzeResponse.ok) {
+      throw new Error(`Erreur analyse: ${analyzeResponse.status}`);
+    }
+
+    const analyzeData = await analyzeResponse.json();
+
+    // Mise à jour de l'état avec les résultats de l'IA
+    setAiResult({
+      category: analyzeData.category || 'Inconnu',
+      price: analyzeData.price || 0,
+      sorted: analyzeData.sorted ?? false,
+      action: analyzeData.sorted ? "Validé pour recyclage" : (analyzeData.rejection_reason || "Déchet non conforme"),
+      description: analyzeData.description || "Aucune description générée."
+    });
+
+  } catch (error: any) {
+    console.error("Workflow Error:", error);
+    alert(`Erreur: ${error.message}`);
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4">
-      {/* ... (Reste de ton JSX exactement identique à avant) ... */}
       <main className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out]">
         
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10">
@@ -232,15 +286,19 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose }) => {
               </div>
             </div>
 
-           {/* Si sorted est FALSE, c'est que le déchet est refusé */}
             {!aiResult.sorted ? (
               <button onClick={handleReset} className="mt-6 w-full bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 font-bold py-3 rounded-xl shadow-sm transition flex justify-center items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 Déchet refusé : Analyser une autre image
               </button>
             ) : (
-              // Si sorted est TRUE, on peut publier
-              <button onClick={() => {  onClose(); }} className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition flex justify-center items-center gap-2">
+              <button 
+                onClick={() => {
+                  if (onPublish) onPublish(aiResult);
+                  onClose(); 
+                }} 
+                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition flex justify-center items-center gap-2"
+              >
                 Publier sur la Marketplace
               </button>
             )}

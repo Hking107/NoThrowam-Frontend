@@ -6,9 +6,9 @@ import {
   LogOut
 } from 'lucide-react';
 
-import WasteScannerModal from '../components/WasteScannerModal';
-import MyListingsModal from '../components/MyListing';
-import ProductModal from '../components/ProductModal'; 
+import WasteScannerModal from './WasteScannerModal';
+import MyListingsModal from './MyListing';
+import ProductModal from './ProductModal'; 
 
 
 
@@ -37,6 +37,8 @@ const SellerDashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false); 
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/signin";
@@ -78,7 +80,7 @@ const SellerDashboard: React.FC = () => {
   
 
 
-const [chartData, setChartData] = useState({ /* ... */ });
+const [chartData, setChartData] = useState({});
 
   // NOUVEAU : State pour les Stats Cards
   const [dashboardStats, setDashboardStats] = useState({
@@ -99,30 +101,26 @@ const [chartData, setChartData] = useState({ /* ... */ });
           headers: {
             "accept": "application/json",
             "Authorization": `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420",
-            "X-CSRFTOKEN": "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ"
+            "ngrok-skip-browser-warning": "69420"
+            // Note: Removed CSRF token here, usually not needed for GET requests with JWT
           }
         });
 
         if (response.ok) {
-          const posts = await response.json(); // Ton tableau JSON
+          const posts = await response.json(); 
+          
+          // 1. UPDATE RECENT POSTS TABLE
+          setRecentPosts(posts);
 
-          // --- 1. CALCUL DES STATS CARDS ---
+          // 2. CALCULATE STATS CARDS
           let sumEarnings = 0;
           let sumWeight = 0;
           let activeCount = 0;
 
           posts.forEach((post: any) => {
-            // Additionner les prix
-            if (post.price !== null) {
-              sumEarnings += Number(post.price);
-            }
-            // Additionner le poids (quantity est une string genre "1.00")
-            if (post.quantity !== null) {
-              sumWeight += parseFloat(post.quantity);
-            }
-            // Compter les annonces actives (qui ne sont ni brouillon ni rejetées)
-            // Tu peux ajuster 'AVAILABLE', 'PUBLISHED', etc., selon ce que ton backend utilise pour les vraies annonces actives.
+            if (post.price) sumEarnings += Number(post.price);
+            if (post.quantity) sumWeight += parseFloat(post.quantity);
+            // Count all posts as requested earlier!
             activeCount++;
           });
 
@@ -133,8 +131,7 @@ const [chartData, setChartData] = useState({ /* ... */ });
             activeListings: activeCount
           });
 
-
-          // --- 2. CALCUL DU GRAPHIQUE (Code précédent) ---
+          // 3. CALCULATE GRAPH DATA
           const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
           const currentDate = new Date();
           const last6Months = [];
@@ -181,8 +178,7 @@ const [chartData, setChartData] = useState({ /* ... */ });
           });
         }
       } catch (error) {
-        console.error("Erreur de graphe:", error);
-        // En cas d'erreur, on arrête le chargement quand même
+        console.error("Erreur de dashboard:", error);
         setDashboardStats(prev => ({ ...prev, isLoading: false }));
       }
     };
@@ -192,8 +188,6 @@ const [chartData, setChartData] = useState({ /* ... */ });
 useEffect(() => {
   // 1. Generate 6 random points across the X-axis (0, 20, 40, 60, 80, 100)
   const points = [0, 20, 40, 60, 80, 100].map(x => {
-    // SVG Y-axis is inverted (0 is top, 40 is bottom). 
-    // We want random points between 5 and 35 to keep it inside the viewbox.
     const y = Math.floor(Math.random() * 30) + 5; 
     
     // Calculate a fake dollar value based on the height (higher point = higher $)
@@ -207,22 +201,20 @@ useEffect(() => {
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
     const curr = points[i];
-    const cpX = (prev.x + curr.x) / 2; // Control point X (halfway between points)
+    const cpX = (prev.x + curr.x) / 2; 
     
-    // Cubic bezier curve command
     curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
   }
 
-  // 3. Pick a point to highlight (e.g., the 5th point / May)
   const highlightPoint = points[4];
 
   // 4. Update the state
   setChartData({
     path: curvePath,
-    fillPath: `${curvePath} L 100,40 L 0,40 Z`, // Draw to bottom corners to close the fill
+    fillPath: `${curvePath} L 100,40 L 0,40 Z`, 
     highlight: highlightPoint
   });
-}, []); // Empty array ensures this runs once per page load
+}, []); 
 
 useEffect(() => {
   const fetchAndCalculateStats = async () => {
@@ -496,9 +488,26 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  <TableRow date="Oct 24, 2023" type="HDPE Plastic" icon={<div className="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center"><Leaf size={16}/></div>} id="#PL-8832" weight="45.5" price="$124.00" status="Completed" />
-                  <TableRow date="Oct 22, 2023" type="Aluminum Scraps" icon={<div className="w-8 h-8 rounded bg-orange-100 text-orange-600 flex items-center justify-center"><FileText size={16}/></div>} id="#AL-2201" weight="120.0" price="$360.50" status="Processing" />
-                  <TableRow date="Oct 20, 2023" type="Cardboard Bales" icon={<div className="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center"><FileText size={16}/></div>} id="#CA-5541" weight="200.0" price="$85.20" status="Pending" />
+                  {recentPosts.length > 0 ? (
+                    recentPosts.map((post) => (
+                      <TableRow 
+                        key={post.id}
+                        date={new Date(post.created_at).toLocaleDateString()} 
+                        type={post.title || post.category?.label || "Unknown Material"} 
+                        icon={<div className="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center"><Leaf size={16}/></div>} 
+                        id={`#${post.id}`} 
+                        weight={`${post.quantity || 0} ${post.unit || 'kg'}`} 
+                        price={`${post.price || 0} FCFA`} 
+                        status={post.status} 
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                        No transactions found yet. Scan some waste to get started!
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -531,12 +540,14 @@ const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, trend, posi
   </div>
 );
 
-const TableRow: React.FC<TableRowProps> = ({ date, type, icon, id, weight, price, status }) => {
+const TableRow: React.FC<TableRowProps | any> = ({ date, type, icon, id, weight, price, status }) => {
   const getStatusStyle = (s: string) => {
     switch(s) {
-      case 'Completed': return 'bg-green-100 text-green-700';
-      case 'Processing': return 'bg-orange-100 text-orange-700';
-      case 'Pending': return 'bg-gray-100 text-gray-600';
+      case 'SOLD': return 'bg-green-100 text-green-700'; 
+      case 'PUBLISHED': return 'bg-blue-100 text-blue-700'; 
+      case 'RESERVED': return 'bg-orange-100 text-orange-700';
+      case 'DRAFT': return 'bg-gray-100 text-gray-600'; 
+      case 'REJECTED': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
