@@ -1,35 +1,17 @@
 import React, { useEffect, useState } from 'react'; 
 import { 
   LayoutDashboard, List, ShoppingBag, Wallet, BarChart3, Backpack,
-  Settings, Bell, Plus, TrendingUp, TrendingDown, 
-  DollarSign, Scale, FileText, Leaf, MoreHorizontal, Filter, Download,
+  Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter, Download,
   LogOut
 } from 'lucide-react';
 
 import WasteScannerModal from './WasteScannerModal';
 import MyListingsModal from './MyListing';
 import ProductModal from './ProductModal'; 
+import { StatCard } from '../components/Seller/StatCards';
+import { TableRow } from './TableRows';
 
 
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  bg: string;
-  title: string;
-  value: string;
-  trend: string;
-  positive: boolean | null;
-}
-
-interface TableRowProps {
-  date: string;
-  type: string;
-  icon: React.ReactNode;
-  id: string;
-  weight: string;
-  price: string;
-  status: 'Completed' | 'Processing' | 'Pending';
-}
 
 const SellerDashboard: React.FC = () => {
  
@@ -82,7 +64,6 @@ const SellerDashboard: React.FC = () => {
 
 const [chartData, setChartData] = useState({});
 
-  // NOUVEAU : State pour les Stats Cards
   const [dashboardStats, setDashboardStats] = useState({
     isLoading: true,
     totalEarnings: 0,
@@ -102,7 +83,6 @@ const [chartData, setChartData] = useState({});
             "accept": "application/json",
             "Authorization": `Bearer ${token}`,
             "ngrok-skip-browser-warning": "69420"
-            // Note: Removed CSRF token here, usually not needed for GET requests with JWT
           }
         });
 
@@ -242,8 +222,7 @@ useEffect(() => {
 
           posts.forEach((post: any) => {
             const status = (post.status || "").toLowerCase();
-            
-            // Count Active Listings
+          
             if (status === 'active' || status === 'pending') {
               activeCount += 1;
             }
@@ -310,8 +289,6 @@ useEffect(() => {
               My Listings
             </button>
             
-            
-            
            <button 
             onClick={() => setIsProductModalOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
@@ -334,7 +311,6 @@ useEffect(() => {
               <img src="" alt="" className="w-full h-full object-cover" />
             </div>
             <div>
-              {/* On remplace "User user" par la variable d'état */}
               <p className="text-sm font-bold text-gray-900">{userEmail}</p>
               <p className="text-xs text-gray-500">Premium Seller</p>
             </div>
@@ -519,62 +495,7 @@ useEffect(() => {
   );
 };
 
-// --- COMPOSANTS SECONDAIRES TYPÉS ---
 
-const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, trend, positive }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-    <div className="flex justify-between items-start z-10 relative">
-      <div className={`p-3 rounded-xl ${bg}`}>
-        {icon}
-      </div>
-      {/* <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${positive === true ? 'bg-green-100 text-green-700' : positive === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-        {positive === true && <TrendingUp size={12} />}
-        {positive === false && <TrendingDown size={12} />}
-        {trend}
-      </div> */}
-    </div>
-    <div className="mt-4 z-10 relative">
-      <p className="text-gray-500 text-sm font-medium">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
-    </div>
-  </div>
-);
-
-const TableRow: React.FC<TableRowProps | any> = ({ date, type, icon, id, weight, price, status }) => {
-  const getStatusStyle = (s: string) => {
-    switch(s) {
-      case 'SOLD': return 'bg-green-100 text-green-700'; 
-      case 'PUBLISHED': return 'bg-blue-100 text-blue-700'; 
-      case 'RESERVED': return 'bg-orange-100 text-orange-700';
-      case 'DRAFT': return 'bg-gray-100 text-gray-600'; 
-      case 'REJECTED': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  return (
-    <tr className="hover:bg-gray-50/50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap">{date}</td>
-      <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3 font-medium text-gray-900">
-        {icon}
-        {type}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-gray-400">{id}</td>
-      <td className="px-6 py-4 whitespace-nowrap font-mono">{weight}</td>
-      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{price}</td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-3 py-1 text-xs font-bold rounded-full ${getStatusStyle(status)}`}>
-          {status}
-        </span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-right">
-        <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
-          <MoreHorizontal size={20} />
-        </button>
-      </td>
-    </tr>
-  );
-};
 
 export default SellerDashboard;
 
