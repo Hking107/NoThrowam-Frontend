@@ -62,7 +62,7 @@ const SellerDashboard: React.FC = () => {
   
 
 
-const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState({});
 
   const [dashboardStats, setDashboardStats] = useState({
     isLoading: true,
@@ -89,19 +89,20 @@ const [chartData, setChartData] = useState({});
         if (response.ok) {
           const posts = await response.json(); 
           
-          // 1. UPDATE RECENT POSTS TABLE
           setRecentPosts(posts);
 
-          // 2. CALCULATE STATS CARDS
           let sumEarnings = 0;
           let sumWeight = 0;
           let activeCount = 0;
 
           posts.forEach((post: any) => {
             if (post.price) sumEarnings += Number(post.price);
+            
             if (post.quantity) sumWeight += parseFloat(post.quantity);
-            // Count all posts as requested earlier!
-            activeCount++;
+            
+            if (post.status === "PUBLISHED") {
+              activeCount++;
+            }
           });
 
           setDashboardStats({
@@ -111,7 +112,13 @@ const [chartData, setChartData] = useState({});
             activeListings: activeCount
           });
 
-          // 3. CALCULATE GRAPH DATA
+          setDashboardStats({
+            isLoading: false,
+            totalEarnings: sumEarnings,
+            totalWeight: sumWeight,
+            activeListings: activeCount
+          });
+
           const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
           const currentDate = new Date();
           const last6Months = [];
@@ -162,21 +169,18 @@ const [chartData, setChartData] = useState({});
         setDashboardStats(prev => ({ ...prev, isLoading: false }));
       }
     };
-
     fetchDashboardData();
   }, []);
+
 useEffect(() => {
-  // 1. Generate 6 random points across the X-axis (0, 20, 40, 60, 80, 100)
   const points = [0, 20, 40, 60, 80, 100].map(x => {
     const y = Math.floor(Math.random() * 30) + 5; 
     
-    // Calculate a fake dollar value based on the height (higher point = higher $)
     const value = Math.floor((40 - y) * 35); 
     
     return { x, y, value };
   });
 
-  // 2. Build the smooth curve path
   let curvePath = `M ${points[0].x},${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
@@ -196,63 +200,7 @@ useEffect(() => {
   });
 }, []); 
 
-useEffect(() => {
-  const fetchAndCalculateStats = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
 
-        const response = await fetch("/api/v0/waste-posts/", {
-          method: "GET",
-          headers: {
-            "accept": "application/json",
-            "Authorization": `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420"
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const posts = Array.isArray(data) ? data : (data.results || []);
-
-          // 3. DO THE MATH
-          let earnings = 0;
-          let weight = 0;
-          let activeCount = 0;
-
-          posts.forEach((post: any) => {
-            const status = (post.status || "").toLowerCase();
-          
-            if (status === 'active' || status === 'pending') {
-              activeCount += 1;
-            }
-
-            // Calculate Earnings and Weight (Usually, you only count 'sold' items for earnings)
-            // Adjust the condition below if you want to sum up ALL items instead of just sold ones
-            if (status === 'sold') {
-              // Convert to numbers before adding (fallback to 0 if null)
-              earnings += parseFloat(post.price || post.estimated_price || 0);
-              weight += parseFloat(post.quantity || post.weight || 0);
-            }
-          });
-
-          // Update the state with our final calculations
-          setDashboardStats({
-            totalEarnings: earnings,
-            totalWeight: weight,
-            activeListings: activeCount,
-            isLoading: false
-          });
-
-        }
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        setDashboardStats(prev => ({ ...prev, isLoading: false }));
-      }
-    };
-
-    fetchAndCalculateStats();
-  }, []);
   return (
     <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
       
@@ -350,31 +298,32 @@ useEffect(() => {
 
           {/* Stats Cards */}
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard 
-              icon={<DollarSign size={20} className="text-green-600"/>} 
-              bg="bg-green-100" 
-              title="Total Earnings" 
-              value={dashboardStats.isLoading ? "..." : "22,000 FCFA"} 
-              trend="+12%" // Trend usually requires historical data, leaving static for now
-              positive={true} 
-            />
-            <StatCard 
-              icon={<Scale size={20} className="text-blue-600"/>} 
-              bg="bg-blue-100" 
-              title="Weight Recycled" 
-              value={dashboardStats.isLoading ? "..." : `120 kg`} 
-              trend="+5%" 
-              positive={true} 
-            />
-            <StatCard 
-              icon={<FileText size={20} className="text-orange-600"/>} 
-              bg="bg-orange-100" 
-              title="Active Listings" 
-              value={dashboardStats.isLoading ? "..." : "7"} 
-              trend="0%" 
-              positive={null} 
-            />
-          </div>
+          <StatCard 
+            icon={<DollarSign size={20} className="text-green-600"/>} 
+            bg="bg-green-100" 
+            title="Total Earnings" 
+            // On utilise toLocaleString() pour avoir un bel affichage (ex: 7 000 FCFA)
+            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`} 
+            trend="+12%" 
+            positive={true} 
+          />
+          <StatCard 
+            icon={<Scale size={20} className="text-blue-600"/>} 
+            bg="bg-blue-100" 
+            title="Weight Recycled" 
+            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalWeight || 0).toFixed(1)} kg`} 
+            trend="+5%" 
+            positive={true} 
+          />
+          <StatCard 
+            icon={<FileText size={20} className="text-orange-600"/>} 
+            bg="bg-orange-100" 
+            title="Active Listings" 
+            value={dashboardStats.isLoading ? "..." : `${dashboardStats.activeListings || 0}`} 
+            trend="0%" 
+            positive={null} 
+          />
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
