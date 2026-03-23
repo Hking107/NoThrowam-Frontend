@@ -8,8 +8,9 @@ import {
 import WasteScannerModal from './WasteScannerModal';
 import MyListingsModal from './MyListing';
 import ProductModal from './ProductModal'; 
+import MaterialMixChart from '../components/Seller/MaterialMix';
 import { StatCard } from '../components/Seller/StatCards';
-import { TableRow } from './TableRows';
+import { TableRow } from '../components/Seller/TableRows';
 
 
 
@@ -284,7 +285,6 @@ useEffect(() => {
                 <Bell size={20} />
               </button>
               
-              {/* <-- 5. Ajout du onClick sur ce bouton pour ouvrir la modale ! */}
               <button 
                 onClick={() => setIsModalOpen(true)} 
                 className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-green-200"
@@ -302,7 +302,6 @@ useEffect(() => {
             icon={<DollarSign size={20} className="text-green-600"/>} 
             bg="bg-green-100" 
             title="Total Earnings" 
-            // On utilise toLocaleString() pour avoir un bel affichage (ex: 7 000 FCFA)
             value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`} 
             trend="+12%" 
             positive={true} 
@@ -357,30 +356,11 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-900">Material Mix</h3>
-              <p className="text-sm text-gray-500 mb-6">Distribution by weight</p>
-              
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative w-48 h-48">
-                  <svg viewBox="0 0 36 36" className="w-full h-full">
-                    <path className="text-yellow-400" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="15 100" />
-                    <path className="text-blue-500" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="30 100" strokeDashoffset="-15" />
-                    <path className="text-green-500" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="55 100" strokeDashoffset="-45" />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-sm text-gray-400">Total</span>
-                    <span className="text-2xl font-bold text-gray-900">120kg</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between w-full mt-6 text-sm">
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-green-500"></div>Plastic</span><span className="text-gray-500">55%</span></div>
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Paper</span><span className="text-gray-500">30%</span></div>
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-yellow-400"></div>Metal</span><span className="text-gray-500">15%</span></div>
-                </div>
-              </div>
-            </div>
+            <MaterialMixChart 
+              posts={recentPosts} 
+              isLoading={dashboardStats.isLoading} 
+              totalWeight={dashboardStats.totalWeight} 
+            />
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
