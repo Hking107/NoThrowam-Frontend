@@ -24,10 +24,9 @@ export const SignIn = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     setLoading(true);
 
     try {
@@ -36,7 +35,6 @@ export const SignIn = () => {
         headers: { 
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "69420", 
-          "X-CSRFTOKEN": "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ"
         },
         body: JSON.stringify(formData),
       });
@@ -45,16 +43,21 @@ export const SignIn = () => {
 
       const data = await response.json();
 
-      // Example: Save token
       localStorage.setItem("token", data.access);
-      localStorage.setItem("role",data.role);
+      localStorage.setItem("role", data.role);
 
-    // alert("Login successful 🎉");
+      if (data.role === "CUSTOMER") {
+        navigate("/dashboard_customer");
+      } else if (data.role === "SELLER") {
+        navigate("/dashboard_seller");
+      } else {
+        navigate("/dashboard");
+      }
+
     } catch (err) {
       setError("Invalid email or password");
     } finally {
       setLoading(false);
-      navigate("/dashboard_seller"); 
     }
   };
 

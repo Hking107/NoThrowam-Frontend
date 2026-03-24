@@ -1,35 +1,18 @@
 import React, { useEffect, useState } from 'react'; 
 import { 
   LayoutDashboard, List, ShoppingBag, Wallet, BarChart3, Backpack,
-  Settings, Bell, Plus, TrendingUp, TrendingDown, 
-  DollarSign, Scale, FileText, Leaf, MoreHorizontal, Filter, Download,
+  Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter, Download,
   LogOut
 } from 'lucide-react';
 
 import WasteScannerModal from './WasteScannerModal';
 import MyListingsModal from './MyListing';
 import ProductModal from './ProductModal'; 
+import MaterialMixChart from '../components/Seller/MaterialMix';
+import { StatCard } from '../components/Seller/StatCards';
+import { TableRow } from '../components/Seller/TableRows';
 
 
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  bg: string;
-  title: string;
-  value: string;
-  trend: string;
-  positive: boolean | null;
-}
-
-interface TableRowProps {
-  date: string;
-  type: string;
-  icon: React.ReactNode;
-  id: string;
-  weight: string;
-  price: string;
-  status: 'Completed' | 'Processing' | 'Pending';
-}
 
 const SellerDashboard: React.FC = () => {
  
@@ -80,9 +63,8 @@ const SellerDashboard: React.FC = () => {
   
 
 
-const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState({});
 
-  // NOUVEAU : State pour les Stats Cards
   const [dashboardStats, setDashboardStats] = useState({
     isLoading: true,
     totalEarnings: 0,
@@ -102,26 +84,26 @@ const [chartData, setChartData] = useState({});
             "accept": "application/json",
             "Authorization": `Bearer ${token}`,
             "ngrok-skip-browser-warning": "69420"
-            // Note: Removed CSRF token here, usually not needed for GET requests with JWT
           }
         });
 
         if (response.ok) {
           const posts = await response.json(); 
           
-          // 1. UPDATE RECENT POSTS TABLE
           setRecentPosts(posts);
 
-          // 2. CALCULATE STATS CARDS
           let sumEarnings = 0;
           let sumWeight = 0;
           let activeCount = 0;
 
           posts.forEach((post: any) => {
             if (post.price) sumEarnings += Number(post.price);
+            
             if (post.quantity) sumWeight += parseFloat(post.quantity);
-            // Count all posts as requested earlier!
-            activeCount++;
+            
+            if (post.status === "PUBLISHED") {
+              activeCount++;
+            }
           });
 
           setDashboardStats({
@@ -131,7 +113,13 @@ const [chartData, setChartData] = useState({});
             activeListings: activeCount
           });
 
-          // 3. CALCULATE GRAPH DATA
+          setDashboardStats({
+            isLoading: false,
+            totalEarnings: sumEarnings,
+            totalWeight: sumWeight,
+            activeListings: activeCount
+          });
+
           const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
           const currentDate = new Date();
           const last6Months = [];
@@ -182,21 +170,18 @@ const [chartData, setChartData] = useState({});
         setDashboardStats(prev => ({ ...prev, isLoading: false }));
       }
     };
-
     fetchDashboardData();
   }, []);
+
 useEffect(() => {
-  // 1. Generate 6 random points across the X-axis (0, 20, 40, 60, 80, 100)
   const points = [0, 20, 40, 60, 80, 100].map(x => {
     const y = Math.floor(Math.random() * 30) + 5; 
     
-    // Calculate a fake dollar value based on the height (higher point = higher $)
     const value = Math.floor((40 - y) * 35); 
     
     return { x, y, value };
   });
 
-  // 2. Build the smooth curve path
   let curvePath = `M ${points[0].x},${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
@@ -216,64 +201,7 @@ useEffect(() => {
   });
 }, []); 
 
-useEffect(() => {
-  const fetchAndCalculateStats = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
 
-        const response = await fetch("/api/v0/waste-posts/", {
-          method: "GET",
-          headers: {
-            "accept": "application/json",
-            "Authorization": `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420"
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const posts = Array.isArray(data) ? data : (data.results || []);
-
-          // 3. DO THE MATH
-          let earnings = 0;
-          let weight = 0;
-          let activeCount = 0;
-
-          posts.forEach((post: any) => {
-            const status = (post.status || "").toLowerCase();
-            
-            // Count Active Listings
-            if (status === 'active' || status === 'pending') {
-              activeCount += 1;
-            }
-
-            // Calculate Earnings and Weight (Usually, you only count 'sold' items for earnings)
-            // Adjust the condition below if you want to sum up ALL items instead of just sold ones
-            if (status === 'sold') {
-              // Convert to numbers before adding (fallback to 0 if null)
-              earnings += parseFloat(post.price || post.estimated_price || 0);
-              weight += parseFloat(post.quantity || post.weight || 0);
-            }
-          });
-
-          // Update the state with our final calculations
-          setDashboardStats({
-            totalEarnings: earnings,
-            totalWeight: weight,
-            activeListings: activeCount,
-            isLoading: false
-          });
-
-        }
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        setDashboardStats(prev => ({ ...prev, isLoading: false }));
-      }
-    };
-
-    fetchAndCalculateStats();
-  }, []);
   return (
     <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
       
@@ -310,8 +238,6 @@ useEffect(() => {
               My Listings
             </button>
             
-            
-            
            <button 
             onClick={() => setIsProductModalOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
@@ -334,7 +260,6 @@ useEffect(() => {
               <img src="" alt="" className="w-full h-full object-cover" />
             </div>
             <div>
-              {/* On remplace "User user" par la variable d'état */}
               <p className="text-sm font-bold text-gray-900">{userEmail}</p>
               <p className="text-xs text-gray-500">Premium Seller</p>
             </div>
@@ -360,7 +285,6 @@ useEffect(() => {
                 <Bell size={20} />
               </button>
               
-              {/* <-- 5. Ajout du onClick sur ce bouton pour ouvrir la modale ! */}
               <button 
                 onClick={() => setIsModalOpen(true)} 
                 className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-green-200"
@@ -374,31 +298,31 @@ useEffect(() => {
 
           {/* Stats Cards */}
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard 
-              icon={<DollarSign size={20} className="text-green-600"/>} 
-              bg="bg-green-100" 
-              title="Total Earnings" 
-              value={dashboardStats.isLoading ? "..." : "22,000 FCFA"} 
-              trend="+12%" // Trend usually requires historical data, leaving static for now
-              positive={true} 
-            />
-            <StatCard 
-              icon={<Scale size={20} className="text-blue-600"/>} 
-              bg="bg-blue-100" 
-              title="Weight Recycled" 
-              value={dashboardStats.isLoading ? "..." : `120 kg`} 
-              trend="+5%" 
-              positive={true} 
-            />
-            <StatCard 
-              icon={<FileText size={20} className="text-orange-600"/>} 
-              bg="bg-orange-100" 
-              title="Active Listings" 
-              value={dashboardStats.isLoading ? "..." : "7"} 
-              trend="0%" 
-              positive={null} 
-            />
-          </div>
+          <StatCard 
+            icon={<DollarSign size={20} className="text-green-600"/>} 
+            bg="bg-green-100" 
+            title="Total Earnings" 
+            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`} 
+            trend="+12%" 
+            positive={true} 
+          />
+          <StatCard 
+            icon={<Scale size={20} className="text-blue-600"/>} 
+            bg="bg-blue-100" 
+            title="Weight Recycled" 
+            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalWeight || 0).toFixed(1)} kg`} 
+            trend="+5%" 
+            positive={true} 
+          />
+          <StatCard 
+            icon={<FileText size={20} className="text-orange-600"/>} 
+            bg="bg-orange-100" 
+            title="Active Listings" 
+            value={dashboardStats.isLoading ? "..." : `${dashboardStats.activeListings || 0}`} 
+            trend="0%" 
+            positive={null} 
+          />
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
@@ -432,30 +356,11 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-900">Material Mix</h3>
-              <p className="text-sm text-gray-500 mb-6">Distribution by weight</p>
-              
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative w-48 h-48">
-                  <svg viewBox="0 0 36 36" className="w-full h-full">
-                    <path className="text-yellow-400" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="15 100" />
-                    <path className="text-blue-500" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="30 100" strokeDashoffset="-15" />
-                    <path className="text-green-500" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" strokeDasharray="55 100" strokeDashoffset="-45" />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-sm text-gray-400">Total</span>
-                    <span className="text-2xl font-bold text-gray-900">120kg</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between w-full mt-6 text-sm">
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-green-500"></div>Plastic</span><span className="text-gray-500">55%</span></div>
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Paper</span><span className="text-gray-500">30%</span></div>
-                  <div className="flex flex-col items-center"><span className="flex items-center gap-1 font-semibold"><div className="w-2 h-2 rounded-full bg-yellow-400"></div>Metal</span><span className="text-gray-500">15%</span></div>
-                </div>
-              </div>
-            </div>
+            <MaterialMixChart 
+              posts={recentPosts} 
+              isLoading={dashboardStats.isLoading} 
+              totalWeight={dashboardStats.totalWeight} 
+            />
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -519,62 +424,7 @@ useEffect(() => {
   );
 };
 
-// --- COMPOSANTS SECONDAIRES TYPÉS ---
 
-const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, trend, positive }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-    <div className="flex justify-between items-start z-10 relative">
-      <div className={`p-3 rounded-xl ${bg}`}>
-        {icon}
-      </div>
-      {/* <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${positive === true ? 'bg-green-100 text-green-700' : positive === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-        {positive === true && <TrendingUp size={12} />}
-        {positive === false && <TrendingDown size={12} />}
-        {trend}
-      </div> */}
-    </div>
-    <div className="mt-4 z-10 relative">
-      <p className="text-gray-500 text-sm font-medium">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
-    </div>
-  </div>
-);
-
-const TableRow: React.FC<TableRowProps | any> = ({ date, type, icon, id, weight, price, status }) => {
-  const getStatusStyle = (s: string) => {
-    switch(s) {
-      case 'SOLD': return 'bg-green-100 text-green-700'; 
-      case 'PUBLISHED': return 'bg-blue-100 text-blue-700'; 
-      case 'RESERVED': return 'bg-orange-100 text-orange-700';
-      case 'DRAFT': return 'bg-gray-100 text-gray-600'; 
-      case 'REJECTED': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  return (
-    <tr className="hover:bg-gray-50/50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap">{date}</td>
-      <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3 font-medium text-gray-900">
-        {icon}
-        {type}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-gray-400">{id}</td>
-      <td className="px-6 py-4 whitespace-nowrap font-mono">{weight}</td>
-      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{price}</td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-3 py-1 text-xs font-bold rounded-full ${getStatusStyle(status)}`}>
-          {status}
-        </span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-right">
-        <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
-          <MoreHorizontal size={20} />
-        </button>
-      </td>
-    </tr>
-  );
-};
 
 export default SellerDashboard;
 
