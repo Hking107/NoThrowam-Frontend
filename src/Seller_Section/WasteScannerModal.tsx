@@ -166,8 +166,8 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
         image: base64Image,
         quantity: Math.floor(Math.random() * 100) + 1, 
         unit: "kg",
-        latitude: Math.floor(Math.random() * 3.8480) + 1 ,
-        longitude: Math.floor(Math.random() * 11.5020) + 1 ,
+        latitude:  3.8480 ,
+        longitude: 11.5023 ,
       })
     });
 
