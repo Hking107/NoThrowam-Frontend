@@ -121,4 +121,35 @@ export const landingData = {
     },
     copyright: "© 2026 NoThrowam. All rights reserved.",
   },
+  howToUse: {
+    sectionTitle: "How It Works",
+    sectionSubtitle:
+      "Getting started with NoThrowam is simple. Follow these easy steps to start making a difference.",
+    steps: [
+      {
+        number: 1,
+        title: "Download the App",
+        description:
+          "Get NoThrowam from the App Store or Google Play in under a minute. Create your account and join the movement.",
+      },
+      {
+        number: 2,
+        title: "Report Waste",
+        description:
+          "Snap a photo, pin the location on the map, and submit a waste report instantly from wherever you are.",
+      },
+      {
+        number: 3,
+        title: "Connect with Collectors",
+        description:
+          "A nearby certified collector is automatically matched to your report and dispatched for pickup.",
+      },
+      {
+        number: 4,
+        title: "Track & Earn Rewards",
+        description:
+          "Follow the cleanup in real-time and earn green points you can redeem for rewards and discounts.",
+      },
+    ],
+  },
 };

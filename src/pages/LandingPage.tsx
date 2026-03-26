@@ -1,5 +1,6 @@
 //import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
+import { HowToUse } from "../components/HowToUse";
 import { SuccessStories } from "../components/SuccessStories";
 import { ActorCards } from "../components/ActorCards";
 import { Footer } from "../components/Footer";
