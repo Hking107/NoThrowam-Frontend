@@ -9,7 +9,7 @@ const MainDashboard: React.FC = () => {
 
     return new Promise((resolve) => {
       setTimeout(() => {
-        alert("✅ Analyse IA terminée ! Le déchet a été géolocalisé et ajouté à la Marketplace.");
+        // alert(" Analyse IA terminée ! Le déchet a été géolocalisé et ajouté à la Marketplace.");
         resolve(); 
       }, 2000);
     });
