@@ -38,4 +38,7 @@ export const wasteService = {
     const data = await response.json();
     return data.proposals || [];
   }
+
+
 };
+

@@ -4,10 +4,7 @@ import { X, CreditCard, Smartphone, CheckCircle } from 'lucide-react';
 import type { MarketPoint } from '../../types/MarketPoint';
 import { CATEGORY_EMOJI } from '../../constants/constants';
 import { PurchaseBus } from '../../Customer_Section/Customeragentchat';
-import { createProposal } from '../../services/ProposalAPi';
-
-// import { createProposal } from '../services/ProposalAPI'; 
-
+import { createProposal } from '../../services/ProposalAPI';
 
 type PaymentPhase = "choose" | "processing" | "done" | "error";
 

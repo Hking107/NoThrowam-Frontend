@@ -6,7 +6,7 @@ import MarketPopup from "../components/Customer/MarketPopup";
 import type { MarketPoint } from "../types/MarketPoint";
 import type { WastePost } from "../types/WastePost";
 import { CATEGORY_LABEL, CATEGORY_COLORS, CATEGORY_EMOJI } from "../constants/constants";
-import { createProposal } from "../services/ProposalAPi";
+
 import PaymentPanel from "../components/Customer/PaymentPanel";
 
 
@@ -31,7 +31,7 @@ function toMarketPoint(p: WastePost): MarketPoint {
     fixedWeight: parseFloat(p.quantity) || 0,
     weightUnit:  p.unit?.trim() || "kg",
     currency:    "FCFA",
-    images:      imgs,   // always an array, never undefined
+    images:      imgs,   
   };
 }
 
