@@ -150,7 +150,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     }
 
     const base64Image = await fileToBase64(selectedFile);
-    const imagePayload = base64Image.split(',')[1];
+    //const imagePayload = base64Image.split(',')[1];
 
     console.log("Création du post en cours...");
     const createResponse = await fetch("/api/v0/waste-posts/create/", {

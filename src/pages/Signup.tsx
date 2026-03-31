@@ -43,7 +43,7 @@ export function Signup() {
 };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-br from-green-50 to-blue-100 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-linear-to-br from-green-50 to-blue-100 relative overflow-hidden">
      
       <Carosel/>
       <MobileCarousel/>
@@ -60,19 +60,19 @@ export function Signup() {
         <div className="flex flex-col gap-4">
           <button
             onClick={() => navigate("/seller")}
-            className="w-full py-3 font-semibold text-white bg-gradient-to-r from-green-500 to-teal-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-green-600 hover:to-teal-600 transition duration-300"
+            className="w-full py-3 font-semibold text-white bg-linear-to-r from-green-500 to-teal-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-green-600 hover:to-teal-600 transition duration-300"
           >
             Sign Up as Seller
           </button>
           <button
             onClick={() => navigate("/customer")}
-            className="w-full py-3 font-semibold text-white bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-yellow-500 hover:to-orange-600 transition duration-300"
+            className="w-full py-3 font-semibold text-white bg-linear-to-r from-yellow-400 to-orange-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-yellow-500 hover:to-orange-600 transition duration-300"
           >
             Sign Up as Customer
           </button>
           <button
             onClick={() => navigate("/manager")}
-            className="w-full py-3 font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-purple-600 hover:to-indigo-600 transition duration-300"
+            className="w-full py-3 font-semibold text-white bg-linear-to-r from-purple-500 to-indigo-500 rounded-lg shadow-lg transform hover:scale-105 hover:from-purple-600 hover:to-indigo-600 transition duration-300"
           >
             Sign Up as Manager
           </button>
