@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, Building2, Loader2, AlertCircle } from 'lucide-react';
+import { wasteService } from '../services/wasteService';
 
 interface PotentialBuyersModalProps {
   listing: any; 
@@ -13,9 +14,48 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   const fetchOffers = async () => {
+  //     if (!listing || !listing.id) {
+  //       setError("Invalid listing ID.");
+  //       setIsLoading(false);
+  //       return;
+  //     }
+
+  //     setIsLoading(true);
+  //     setError(null);
+  //     try {
+  //       const token = localStorage.getItem("token");
+        
+  //       const response = await fetch(`/api/v0/waste-posts/${listing.id}/proposals/`, {
+  //         method: 'GET',
+  //         headers: {
+  //           'accept': 'application/json',
+  //           'Authorization': `Bearer ${token}`,
+  //           'ngrok-skip-browser-warning': 'true'
+  //         }
+  //       });
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setOffers(data.proposals || []);
+  //       } else {
+  //         setError(`Failed to load offers. Server responded with status: ${response.status}`);
+  //         console.error("Server Error:", response.status);
+  //       }
+  //     } catch (err) {
+  //       setError("A network error occurred while fetching proposals.");
+  //       console.error("Network Error:", err);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   fetchOffers();
+  // }, [listing]);
+  
   useEffect(() => {
     const fetchOffers = async () => {
-      // Sécurité : si on n'a pas d'ID, on ne lance pas la requête.
       if (!listing || !listing.id) {
         setError("Invalid listing ID.");
         setIsLoading(false);
@@ -24,29 +64,13 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
 
       setIsLoading(true);
       setError(null);
+      
       try {
-        const token = localStorage.getItem("token");
-        
-        // NOUVEL ENDPOINT avec ${listing.id}
-        const response = await fetch(`/api/v0/waste-posts/${listing.id}/proposals/`, {
-          method: 'GET',
-          headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setOffers(data.proposals || []);
-        } else {
-          setError(`Failed to load offers. Server responded with status: ${response.status}`);
-          console.error("Server Error:", response.status);
-        }
-      } catch (err) {
-        setError("A network error occurred while fetching proposals.");
-        console.error("Network Error:", err);
+        const proposalsData = await wasteService.getProposals(listing.id);
+        setOffers(proposalsData);
+      } catch (err: any) {
+        setError(err.message || "A network error occurred while fetching proposals.");
+        console.error("API Error:", err);
       } finally {
         setIsLoading(false);
       }
