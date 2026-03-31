@@ -2,12 +2,24 @@ import { useState } from "react";
 import { User, Menu, X, UserPlus } from "lucide-react";
 import { landingData } from "../constants/landingData";
 import { Logo } from "./Logo";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  useGSAP(() => {
+    gsap.from(".navbar-anim", {
+      y: -20,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power2.out",
+      delay: 0.2,
+    });
+  });
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-brand-surface/90 backdrop-blur-md border-b border-black/5">
+    <nav className="navbar-anim sticky top-0 z-50 w-full bg-brand-surface/90 backdrop-blur-md border-b border-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section (Left) */}
