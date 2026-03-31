@@ -1,16 +1,59 @@
+import { useRef } from "react";
 import { landingData } from "../constants/landingData";
 import { ArrowRight, Leaf, MapPin } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function SuccessStories() {
   const { sectionTitle, items } = landingData.successStories;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // Assuming we always have at least 3 items for this layout
   const featuredStory = items[0];
   const sideStories = items.slice(1, 3);
 
+  useGSAP(
+    () => {
+      // 1. Header Reveal
+      gsap.from(headerRef.current, {
+        scrollTrigger: {
+          trigger: headerRef.current,
+          start: "top 85%",
+          toggleActions: "play none none none",
+        },
+        y: 40,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      });
+
+      // 2. Bento Grid Cards Reveal
+      gsap.set(".story-card", { y: 50, opacity: 0 });
+
+      gsap.to(".story-card", {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 70%",
+          toggleActions: "play none none none",
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: "power2.out",
+      });
+    },
+    { scope: containerRef },
+  );
+
   return (
     <section
       id="stories"
+      ref={containerRef}
       className="relative py-24 bg-brand-surface overflow-hidden"
     >
       {/* Background Decor */}
@@ -19,7 +62,10 @@ export function SuccessStories() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col items-center text-center mb-16 max-w-2xl mx-auto">
+        <div
+          ref={headerRef}
+          className="flex flex-col items-center text-center mb-16 max-w-2xl mx-auto"
+        >
           <div className="inline-flex items-center gap-2 bg-brand-green/10 text-brand-green font-bold px-4 py-1.5 rounded-full text-sm mb-4">
             <Leaf size={16} /> Community Impact
           </div>
@@ -35,7 +81,7 @@ export function SuccessStories() {
         {/* Bento Box Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
           {/* Featured Large Card (Spans 7 cols on lg screens) */}
-          <div className="lg:col-span-7 group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer h-[400px] lg:h-auto">
+          <div className="story-card lg:col-span-7 group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer h-[400px] lg:h-auto">
             {/* Background Image */}
             <img
               src={featuredStory.imageUrl}
@@ -78,7 +124,7 @@ export function SuccessStories() {
             {sideStories.map((story, idx) => (
               <div
                 key={story.id}
-                className="flex-1 group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer min-h-[280px]"
+                className="story-card flex-1 group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer min-h-[280px]"
               >
                 {/* Background Image */}
                 <img

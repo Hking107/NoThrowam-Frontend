@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { landingData } from "../constants/landingData";
 import {
   ShoppingCart,
@@ -5,12 +6,39 @@ import {
   ClipboardCheck,
   ArrowRight,
 } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function ActorCards() {
   const { seller, customer, manager } = landingData.actorFunnel;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      // Set initial state
+      gsap.set(".actor-card", { y: 40, opacity: 0 });
+
+      gsap.to(".actor-card", {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power2.out",
+      });
+    },
+    { scope: containerRef },
+  );
 
   return (
-    <section id="actors" className="py-20 bg-white">
+    <section id="actors" ref={containerRef} className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 max-w-2xl mx-auto">
           <h2 className="heading-section text-brand-text mb-4">
@@ -24,9 +52,9 @@ export function ActorCards() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Seller Card */}
-          <div className="card-yellow flex flex-col justify-between group cursor-pointer">
+          <div className="actor-card card-yellow flex flex-col justify-between group cursor-pointer">
             <div>
-              <div className="w-16 h-16 bg-brand-yellow/20 rounded-2xl flex items-center justify-center mb-6 text-brand-yellow group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-brand-yellow/20 rounded-2xl flex items-center justify-center mb-6 text-brand-yellow group-hover:scale-110 transition-transform duration-300">
                 <ShoppingCart size={32} />
               </div>
               <h3 className="text-2xl font-bold mb-3">{seller.title}</h3>
@@ -40,9 +68,9 @@ export function ActorCards() {
           </div>
 
           {/* Customer Card */}
-          <div className="card-red flex flex-col justify-between group cursor-pointer relative top-0 md:top-8">
+          <div className="actor-card card-red flex flex-col justify-between group cursor-pointer relative top-0 md:top-8">
             <div>
-              <div className="w-16 h-16 bg-brand-red/10 rounded-2xl flex items-center justify-center mb-6 text-brand-red group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-brand-red/10 rounded-2xl flex items-center justify-center mb-6 text-brand-red group-hover:scale-110 transition-transform duration-300">
                 <CreditCard size={32} />
               </div>
               <h3 className="text-2xl font-bold mb-3">{customer.title}</h3>
@@ -56,9 +84,9 @@ export function ActorCards() {
           </div>
 
           {/* Manager Card */}
-          <div className="card-green flex flex-col justify-between group cursor-pointer">
+          <div className="actor-card card-green flex flex-col justify-between group cursor-pointer">
             <div>
-              <div className="w-16 h-16 bg-brand-green/10 rounded-2xl flex items-center justify-center mb-6 text-brand-green group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-brand-green/10 rounded-2xl flex items-center justify-center mb-6 text-brand-green group-hover:scale-110 transition-transform duration-300">
                 <ClipboardCheck size={32} />
               </div>
               <h3 className="text-2xl font-bold mb-3">{manager.title}</h3>

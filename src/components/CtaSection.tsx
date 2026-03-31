@@ -1,12 +1,40 @@
 import { landingData } from "../constants/landingData";
 import { ArrowRight, Mail } from "lucide-react";
+import { useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function CtaSection() {
   const { title, subtitle, primaryCtaText, secondaryCtaText } =
     landingData.ctaSection;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.from(".reveal-item", {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 85%",
+          toggleActions: "play none none none",
+        },
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power2.out",
+      });
+    },
+    { scope: containerRef },
+  );
 
   return (
-    <section className="relative py-20 lg:py-28 bg-brand-surface overflow-hidden">
+    <section
+      ref={containerRef}
+      className="relative py-20 lg:py-28 bg-brand-surface overflow-hidden"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Main CTA Container */}
         <div className="relative rounded-[2.5rem] overflow-hidden bg-brand-green">
@@ -16,7 +44,7 @@ export function CtaSection() {
 
           <div className="relative px-6 py-16 md:py-20 lg:px-16 text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-10">
             {/* Text Content */}
-            <div className="max-w-2xl text-white">
+            <div className="reveal-item max-w-2xl text-white">
               <h2 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight leading-tight">
                 {title.en}
               </h2>
@@ -29,7 +57,7 @@ export function CtaSection() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full lg:w-auto px-4 sm:px-0">
+            <div className="reveal-item flex flex-col sm:flex-row gap-4 shrink-0 w-full lg:w-auto px-4 sm:px-0">
               <button className="flex items-center justify-center gap-2 bg-brand-yellow hover:bg-[#e0b810] text-brand-text px-8 py-4 rounded-full text-lg font-bold shadow-xl transition-all transform active:scale-95">
                 {primaryCtaText.en}
                 <ArrowRight className="h-5 w-5" />

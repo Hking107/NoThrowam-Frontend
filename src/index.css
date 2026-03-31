@@ -177,6 +177,15 @@
   .phone-dot.active {
     @apply w-4 bg-brand-green;
   }
+
+  /* Glassmorphism Utility */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-2xl;
+  }
 }
 
 /* ============================================================

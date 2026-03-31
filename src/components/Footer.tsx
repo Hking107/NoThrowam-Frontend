@@ -9,6 +9,12 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
+import { useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function Footer() {
   const {
@@ -19,9 +25,30 @@ export function Footer() {
     socialLinks,
     copyright,
   } = landingData.footer;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.from(containerRef.current, {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 95%",
+          toggleActions: "play none none none",
+        },
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      });
+    },
+    { scope: containerRef },
+  );
 
   return (
-    <footer className="bg-white pt-20 pb-10 border-t border-black/5">
+    <footer
+      ref={containerRef}
+      className="bg-white pt-20 pb-10 border-t border-black/5"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Section: Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
