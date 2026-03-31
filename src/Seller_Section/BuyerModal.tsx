@@ -39,7 +39,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
 
         if (response.ok) {
           const data = await response.json();
-          setOffers(Array.isArray(data) ? data : (data.results || []));
+          setOffers(data.proposals || []);
         } else {
           setError(`Failed to load offers. Server responded with status: ${response.status}`);
           console.error("Server Error:", response.status);
