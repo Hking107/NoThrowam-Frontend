@@ -6,7 +6,6 @@ interface WasteScannerModalProps {
   onPublish?: (data: any) => void; 
 }
 
-// Fonction utilitaire pour convertir un fichier en Base64
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -24,7 +23,6 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ... (Garde tes fonctions handleDragOver, handleDragEnter, handleDragLeave, handleDrop, handleFileChange, triggerFileInput, processFile, handleReset inchangées) ...
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };

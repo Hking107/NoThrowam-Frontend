@@ -2,70 +2,17 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X, ShoppingCart, CreditCard, Smartphone, CheckCircle, Loader, RefreshCw } from "lucide-react";
 import { MapEventBus, PurchaseBus } from "./Customeragentchat";
 
+import MarketPopup from "../components/Customer/MarketPopup";
+import type { MarketPoint } from "../types/MarketPoint";
+import type { WastePost } from "../types/WastePost";
+import { CATEGORY_LABEL, CATEGORY_COLORS, CATEGORY_EMOJI } from "../constants/constants";
+import { createProposal } from "../services/ProposalAPi";
+import PaymentPanel from "../components/Customer/PaymentPanel";
+
+
 declare global { interface Window { L: any } }
 
-/* ─── API Types ──────────────────────────────── */
-type WastePost = {
-  id: number;
-  seller: number;
-  title: string;
-  description: string;
-  sorted: boolean;
-  category: number;
-  price: number;
-  image: string | null;
-  image_url: string | null;
-  quantity: string;
-  unit: string;
-  latitude: string;
-  longitude: string;
-  status: string;
-  rejection_reason: string | null;
-  paid: boolean;
-  reserved_by: number | null;
-  reserved_until: string | null;
-  ai_state: string;
-  ai_payload: string | null;
-  ai_error: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
-/* ─── Internal MarketPoint ───────────────────── */
-type MarketPoint = {
-  id: number;
-  lat: number;
-  lng: number;
-  label: string;
-  category: string;
-  description: string;
-  fixedPrice: number;
-  fixedWeight: number;
-  weightUnit: string;
-  currency: string;
-  images: { id: number; url: string }[];
-};
-
-/* ─── Category mapping ───────────────────────── */
-// Categories come as numeric IDs from the API — we map them to labels/colors
-const CATEGORY_LABEL: Record<number, string> = {
-  1: "Plastique",
-  2: "Métal",
-  3: "Carton",
-  4: "Verre",
-  5: "Textile",
-};
-const CATEGORY_COLORS: Record<string, string> = {
-  Plastique: "#22c55e",
-  Métal:     "#3b82f6",
-  Carton:    "#f59e0b",
-  Verre:     "#06b6d4",
-  Textile:   "#a855f7",
-  Autre:     "#94a3b8",
-};
-const CATEGORY_EMOJI: Record<string, string> = {
-  Plastique: "♻️", Métal: "🔩", Carton: "📦", Verre: "🫙", Textile: "🧵", Autre: "🗑️",
-};
 
 function toMarketPoint(p: WastePost): MarketPoint {
   const cat = CATEGORY_LABEL[p.category] || "Autre";
@@ -106,26 +53,12 @@ async function fetchWastePosts(): Promise<MarketPoint[]> {
     .filter(p => p.lat !== 0 && p.lng !== 0);
 }
 
-async function createProposal(postId: number): Promise<{ alreadyExists: boolean }> {
-  const res = await fetch(`/api/v0/proposals/waste-posts/${postId}/create/`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "ngrok-skip-browser-warning": "69420",
-    },
-  });
-  if (res.status === 200) return { alreadyExists: true };
-  if (res.status === 201) return { alreadyExists: false };
-  const err = await res.json().catch(() => ({}));
-  throw new Error((err as any)?.detail || `HTTP ${res.status}`);
-}
+
 
 /* ─── Payment Panel ──────────────────────────── */
 type PaymentPhase = "choose" | "processing" | "done" | "error";
 
-const PaymentPanel = ({
+const PaymentPanl = ({
   point, onClose, onComplete,
 }: {
   point: MarketPoint;
@@ -376,178 +309,6 @@ const PaymentPanel = ({
   );
 };
 
-/* ─── Market Popup ───────────────────────────── */
-const MarketPopup = ({
-  point, origin, onClose, onBuy,
-}: {
-  point: MarketPoint;
-  origin: { x: number; y: number };
-  onClose: () => void;
-  onBuy: () => void;
-}) => {
-  const [idx, setIdx]         = useState(0);
-  const [visible, setVisible] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const [animating, setAnim]  = useState(false);
-  const [dir, setDir]         = useState<"left" | "right" | null>(null);
-
-  const imgs  = point.images ?? [];
-  const color = CATEGORY_COLORS[point.category] || "#22c55e";
-
-  useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
-  }, []);
-
-  const close = () => { setClosing(true); setTimeout(onClose, 320); };
-
-  const go = (d: "left" | "right") => {
-    if (animating) return;
-    setDir(d); setAnim(true);
-    setTimeout(() => {
-      setIdx(i => d === "right" ? (i + 1) % imgs.length : (i - 1 + imgs.length) % imgs.length);
-      setDir(null); setAnim(false);
-    }, 260);
-  };
-
-  const W = 300;
-  const vw = window.innerWidth, vh = window.innerHeight;
-  let left = origin.x + 32, top = origin.y - 200;
-  if (left + W > vw - 16) left = origin.x - W - 32;
-  if (top < 16)           top  = 16;
-  if (top + 420 > vh - 16) top = vh - 436;
-
-  return (
-    <div
-      onClick={e => e.stopPropagation()}
-      style={{
-        position: "fixed", left, top, width: W, zIndex: 3000,
-        borderRadius: 20, overflow: "hidden",
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
-        boxShadow: "0 24px 60px rgba(0,0,0,.18), 0 0 0 1.5px rgba(255,255,255,.9)",
-        transform:  visible && !closing ? "scale(1)" : "scale(0.6)",
-        opacity:    visible && !closing ? 1 : 0,
-        transition: "transform .35s cubic-bezier(.34,1.56,.64,1), opacity .28s",
-        transformOrigin: `${origin.x < left + W / 2 ? "left" : "right"} center`,
-      }}
-    >
-      {/* Image */}
-      <div style={{ position: "relative", height: 185, background: "#f1f5f9", overflow: "hidden" }}>
-        {imgs.length > 0 ? (
-          <img src={imgs[idx].url} alt="" style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            transition: "transform .26s ease, opacity .26s ease",
-            transform: animating ? (dir === "right" ? "translateX(-6%) scale(.97)" : "translateX(6%) scale(.97)") : "none",
-            opacity: animating ? 0 : 1,
-          }} />
-        ) : (
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 40,
-          }}>
-            {CATEGORY_EMOJI[point.category] || "📦"}
-          </div>
-        )}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom,rgba(0,0,0,.14) 0%,transparent 38%,rgba(0,0,0,.4) 100%)",
-          pointerEvents: "none",
-        }} />
-
-        {/* Category badge */}
-        <div style={{
-          position: "absolute", top: 12, left: 12,
-          padding: "4px 10px", borderRadius: 8,
-          background: `${color}ee`, color: "white",
-          fontSize: 11, fontWeight: 700, letterSpacing: ".04em",
-        }}>
-          {CATEGORY_EMOJI[point.category]} {point.category}
-        </div>
-
-        {/* Close */}
-        <button onClick={close} style={{
-          position: "absolute", top: 10, right: 10,
-          width: 28, height: 28, borderRadius: "50%",
-          background: "rgba(0,0,0,.42)", backdropFilter: "blur(6px)",
-          border: "none", color: "white", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}><X size={12} /></button>
-
-        {/* Dots */}
-        {imgs.length > 1 && (
-          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 4 }}>
-            {imgs.map((_, i) => (
-              <div key={i} onClick={() => setIdx(i)} style={{
-                width: i === idx ? 16 : 6, height: 6, borderRadius: 3,
-                background: i === idx ? "white" : "rgba(255,255,255,.5)",
-                cursor: "pointer", transition: "width .22s",
-              }} />
-            ))}
-          </div>
-        )}
-
-        {imgs.length > 1 && (
-          <>
-            <button onClick={() => go("left")}  style={arSt("left")}><ChevronLeft size={15} /></button>
-            <button onClick={() => go("right")} style={arSt("right")}><ChevronRight size={15} /></button>
-          </>
-        )}
-      </div>
-
-      {/* Content */}
-      <div style={{ background: "white", padding: "14px 15px", display: "flex", flexDirection: "column", gap: 10 }}>
-        <div>
-          <p style={{ margin: "0 0 3px", fontWeight: 800, fontSize: 13, color: "#111827", lineHeight: 1.3 }}>
-            {point.label}
-          </p>
-          <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.45 }}>
-            {point.description || "Aucune description"}
-          </p>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{
-            flex: 1, padding: "10px 11px", borderRadius: 11,
-            background: "#f8fafc", border: "1px solid #e2e8f0", textAlign: "center",
-          }}>
-            <p style={{ margin: 0, fontSize: 9, color: "#94a3b8", fontWeight: 700, letterSpacing: ".05em" }}>QUANTITÉ</p>
-            <p style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#374151" }}>
-              {point.fixedWeight}
-              <span style={{ fontSize: 11, fontWeight: 500, color: "#94a3b8" }}> {point.weightUnit}</span>
-            </p>
-          </div>
-          <div style={{
-            flex: 1, padding: "10px 11px", borderRadius: 11,
-            background: "#f0fdf4", border: "1px solid #bbf7d0", textAlign: "center",
-          }}>
-            <p style={{ margin: 0, fontSize: 9, color: "#4ade80", fontWeight: 700, letterSpacing: ".05em" }}>PRIX</p>
-            <p style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#15803d" }}>
-              {point.fixedPrice.toLocaleString()}
-              <span style={{ fontSize: 10, fontWeight: 500, color: "#4ade80" }}> {point.currency}</span>
-            </p>
-          </div>
-        </div>
-
-        <button onClick={onBuy} style={{
-          width: "100%", padding: "13px", borderRadius: 13, border: "none",
-          background: "linear-gradient(135deg,#22c55e,#16a34a)",
-          color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          boxShadow: "0 4px 16px rgba(34,197,94,.38)",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-          transition: "transform .15s",
-        }}
-          onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.03)")}
-          onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          <ShoppingCart size={15} />
-          Proposer — {point.fixedPrice.toLocaleString()} {point.currency}
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const arSt = (side: "left" | "right"): React.CSSProperties => ({
   position: "absolute", top: "50%", transform: "translateY(-50%)",
   ...(side === "left" ? { left: 8 } : { right: 8 }),
@@ -582,7 +343,6 @@ const Ring = ({ x, y, color }: { x: number; y: number; color: string }) => (
   }} />
 );
 
-/* ─── Main Map ───────────────────────────────── */
 export const CustomerMap = () => {
   const mapRef     = useRef<HTMLDivElement>(null);
   const leafRef    = useRef<any>(null);

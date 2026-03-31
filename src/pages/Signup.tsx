@@ -2,8 +2,45 @@ import { useNavigate } from "react-router-dom";
 // import cameroonImage from "../assets/istockphoto-1408969578-612x612.webp";
 import Carosel from "../components/caroussl";
 import MobileCarousel from "../components/mobile";
+import { useState } from "react";
+
+import { authService } from "../services/authService";
+
 export function Signup() {
   const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "SELLER"
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  try {
+    const payload = {
+      ...formData,
+      role: "SELLER" 
+    };
+
+    await authService.register(payload);
+
+    navigate("/signin");
+    
+  } catch (err: any) {
+    setError(err.message || "An error occurred during registration");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-br from-green-50 to-blue-100 relative overflow-hidden">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit2, Package, X, Users, Loader2 } from 'lucide-react';
 import BuyersModal from './BuyerModal'; 
+import { wasteService } from '../services/wasteService';
 
 interface MyListingsModalProps {
   onClose: () => void;
@@ -19,27 +20,43 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   // J'ai remis Active et Pending au cas où ton backend les utiliserait
   const statuses = ['All Statuses', 'ACTIVE', 'PENDING', 'PUBLISHED', 'DRAFT', 'RESERVED', 'SOLD', 'REJECTED'];
 
+  // useEffect(() => {
+  //   const fetchMyListings = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const token = localStorage.getItem("token"); 
+        
+  //       const response = await fetch('/api/v0/waste-posts/my/', {
+  //         method: 'GET',
+  //         headers: {
+  //           'accept': 'application/json',
+  //           'Authorization': `Bearer ${token}`,
+  //           'ngrok-skip-browser-warning': 'true' 
+  //         }
+  //       });
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setListings(Array.isArray(data) ? data : (data.results || []));
+  //       } else {
+  //         console.error("Server Error:", response.status);
+  //       }
+  //     } catch (error) {
+  //       console.error("Network Error:", error);
+  //     } finally {
+  //       setIsLoading(false); 
+  //     }
+  //   };
+
+  //   fetchMyListings();
+  // }, []);
+  
   useEffect(() => {
     const fetchMyListings = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem("token"); 
-        
-        const response = await fetch('/api/v0/waste-posts/my/', {
-          method: 'GET',
-          headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true' 
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setListings(Array.isArray(data) ? data : (data.results || []));
-        } else {
-          console.error("Server Error:", response.status);
-        }
+        const listingsData = await wasteService.getMyListings();
+        setListings(listingsData);
       } catch (error) {
         console.error("Network Error:", error);
       } finally {
@@ -48,7 +65,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
     };
 
     fetchMyListings();
-  }, []); 
+  }, []);
 
   const getStatusStyle = (s: string) => {
     switch(s?.toUpperCase()) {
