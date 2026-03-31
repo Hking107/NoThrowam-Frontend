@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/authService"; 
 
 export const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,9 +15,7 @@ export const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -24,27 +23,13 @@ export const SignIn = () => {
     }));
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/v0/auth/login/", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420", 
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Invalid credentials");
-
-      const data = await response.json();
-
-      localStorage.setItem("token", data.access);
-      localStorage.setItem("role", data.role);
+      const data = await authService.login(formData);
 
       if (data.role === "CUSTOMER") {
         navigate("/dashboard_customer");
@@ -69,7 +54,7 @@ export const SignIn = () => {
           Login
         </h2>
         <p className="text-center text-gray-500 mb-6">
-          Login to manage your  account 🔐
+          Login to manage your account 🔐
         </p>
 
         {error && (
