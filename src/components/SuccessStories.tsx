@@ -32,13 +32,16 @@ export function SuccessStories() {
       });
 
       // 2. Bento Grid Cards Reveal
-      gsap.from(".story-card", {
+      gsap.set(".story-card", { y: 50, opacity: 0 });
+
+      gsap.to(".story-card", {
         scrollTrigger: {
-          trigger: ".story-card",
-          start: "top 85%",
+          trigger: containerRef.current,
+          start: "top 70%",
+          toggleActions: "play none none none",
         },
-        y: 50,
-        opacity: 0,
+        y: 0,
+        opacity: 1,
         duration: 0.8,
         stagger: 0.2,
         ease: "power2.out",

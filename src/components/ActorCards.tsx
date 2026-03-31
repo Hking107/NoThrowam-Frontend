@@ -18,13 +18,17 @@ export function ActorCards() {
 
   useGSAP(
     () => {
-      gsap.from(".actor-card", {
+      // Set initial state
+      gsap.set(".actor-card", { y: 40, opacity: 0 });
+
+      gsap.to(".actor-card", {
         scrollTrigger: {
-          trigger: ".actor-card",
-          start: "top 85%",
+          trigger: containerRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
         },
-        y: 40,
-        opacity: 0,
+        y: 0,
+        opacity: 1,
         duration: 0.8,
         stagger: 0.15,
         ease: "power2.out",
