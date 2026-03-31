@@ -1,0 +1,25 @@
+export type WastePost = {
+  id: number;
+  seller: number;
+  title: string;
+  description: string;
+  sorted: boolean;
+  category: number;
+  price: number;
+  image: string | null;
+  image_url: string | null;
+  quantity: string;
+  unit: string;
+  latitude: string;
+  longitude: string;
+  status: string;
+  rejection_reason: string | null;
+  paid: boolean;
+  reserved_by: number | null;
+  reserved_until: string | null;
+  ai_state: string;
+  ai_payload: string | null;
+  ai_error: string | null;
+  created_at: string;
+  updated_at: string;
+};
