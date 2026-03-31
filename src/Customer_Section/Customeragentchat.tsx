@@ -1,27 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X, Send, Mic, MicOff, Bot, User,
-  Zap, ShoppingCart, CheckCircle, Loader, Package, CreditCard,
+  Zap, ShoppingCart, CheckCircle, Loader, Package,
 } from "lucide-react";
+import type { AgentApiResponse } from "../types/AgentAPIResponse";
+import type { AgentResult, AgentStep, CartItem, MapCommand, MapStateSnapshot, MarketPoint, Msg, PurchaseState } from "../types/AIMessage";
+import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
 
-/* ─────────────────────────────────────────────────────
-   MAP EVENT BUS (Customer version)
-───────────────────────────────────────────────────── */
-export type MapCommand =
-  | { type: "highlight";             pointId: number }
-  | { type: "highlight_all_available" }
-  | { type: "fly_to";                lat: number; lng: number }
-  | { type: "clear_highlights" }
-  | { type: "open_purchase";         pointId: number; quantity: number }
-  | { type: "show_cart" };
 
-type MarketPoint = {
-  id: number; label: string; category: string;
-  lat: number; lng: number;
-  fixedPrice: number; currency: string; fixedWeight: number;
-};
-type CartItem = { pointId: number; label: string; qty: number; unitPrice: number; currency: string };
-type MapStateSnapshot = { points: MarketPoint[]; cart: CartItem[] };
 
 const BUS = {
   _cmdListeners: [] as Array<(cmd: MapCommand) => void>,
@@ -41,12 +27,6 @@ export const MapEventBus = BUS;
 /* ─────────────────────────────────────────────────────
    PURCHASE BUS
 ───────────────────────────────────────────────────── */
-export type PurchaseState =
-  | { phase: "idle" }
-  | { phase: "selecting"; pointId: number; qty: number }
-  | { phase: "payment";   items: CartItem[]; total: number; currency: string }
-  | { phase: "processing"; method: string }
-  | { phase: "done";      txRef: string };
 
 export const PurchaseBus = {
   _listeners: [] as Array<(s: PurchaseState) => void>,
@@ -62,22 +42,6 @@ export const PurchaseBus = {
 /* ─────────────────────────────────────────────────────
    REAL API CALL  →  POST /api/v0/agents/agentic-message/
 ───────────────────────────────────────────────────── */
-type AgentApiResponse = {
-  success: boolean;
-  mode: "answer" | "action";
-  response: string;
-  role: string;
-  results?: any[];
-};
-
-type AgentStep = { id: string; label: string; done: boolean };
-type AgentResult = {
-  reply: string;
-  commands: MapCommand[];
-  steps: AgentStep[];
-  purchaseState?: PurchaseState;
-};
-
 function mkStep(label: string): AgentStep {
   return { id: Math.random().toString(36).slice(2), label, done: true };
 }
@@ -144,14 +108,6 @@ async function callAgent(
 
   return { reply: data.response, commands, steps, purchaseState };
 }
-
-/* ─────────────────────────────────────────────────────
-   COMPONENT
-───────────────────────────────────────────────────── */
-type Msg = {
-  id: string; role: "user" | "agent"; text: string;
-  steps?: AgentStep[]; commands?: MapCommand[]; ts: Date; thinking?: boolean;
-};
 
 export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
   const [msgs, setMsgs] = useState<Msg[]>([{
@@ -388,7 +344,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-/* ── Context strip ── */
+
 type MapStateSnapshotLocal = { points: MarketPoint[]; cart: CartItem[] };
 const CustomerContextStrip = ({ purchase }: { purchase: PurchaseState }) => {
   const [snap, setSnap] = useState<MapStateSnapshotLocal>({ points: [], cart: [] });
@@ -423,87 +379,3 @@ const CustomerContextStrip = ({ purchase }: { purchase: PurchaseState }) => {
   );
 };
 
-/* ── Message bubble ── */
-const CustMsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
-  const isAgent = msg.role === "agent";
-  return (
-    <div style={{
-      display:"flex",flexDirection:isAgent?"row":"row-reverse",gap:7,alignItems:"flex-start",
-      animation:`msgPop .28s ease ${d}ms both`,
-    }}>
-      <div style={{
-        width:28,height:28,borderRadius:9,flexShrink:0,marginTop:2,
-        background:isAgent?"linear-gradient(135deg,#22c55e,#16a34a)":"rgba(0,0,0,.05)",
-        border:isAgent?"none":"1px solid rgba(0,0,0,.08)",
-        display:"flex",alignItems:"center",justifyContent:"center",
-        boxShadow:isAgent?"0 3px 10px rgba(34,197,94,.3)":"none",
-      }}>
-        {isAgent?<Bot size={13} color="white"/>:<User size={13} color="#64748b"/>}
-      </div>
-
-      <div style={{maxWidth:"86%",display:"flex",flexDirection:"column",gap:5}}>
-        {isAgent && msg.steps && msg.steps.length > 0 && (
-          <div style={{
-            background:"rgba(240,253,244,.8)",border:"1px solid rgba(34,197,94,.15)",
-            borderRadius:10,padding:"7px 10px",display:"flex",flexDirection:"column",gap:3,
-          }}>
-            {msg.thinking ? (
-              <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                {[0,1,2].map(i=>(
-                  <div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",
-                    animation:`dot 1.2s ease-in-out ${i*.2}s infinite`}}/>
-                ))}
-                <span style={{fontSize:10,color:"#4ade80",marginLeft:4,fontWeight:600}}>Thinking…</span>
-              </div>
-            ) : msg.steps.map((s,i)=>(
-              <div key={s.id} style={{
-                display:"flex",alignItems:"center",gap:6,
-                fontSize:10,color:"#4ade80",
-                animation:`stepIn .22s ease ${i*70}ms both`,
-                fontWeight:600,
-              }}>
-                <CheckCircle size={9}/>{s.label}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {isAgent && msg.commands && msg.commands.length > 0 && (
-          <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
-            {msg.commands.map((c,i)=>(
-              <span key={i} style={{
-                padding:"2px 8px",borderRadius:5,
-                background:"rgba(34,197,94,.1)",border:"1px solid rgba(34,197,94,.2)",
-                color:"#16a34a",fontSize:9,fontWeight:700,letterSpacing:".04em",
-              }}>⚡ {c.type.replace(/_/g," ").toUpperCase()}</span>
-            ))}
-          </div>
-        )}
-
-        {!!msg.text && (
-          <div
-            className="cac-msg"
-            style={{
-              padding:"10px 12px",
-              borderRadius:isAgent?"4px 14px 14px 14px":"14px 4px 14px 14px",
-              background:isAgent?"white":"rgba(34,197,94,.12)",
-              border:isAgent?"1px solid rgba(0,0,0,.07)":"1px solid rgba(34,197,94,.2)",
-              color:isAgent?"#1e293b":"#15803d",
-              fontSize:13,lineHeight:1.65,whiteSpace:"pre-wrap",
-              boxShadow:isAgent?"0 2px 8px rgba(0,0,0,.06)":"none",
-            }}
-            dangerouslySetInnerHTML={{__html:
-              msg.text
-                .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g,"<em>$1</em>")
-            }}
-          />
-        )}
-
-        <span style={{fontSize:9,color:"#94a3b8",textAlign:isAgent?"left":"right",fontWeight:500}}>
-          {msg.ts.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
-        </span>
-      </div>
-    </div>
-  );
-};
