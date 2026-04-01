@@ -224,7 +224,7 @@ export function HowToUse() {
                   ref={(el) => {
                     cardsRefs.current[i] = el;
                   }}
-                  className={`absolute inset-0 w-full h-full p-8 md:p-12 rounded-[2rem] shadow-2xl flex flex-col justify-center text-white bg-linear-to-br ${gradient}`}
+                  className={`absolute inset-0 w-full h-full p-8 md:p-12 rounded-4xl shadow-2xl flex flex-col justify-center text-white bg-linear-to-br ${gradient}`}
                 >
                   {/* Decorative blur circle inside the card */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />

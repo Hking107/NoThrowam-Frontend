@@ -176,7 +176,7 @@ export function SuccessStories() {
                     key={story.id}
                     // Each card slot is one viewport-width wide (minus the gap offset).
                     // Using w-screen keeps cards at exactly 100vw regardless of gap.
-                    className="w-screen flex-shrink-0 flex justify-center items-center px-6 lg:px-16"
+                    className="w-screen shrink-0 flex justify-center items-center px-6 lg:px-16"
                   >
                     <div className="w-full max-w-5xl">
                       {/* ── Card ── */}
@@ -193,10 +193,10 @@ export function SuccessStories() {
                             loading="lazy"
                           />
                           <div className="card-vignette" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-[2]" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent z-2" />
 
                           {/* ── Card number: top-left, always visible ── */}
-                          <div className="absolute top-6 left-7 z-[4] flex items-baseline gap-1">
+                          <div className="absolute top-6 left-7 z-4 flex items-baseline gap-1">
                             <span className="font-mono font-black text-white text-lg leading-none tabular-nums">
                               {String(i + 1).padStart(2, "0")}
                             </span>
@@ -206,7 +206,7 @@ export function SuccessStories() {
                           </div>
 
                           {/* Bottom-left: location tag + title */}
-                          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10 z-[4]">
+                          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10 z-4">
                             <span
                               className={`inline-block ${tag.bg} text-stone-900 text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1 rounded-full mb-4`}
                             >
