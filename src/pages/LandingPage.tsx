@@ -7,6 +7,7 @@ import { ActorCards } from "../components/ActorCards";
 import { Footer } from "../components/Footer";
 import { CtaSection } from "../components/CtaSection";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Testimonials } from "../components/Testimonials";
 
 export function LandingPage() {
   useEffect(() => {
@@ -39,6 +40,7 @@ export function LandingPage() {
       </main>
 
       {/* Standard Footer */}
+      <Testimonials />
       <CtaSection />
       <Footer />
     </div>

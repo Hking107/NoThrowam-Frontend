@@ -282,7 +282,6 @@ export function Hero() {
       </div>
 
       {/* Curved Shape Divider at Bottom */}
-      {/* Curved Shape Divider at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-20">
         <svg
           className="relative block w-full h-[50px] md:h-[100px]"
