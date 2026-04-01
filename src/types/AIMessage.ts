@@ -40,3 +40,4 @@ export type CartItem = { pointId: number; label: string; qty: number; unitPrice:
 
 export type MapStateSnapshot = { points: MarketPoint[]; cart: CartItem[] };
 
+export type MapStateSnapshotLocal = { points: MarketPoint[]; cart: CartItem[] };

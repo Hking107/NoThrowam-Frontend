@@ -1,12 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  X, Send, Mic, MicOff, Bot, User,
-  Zap, ShoppingCart, CheckCircle, Loader, Package,
-} from "lucide-react";
+import {  X, Send, Mic, MicOff, Bot, Zap, ShoppingCart, Loader, Package } from "lucide-react";
 import type { AgentApiResponse } from "../types/AgentAPIResponse";
-import type { AgentResult, AgentStep, CartItem, MapCommand, MapStateSnapshot, MarketPoint, Msg, PurchaseState } from "../types/AIMessage";
+import type { AgentResult, AgentStep, MapCommand, MapStateSnapshot, MapStateSnapshotLocal, Msg, PurchaseState } from "../types/AIMessage";
 import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
-
+import { agentService } from "../services/agentService";
 
 
 const BUS = {
@@ -345,7 +342,6 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
 };
 
 
-type MapStateSnapshotLocal = { points: MarketPoint[]; cart: CartItem[] };
 const CustomerContextStrip = ({ purchase }: { purchase: PurchaseState }) => {
   const [snap, setSnap] = useState<MapStateSnapshotLocal>({ points: [], cart: [] });
   useEffect(() => {
