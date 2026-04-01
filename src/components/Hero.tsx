@@ -2,10 +2,11 @@ import { useRef } from "react";
 import {
   Megaphone,
   MapPin,
-  Recycle,
-  Users,
-  Leaf,
+  // Recycle,
+  // Users,
+  // Leaf,
   ArrowRight,
+  TriangleAlert,
 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -13,29 +14,29 @@ import { landingData } from "../constants/landingData";
 
 // Register GSAP plugins if needed (none needed for basic animations here)
 
-const stats = [
-  {
-    icon: Recycle,
-    value: "12,000+",
-    label: "Kg Collected",
-    color: "text-brand-green",
-    bg: "bg-brand-green/10",
-  },
-  {
-    icon: Users,
-    value: "3,500+",
-    label: "Active Members",
-    color: "text-brand-yellow",
-    bg: "bg-brand-yellow/20",
-  },
-  {
-    icon: Leaf,
-    value: "8",
-    label: "Cities Covered",
-    color: "text-brand-red",
-    bg: "bg-brand-red/10",
-  },
-];
+// const stats = [
+//   {
+//     icon: Recycle,
+//     value: "12,000+",
+//     label: "Kg Collected",
+//     color: "text-brand-green",
+//     bg: "bg-brand-green/10",
+//   },
+//   {
+//     icon: Users,
+//     value: "3,500+",
+//     label: "Active Members",
+//     color: "text-brand-yellow",
+//     bg: "bg-brand-yellow/20",
+//   },
+//   {
+//     icon: Leaf,
+//     value: "8",
+//     label: "Cities Covered",
+//     color: "text-brand-red",
+//     bg: "bg-brand-red/10",
+//   },
+// ];
 
 export function Hero() {
   const container = useRef<HTMLDivElement>(null);
@@ -56,7 +57,9 @@ export function Hero() {
   useGSAP(
     () => {
       // 1. Entrance Animations: Staggered reveal for text content
-      const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1 } });
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out", duration: 1 },
+      });
 
       tl.from(".hero-badge", {
         y: -20,
@@ -131,7 +134,10 @@ export function Hero() {
       className="relative w-full min-h-screen overflow-hidden bg-linear-to-br from-[#004d3a] via-brand-green to-[#009e72]"
     >
       {/* Subtle background texture / gradient blobs */}
-      <div ref={bgBlobsRef} className="absolute inset-0 z-0 pointer-events-none">
+      <div
+        ref={bgBlobsRef}
+        className="absolute inset-0 z-0 pointer-events-none"
+      >
         <div className="bg-blob absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl" />
         <div className="bg-blob absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-brand-yellow/10 blur-3xl" />
         <div className="bg-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-black/10 blur-3xl" />
@@ -189,15 +195,39 @@ export function Hero() {
         {/* ── RIGHT: Visual Panel ── */}
         <div ref={visualRef} className="flex flex-col gap-6 lg:pl-4">
           {/* Hero Image Card */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl h-64 sm:h-72">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl h-64 sm:h-96 group">
             <img
               src={landingData.hero.imageUrl}
               alt={landingData.hero.imageCaption}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
               loading="lazy"
             />
-            {/* Gradient overlay on image */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
+            {/* Report waste overlay - visible on hover */}
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+              <TriangleAlert className="h-32 w-32 text-red-500 mb-4 animate-pulse" />
+              <button
+                onClick={handleReportWaste}
+                className="bg-red-600 hover:bg-red-700 text-white border border-red-500/30 rounded-2xl p-4 flex items-center justify-between gap-6 transition-all duration-300 shadow-2xl hover:shadow-red-600/40 active:scale-95"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 p-3 rounded-xl hover:bg-white/30 transition-colors">
+                    <Megaphone size={28} className="animate-pulse" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-lg font-bold uppercase tracking-tight leading-tight">
+                      Report Waste
+                    </p>
+                    <p className="text-white/80 text-xs mt-0.5">
+                      Immediate action for a cleaner environment
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-white/10 p-2 rounded-full group-hover:translate-x-1 transition-transform">
+                  <ArrowRight size={20} />
+                </div>
+              </button>
+            </div>
+
             {/* Caption pill */}
             <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md text-white text-sm font-medium px-3 py-1 rounded-full border border-white/20">
               📍 {landingData.hero.imageCaption}
@@ -205,7 +235,7 @@ export function Hero() {
           </div>
 
           {/* Impact Stats Row */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* <div className="grid grid-cols-3 gap-3">
             {stats.map(({ icon: Icon, value, label, color, bg }) => (
               <div
                 key={label}
@@ -224,36 +254,30 @@ export function Hero() {
                 </span>
               </div>
             ))}
-          </div>
+          </div> */}
 
-          {/* Success story snippet */}
-          <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-5 flex items-center gap-4">
-            <div className="flex -space-x-3 shrink-0">
-              {[
-                "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&h=80&fit=crop",
-                "https://images.unsplash.com/photo-1530785602389-07594baea8b0?w=80&h=80&fit=crop",
-                "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=80&h=80&fit=crop",
-              ].map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt="Community member"
-                  className="w-10 h-10 rounded-full border-2 border-brand-green object-cover"
-                />
-              ))}
-              <div className="w-10 h-10 rounded-full border-2 border-brand-green bg-brand-yellow/80 flex items-center justify-center text-brand-text text-xs font-bold">
-                +99
+          {/* Urgent Report Action */}
+          {/* <button
+            onClick={handleReportWaste}
+            className="bg-red-600 hover:bg-red-700 text-white border border-red-500/30 rounded-2xl p-6 flex items-center justify-between gap-6 transition-all duration-300 shadow-2xl hover:shadow-red-600/40 group active:scale-95"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 p-3 rounded-xl group-hover:bg-white/30 transition-colors">
+                <Megaphone size={28} className="animate-pulse" />
+              </div>
+              <div className="text-left">
+                <p className="text-lg font-bold uppercase tracking-tight leading-tight">
+                  Report Waste
+                </p>
+                <p className="text-white/80 text-xs mt-0.5">
+                  Immediate action for a cleaner environment
+                </p>
               </div>
             </div>
-            <div>
-              <p className="text-white font-semibold text-sm">
-                Join the community
-              </p>
-              <p className="text-white/55 text-xs">
-                Thousands already making a difference in Cameroon
-              </p>
+            <div className="bg-white/10 p-2 rounded-full group-hover:translate-x-1 transition-transform">
+              <ArrowRight size={20} />
             </div>
-          </div>
+          </button> */}
         </div>
       </div>
 
