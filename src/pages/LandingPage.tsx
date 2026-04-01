@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
-import { HowToUse } from "../components/HowToUse2";
+import { HowToUse } from "../components/HowToUse3";
 import { SuccessStories } from "../components/SuccessStories";
 import { ActorCards } from "../components/ActorCards";
 import { Footer } from "../components/Footer";

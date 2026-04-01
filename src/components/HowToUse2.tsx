@@ -160,7 +160,7 @@ export function HowToUse() {
           <div className="w-full lg:w-1/2 flex items-center justify-center h-full">
             <div
               ref={phoneRef}
-              className="relative w-full max-w-[280px] md:max-w-sm aspect-[9/19] bg-gray-900 rounded-[3rem] shadow-2xl border-[8px] border-gray-800 flex flex-col items-center justify-center overflow-hidden"
+              className="relative w-full max-w-[280px] md:max-w-sm aspect-9/19 bg-gray-900 rounded-[3rem] shadow-2xl border-[8px] border-gray-800 flex flex-col items-center justify-center overflow-hidden"
             >
               {/* Replace with your actual phone asset/UI */}
               <div className="absolute inset-0 bg-linear-to-b from-brand-green/20 to-brand-surface" />
