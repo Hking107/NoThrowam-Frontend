@@ -1,75 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, X, CheckCircle, RotateCcw, Loader, RefreshCw } from "lucide-react";
+import {  Loader, RefreshCw } from "lucide-react";
 import { MapEventBus } from "./AgentChat";
 import type { ApiDeposit, GarbagePoint, Status } from "../types/ManagerMap";
 import { GarbagePopup } from "../components/Manager/GarbagePopup";
+import { fetchUncollected, fetchDepositDetail, collectDeposit } from "../services/ManagerService";
+
 
 declare global { interface Window { L: any } }
 
-/* ── Convert API deposit → GarbagePoint ── */
-function toPoint(d: ApiDeposit): GarbagePoint {
+export function toPoint(d: ApiDeposit): GarbagePoint {
   return {
     id:     d.id,
     lat:    parseFloat(d.latitude)  || 0,
     lng:    parseFloat(d.longitude) || 0,
     label:  d.description?.trim() || `Dépôt #${d.id}`,
-    status: "pending", // endpoint returns only uncollected, so always pending
+    status: "pending", 
     images: d.image_url
       ? [{ id: 1, url: d.image_url }]
       : d.image
         ? [{ id: 1, url: d.image }]
         : [],
   };
-}
-
-/* ── Fetch only uncollected deposits ── */
-
-async function fetchUncollected(): Promise<GarbagePoint[]> {
-  const res = await fetch(`/api/v0/deposits/?collected=false`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-
-  if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-
-  const data: ApiDeposit[] = await res.json();
-  return data
-    .filter(d => !d.collected)
-    .filter(d => d.latitude != null && d.longitude != null)
-    .filter(d => !isNaN(parseFloat(d.latitude)) && !isNaN(parseFloat(d.longitude)))
-    .map(toPoint);
-}
-
-/* ── Shared auth headers ── */
-function authHeaders(): HeadersInit {
-  return {
-    "Accept":                      "application/json",
-    "Authorization":               `Bearer ${localStorage.getItem("token") || ""}`,
-    "ngrok-skip-browser-warning":  "69420",
-    "X-CSRFTOKEN":                 "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
-  };
-}
-
-/* ── GET /api/v0/deposits/{id}/ — fetch fresh detail before opening popup ── */
-async function fetchDepositDetail(id: number): Promise<GarbagePoint> {
-  const res = await fetch(`/api/v0/deposits/${id}/`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-  const d: ApiDeposit = await res.json();
-  return toPoint(d);
-}
-
-/* ── POST /api/v0/deposits/{id}/collect/ — mark as collected ── */
-async function collectDeposit(id: number): Promise<void> {
-  const res = await fetch(`/api/v0/deposits/${id}/collect/`, {
-    method: "POST",
-    headers: authHeaders(),
-  });
-  if (res.status === 400) throw new Error("Dépôt déjà collecté");
-  if (res.status === 404) throw new Error("Dépôt introuvable");
-  if (!res.ok)            throw new Error(`Error ${res.status}: ${res.statusText}`);
 }
 
 const CLR: Record<Status, string> = { collected: "#22c55e", pending: "#ef4444" };
