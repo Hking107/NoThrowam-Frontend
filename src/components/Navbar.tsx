@@ -27,7 +27,7 @@ export function Navbar() {
       const navHeight = 80;
 
       // Default: hero area (top of page) — keep transparent/blur
-      let currentBg = "bg-brand-surface/90 backdrop-blur-md";
+      let currentBg = "bg-brand-surface/70 backdrop-blur-md";
 
       sections.forEach((section) => {
         const el = section as HTMLElement;
