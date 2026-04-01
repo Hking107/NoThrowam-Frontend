@@ -1,56 +1,234 @@
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
+const headers = {
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "69420",
+};
+
+const getAuthHeaders = () => ({
+  ...headers,
+  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+});
 
 export const authService = {
-  
-  login: async (credentials: any) => {
-    const response = await fetch("/api/v0/auth/login/", {
+  /**
+   * Register a new user and trigger OTP send
+   */
+  register: async (userData: {
+    email: string;
+    password: string;
+    name?: string;
+    role: "CUSTOMER" | "MANAGER" | "SELLER";
+  }) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/register/`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "69420", 
-      },
+      headers,
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData?.detail ||
+          errorData?.message ||
+          "Registration failed. Please check your information."
+      );
+    }
+
+    const data = await response.json();
+    // Store email for OTP verification flow
+    sessionStorage.setItem("pending_email", userData.email);
+    sessionStorage.setItem("pending_role", userData.role);
+    return data;
+  },
+
+  /**
+   * Send OTP to email
+   */
+  sendOTP: async (
+    email: string,
+    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL" = "SIGNUP"
+  ) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/otp/send/`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ email, purpose }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        throw new Error(
+          `Please wait ${errorData?.cooldown_seconds || 60} seconds before requesting another OTP`
+        );
+      }
+      throw new Error(
+        errorData?.detail || errorData?.message || "Failed to send OTP"
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Verify OTP and complete signup or password reset
+   */
+  verifyOTP: async (
+    email: string,
+    code: string,
+    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL" = "SIGNUP"
+  ) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/otp/verify/`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ email, code, purpose }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData?.reason ||
+          errorData?.detail ||
+          errorData?.message ||
+          "OTP verification failed"
+      );
+    }
+
+    const data = await response.json();
+
+    // For signup, store tokens
+    if (purpose === "SIGNUP" && data.access) {
+      authService.storeTokens(data.access, data.refresh);
+      sessionStorage.removeItem("pending_email");
+      sessionStorage.removeItem("pending_role");
+    }
+
+    return data;
+  },
+
+  /**
+   * Login with email and password
+   */
+  login: async (credentials: { email: string; password: string }) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/login/`, {
+      method: "POST",
+      headers,
       body: JSON.stringify(credentials),
     });
 
     if (!response.ok) {
-      throw new Error("Invalid credentials");
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error(
+          "Invalid email or password. If you haven't verified your email yet, check for OTP in your inbox."
+        );
+      }
+      throw new Error(
+        errorData?.detail || errorData?.message || "Login failed"
+      );
     }
 
     const data = await response.json();
-
-    if (data.access) {
-      localStorage.setItem("token", data.access);
-      localStorage.setItem("role", data.role);
-    }
-
+    authService.storeTokens(data.access, data.refresh);
     return data;
   },
 
-  register: async (userData: any) => {
-    const response = await fetch("/api/v0/auth/register/", {
+  /**
+   * Refresh access token using refresh token
+   */
+  refresh: async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    const response = await fetch(`${API_BASE}/api/v0/auth/refresh/`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "69420", 
-      },
-      body: JSON.stringify(userData), 
+      headers,
+      body: JSON.stringify({ refresh: refreshToken }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.detail || "Registration failed. Please check your information.");
+      authService.logout();
+      throw new Error("Session expired. Please login again.");
     }
 
     const data = await response.json();
+    localStorage.setItem("access_token", data.access);
     return data;
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
+  /**
+   * Get current user info
+   */
+  getMe: async () => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/me/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authService.logout();
+      }
+      throw new Error("Failed to fetch user info");
+    }
+
+    return await response.json();
   },
 
+  /**
+   * Store tokens in localStorage
+   */
+  storeTokens: (accessToken: string, refreshToken: string) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    
+    // Decode and store role and expiry
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      localStorage.setItem("user_role", payload.role || "");
+      localStorage.setItem("token_exp", payload.exp || "");
+    } catch (e) {
+      console.warn("Could not decode token");
+    }
+  },
+
+  /**
+   * Logout and clear tokens
+   */
+  logout: () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("token_exp");
+    sessionStorage.removeItem("pending_email");
+    sessionStorage.removeItem("pending_role");
+  },
+
+  /**
+   * Check if user is authenticated
+   */
   isAuthenticated: () => {
-    return !!localStorage.getItem("token");
-  }
+    const token = localStorage.getItem("access_token");
+    if (!token) return false;
+
+    // Check if token is expired
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp > Date.now() / 1000;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Get stored access token
+   */
+  getAccessToken: () => localStorage.getItem("access_token"),
+
+  /**
+   * Get stored user role
+   */
+  getUserRole: () => localStorage.getItem("user_role"),
 };

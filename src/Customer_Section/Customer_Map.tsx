@@ -5,7 +5,7 @@ import { MapEventBus, PurchaseBus } from "./Customeragentchat";
 import MarketPopup from "../components/Customer/MarketPopup";
 import type { MarketPoint } from "../types/MarketPoint";
 import type { WastePost } from "../types/WastePost";
-import { CATEGORY_LABEL, CATEGORY_COLORS, CATEGORY_EMOJI } from "../constants/constants";
+import { CATEGORY_LABEL, CATEGORY_COLORS, CATEGORY_EMOJI } from "../contexts/constants/constants";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
 
