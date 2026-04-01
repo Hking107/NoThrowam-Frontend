@@ -25,7 +25,7 @@ export const landingData = {
     imageCaption: "Douala Street View",
     // Placeholder image that fits the "African vibe / clean street" description
     imageUrl:
-      "https://images.unsplash.com/photo-1594386479412-fa62932f4cdc?q=80&w=1117&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://images.theconversation.com/files/687459/original/file-20250826-56-683sie.jpeg?ixlib=rb-4.1.0&rect=0%2C0%2C4032%2C2688&q=50&auto=format&w=768&h=512&fit=crop&dpr=2",
   },
   successStories: {
     sectionTitle: "Success Stories",
