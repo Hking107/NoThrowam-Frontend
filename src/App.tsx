@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { SignIn } from "./pages/SignIn";
 import { Signup } from "./pages/Signup";
-import { Seller_SI } from "./pages/Up/Seller_SI";
+import { WebSocketProvider } from "./WebSocketProvider";
 import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
@@ -24,6 +24,8 @@ function App() {
         </Route>
       </Routes>
     </Router>
+
+    
   );
 }
 
