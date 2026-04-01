@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
 import { HowToUse } from "../components/HowToUse3";
-import { SuccessStories } from "../components/SuccessStories";
+import { SuccessStories } from "../components/SuccessStories2";
 import { ActorCards } from "../components/ActorCards";
 import { Footer } from "../components/Footer";
 import { CtaSection } from "../components/CtaSection";
