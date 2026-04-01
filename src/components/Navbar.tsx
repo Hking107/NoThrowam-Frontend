@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Menu, X, UserPlus } from "lucide-react";
 import { landingData } from "../constants/landingData";
 import { Logo } from "./Logo";
@@ -7,6 +7,9 @@ import { useGSAP } from "@gsap/react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [navBg, setNavBg] = useState<string>(
+    "bg-brand-surface/90 backdrop-blur-md",
+  );
 
   useGSAP(() => {
     gsap.from(".navbar-anim", {
@@ -18,8 +21,40 @@ export function Navbar() {
     });
   });
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll("section[data-nav-bg]");
+      const navHeight = 80;
+
+      // Default: hero area (top of page) — keep transparent/blur
+      let currentBg = "bg-brand-surface/90 backdrop-blur-md";
+
+      sections.forEach((section) => {
+        const el = section as HTMLElement;
+        const rect = el.getBoundingClientRect();
+
+        // Check if this section is currently occupying the navbar position
+        if (rect.top <= navHeight && rect.bottom > navHeight) {
+          const sectionBg = el.dataset.navBg;
+          if (sectionBg) {
+            currentBg = sectionBg;
+          }
+        }
+      });
+
+      setNavBg(currentBg);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // run once on mount
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="navbar-anim sticky top-0 z-50 w-full bg-brand-surface/90 backdrop-blur-md border-b border-black/5">
+    <nav
+      className={`navbar-anim sticky top-0 z-50 w-full border-b border-black/5 transition-colors duration-300 ${navBg}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section (Left) */}

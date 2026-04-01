@@ -282,6 +282,7 @@ export function Hero() {
       </div>
 
       {/* Curved Shape Divider at Bottom */}
+      {/* Curved Shape Divider at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-20">
         <svg
           className="relative block w-full h-[50px] md:h-[100px]"
@@ -291,7 +292,7 @@ export function Hero() {
           preserveAspectRatio="none"
         >
           <path
-            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,121.32,196.36,108.6,239.3,100,281.45,80.6,321.39,56.44Z"
+            d="M0,0 C300,60 900,60 1200,0 L1200,120 L0,120 Z"
             className="fill-brand-surface"
           ></path>
         </svg>
