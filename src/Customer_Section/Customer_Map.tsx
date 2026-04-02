@@ -409,3 +409,5 @@ export const CustomerMap = () => {
     </div>
   );
 };
+
+export { MapEventBus };
