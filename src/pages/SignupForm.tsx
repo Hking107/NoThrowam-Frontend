@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
+import { Eye, EyeClosed } from "lucide-react";
 
 export interface SignupFormProps {
   role: "SELLER" | "CUSTOMER" | "MANAGER";
@@ -72,9 +73,6 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
 
       await authService.register(payload);
 
-      // Send OTP to email
-      await authService.sendOTP(formData.email, "SIGNUP");
-
       // Navigate to OTP verification
       navigate("/verify-otp", {
         state: { email: formData.email, isSignup: true },
@@ -94,7 +92,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
-            Create {roleName} Account
+            Create Account
           </h1>
           <p className="text-gray-600">Join NoThrowam and get started</p>
         </div>
@@ -157,7 +155,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
               </button>
             </div>
           </div>

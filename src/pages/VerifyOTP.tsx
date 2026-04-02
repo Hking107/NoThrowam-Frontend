@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 
 export function VerifyOTP() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { verifyOTP } = useAuth();
   const email = location.state?.email || sessionStorage.getItem("pending_email");
   const isSignup = location.state?.isSignup || false;
 
@@ -76,9 +78,10 @@ export function VerifyOTP() {
     setLoading(true);
 
     try {
+      await verifyOTP(email, otp);
       if (isSignup) {
         // Get user role for redirect
-        const role = sessionStorage.getItem("pending_role");
+        const role = localStorage.getItem("user_role");
         if (role === "CUSTOMER") {
           navigate("/dashboard_customer");
         } else if (role === "SELLER") {
@@ -192,7 +195,7 @@ export function VerifyOTP() {
           >
             {canResend
               ? "Resend Code"
-              : `Resend in ${resendCooldown}s`}
+              : `Resend in ${formatTime(resendCooldown)}s`}
           </button>
         </div>
       </div>

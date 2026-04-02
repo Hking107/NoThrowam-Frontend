@@ -46,10 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const data = await authService.login({ email, password });
+    await authService.login({ email, password });
     const userData = await authService.getMe();
     setUser(userData);
-    return data;
+    return userData;
   };
 
   const register = async (
@@ -67,10 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const verifyOTP = async (email: string, code: string) => {
-    const data = await authService.verifyOTP(email, code, "SIGNUP");
+    await authService.verifyOTP(email, code, "SIGNUP");
     const userData = await authService.getMe();
     setUser(userData);
-    return data;
+    return userData;
   };
 
   const logout = () => {

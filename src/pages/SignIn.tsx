@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 
 export const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,6 +14,7 @@ export const SignIn = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,14 +37,14 @@ export const SignIn = () => {
     setLoading(true);
 
     try {
-      const data = await authService.login(formData);
+      const userData = await login(formData.email, formData.password);
+      const role = userData?.role || localStorage.getItem("user_role");
 
-      // Navigate based on role
-      if (data.role === "CUSTOMER") {
+      if (role === "CUSTOMER") {
         navigate("/dashboard_customer");
-      } else if (data.role === "SELLER") {
+      } else if (role === "SELLER") {
         navigate("/dashboard_seller");
-      } else if (data.role === "MANAGER") {
+      } else if (role === "MANAGER") {
         navigate("/manager");
       } else {
         navigate("/");
@@ -66,7 +67,7 @@ export const SignIn = () => {
           Welcome Back
         </h2>
         <p className="text-center text-gray-600 mb-6">
-          Login to your NoThrowam account 🔐
+          Login to your NoThrowam account
         </p>
 
         {error && (

@@ -31,7 +31,8 @@ export const authService = {
       throw new Error(
         errorData?.detail ||
           errorData?.message ||
-          "Registration failed. Please check your information."
+            errorData?.email ||
+            "Registration failed. Please check your information."
       );
     }
 
@@ -100,7 +101,6 @@ export const authService = {
     if (purpose === "SIGNUP" && data.access) {
       authService.storeTokens(data.access, data.refresh);
       sessionStorage.removeItem("pending_email");
-      sessionStorage.removeItem("pending_role");
     }
 
     return data;
@@ -187,7 +187,9 @@ export const authService = {
     // Decode and store role and expiry
     try {
       const payload = JSON.parse(atob(accessToken.split('.')[1]));
-      localStorage.setItem("user_role", payload.role || "");
+      console.log("Decoded token payload:", payload);
+      localStorage.setItem("user_role", payload.role || sessionStorage.getItem("pending_role") || "");
+      sessionStorage.removeItem("pending_role");
       localStorage.setItem("token_exp", payload.exp || "");
     } catch (e) {
       console.warn("Could not decode token");
