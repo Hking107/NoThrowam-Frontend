@@ -1,4 +1,4 @@
-import { landingData } from "../constants/landingData";
+import { landingData } from "../contexts/constants/landingData";
 import { ArrowRight, Mail } from "lucide-react";
 import { useRef } from "react";
 import gsap from "gsap";

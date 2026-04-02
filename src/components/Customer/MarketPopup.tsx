@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
-import { CATEGORY_COLORS, CATEGORY_EMOJI } from '../../constants/constants';
+import { CATEGORY_COLORS, CATEGORY_EMOJI } from '../../contexts/constants/constants';
 import type { MarketPoint } from '../../types/MarketPoint';
 
 
