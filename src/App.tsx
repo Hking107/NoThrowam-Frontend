@@ -2,15 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { SignIn } from "./pages/SignIn";
 import { Signup } from "./pages/Signup";
-<<<<<<< HEAD
 import { WebSocketProvider } from "./WebSocketProvider";
-=======
 import { SellerSignup } from "./pages/SellerSignup";
 import { CustomerSignup } from "./pages/CustomerSignup";
 import { ManagerSignup } from "./pages/ManagerSignup";
 import { VerifyOTP } from "./pages/VerifyOTP";
 import { ProtectedRoute } from "./components/ProtectedRoute";
->>>>>>> 18f8845 (Protecting routes for Authentication security ...OK)
 import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
