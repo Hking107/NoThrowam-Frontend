@@ -1,6 +1,5 @@
 
-
-type MessageHandler = (data: any) => void;
+type MessageHandler = (message: any) => void;
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
@@ -18,6 +17,7 @@ export class WebSocketService {
   public connect() {
     this.intentionalDisconnect = false;
     
+    // Auth: Le backend accepte le token via querystring (recommandé pour les WS dans le navigateur)
     const token = localStorage.getItem('token');
     const finalUrl = token ? `${this.url}?token=${token}` : this.url;
 
@@ -32,8 +32,15 @@ export class WebSocketService {
     this.ws.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);
-        const typeHandlers = this.handlers.get(parsed.type) || [];
-        typeHandlers.forEach(fn => fn(parsed.data));
+        
+        // On récupère le type d'événement (ex: "posts_list", "post.created", "error")
+        const eventType = parsed.type;
+        const typeHandlers = this.handlers.get(eventType) || [];
+        
+        // ⚠️ MODIFICATION IMPORTANTE : On passe tout l'objet 'parsed' au composant
+        // car le backend utilise des clés variables ("posts", "post", "message", etc.)
+        typeHandlers.forEach(fn => fn(parsed));
+        
       } catch (e) {
         console.error("[WS] Erreur parsing message", event.data);
       }
@@ -50,8 +57,16 @@ export class WebSocketService {
 
     this.ws.onerror = (err) => {
       console.error(` [WS] Erreur sur ${this.url}:`, err);
-      this.ws?.close(); 
+      this.ws?.close();
     };
+  }
+
+  public sendEvent(type: string, payload?: any) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type, payload }));
+    } else {
+      console.warn(`[WS] Impossible d'envoyer '${type}', WebSocket non connecté.`);
+    }
   }
 
   public on(type: string, handler: MessageHandler) {
@@ -74,22 +89,17 @@ export class WebSocketService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * (2 ** this.reconnectAttempts), 30000);
-      console.log(`🔄 [WS] Reconnexion à ${this.url} dans ${delay}ms... (Essai ${this.reconnectAttempts})`);
-      
-      setTimeout(() => {
-        this.connect();
-      }, delay);
-    } else {
-      console.error(`🚨 [WS] Abandon: Impossible de se reconnecter à ${this.url}`);
+      setTimeout(() => this.connect(), delay);
     }
   }
 
   private startHeartbeat() {
+    // Garde la connexion active
     this.pingInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: "ping" }));
       }
-    }, 30000); // Envoie un ping toutes les 30 secondes
+    }, 30000);
   }
 
   private stopHeartbeat() {
