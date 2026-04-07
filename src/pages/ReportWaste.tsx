@@ -36,7 +36,7 @@ function LocationSelector({ location, setLocation }: { location: LocationData | 
 export function ReportWaste() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [_file, setFile] = useState<File | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export function ReportWaste() {
         });
         setIsLocating(false);
       },
-      (error) => {
+      (_error) => {
         setLocationError("Unable to retrieve your location. Please drop a pin on the map.");
         setIsLocating(false);
         // Default to a central location (e.g., somewhere general) if failed
@@ -276,7 +276,7 @@ export function ReportWaste() {
                 )}
                 
                 {location && (
-                  <div className="absolute bottom-4 left-4 right-4 z-[400] bg-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
+                  <div className="absolute bottom-4 left-4 right-4 z-400 bg-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
                     <MapPin className="w-5 h-5 text-green-500 shrink-0" />
                     <span className="truncate text-gray-700">Location selected. Tap map to adjust.</span>
                   </div>
