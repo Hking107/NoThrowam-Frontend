@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { landingData } from "../constants/landingData";
+import { landingData } from "../contexts/constants/landingData";
 import { ArrowUpRight, Leaf } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";

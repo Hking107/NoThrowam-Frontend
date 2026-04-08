@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { landingData } from "../constants/landingData";
+import { landingData } from "../contexts/constants/landingData";
 import {
   ShoppingCart,
   CreditCard,
