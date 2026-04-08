@@ -14,45 +14,45 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   const fetchOffers = async () => {
-  //     if (!listing || !listing.id) {
-  //       setError("Invalid listing ID.");
-  //       setIsLoading(false);
-  //       return;
-  //     }
+  useEffect(() => {
+    const fetchOffers = async () => {
+      if (!listing || !listing.id) {
+        setError("Invalid listing ID.");
+        setIsLoading(false);
+        return;
+      }
 
-  //     setIsLoading(true);
-  //     setError(null);
-  //     try {
-  //       const token = localStorage.getItem("token");
+      setIsLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
         
-  //       const response = await fetch(`/api/v0/waste-posts/${listing.id}/proposals/`, {
-  //         method: 'GET',
-  //         headers: {
-  //           'accept': 'application/json',
-  //           'Authorization': `Bearer ${token}`,
-  //           'ngrok-skip-browser-warning': 'true'
-  //         }
-  //       });
+        const response = await fetch(`/api/v0/waste-posts/${listing.id}/proposals/`, {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
 
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         setOffers(data.proposals || []);
-  //       } else {
-  //         setError(`Failed to load offers. Server responded with status: ${response.status}`);
-  //         console.error("Server Error:", response.status);
-  //       }
-  //     } catch (err) {
-  //       setError("A network error occurred while fetching proposals.");
-  //       console.error("Network Error:", err);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+        if (response.ok) {
+          const data = await response.json();
+          setOffers(data.proposals || []);
+        } else {
+          setError(`Failed to load offers. Server responded with status: ${response.status}`);
+          console.error("Server Error:", response.status);
+        }
+      } catch (err) {
+        setError("A network error occurred while fetching proposals.");
+        console.error("Network Error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  //   fetchOffers();
-  // }, [listing]);
+    fetchOffers();
+  }, [listing]);
   
   useEffect(() => {
     const fetchOffers = async () => {
@@ -141,7 +141,6 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
             <div className="space-y-4">
               {offers.map((offer) => {
                 const buyerName = getBuyerName(offer);
-                // J'ai ajouté 'amount' ici au cas où l'API renvoie ce terme
                 const offeredPrice = offer.proposed_price || offer.amount || offer.price || 0;
                 const isSoldToThis = soldTo === buyerName;
 

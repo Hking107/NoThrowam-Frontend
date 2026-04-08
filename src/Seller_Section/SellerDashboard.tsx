@@ -11,6 +11,7 @@ import ProductModal from './ProductModal';
 import MaterialMixChart from '../components/Seller/MaterialMix';
 import { StatCard } from '../components/Seller/StatCards';
 import { TableRow } from '../components/Seller/TableRows';
+import WalletModal from './WalletModal';
 
 
 
@@ -21,6 +22,7 @@ const SellerDashboard: React.FC = () => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false); 
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [isOpenWallet, setIsOpenWallet ] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -212,8 +214,10 @@ useEffect(() => {
       )}
       {isProductModalOpen && <ProductModal onClose={() => setIsProductModalOpen(false)} />}
 
+      {isOpenWallet && <WalletModal onClose= {() => setIsOpenWallet(false)}/>}  
+
       {/* --- SIDEBAR --- */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex">
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between md:flex">
         <div>
           <div className="p-6 flex items-center gap-3">
             <div className="bg-green-500 text-white p-2 rounded-lg">
@@ -245,6 +249,15 @@ useEffect(() => {
             <Backpack size={20} />
             Products
           </button>
+
+          <button 
+            onClick={() => setIsOpenWallet(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
+          >
+            <Wallet size={20} />
+            Wallet
+          </button>
+          
 
           </nav>
         </div>

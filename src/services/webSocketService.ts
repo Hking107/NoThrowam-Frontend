@@ -37,7 +37,6 @@ export class WebSocketService {
         const eventType = parsed.type;
         const typeHandlers = this.handlers.get(eventType) || [];
         
-        // ⚠️ MODIFICATION IMPORTANTE : On passe tout l'objet 'parsed' au composant
         // car le backend utilise des clés variables ("posts", "post", "message", etc.)
         typeHandlers.forEach(fn => fn(parsed));
         
@@ -94,7 +93,6 @@ export class WebSocketService {
   }
 
   private startHeartbeat() {
-    // Garde la connexion active
     this.pingInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: "ping" }));
