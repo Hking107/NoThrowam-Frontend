@@ -190,8 +190,8 @@ export const Customer_Nav = () => {
               <User size={14} color="white"/>
             </div>
             <div style={{ flex: 1, overflow: "hidden" }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#15803d", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Jean Dupont</p>
-              <p style={{ margin: 0, fontSize: 10, color: "#4ade80", fontWeight: 500 }}>Client vérifié ✓</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#15803d", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>User name</p>
+              <p style={{ margin: 0, fontSize: 10, color: "#4ade80", fontWeight: 500 }}>Verified client </p>
             </div>
           </div>
         )}
