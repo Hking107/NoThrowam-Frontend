@@ -14,8 +14,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* <Route path="/" element={<ManagerMain/>} /> */}
-        {/* <Route path="/" element={<CustomerMain/>} /> */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/dashboard_customer" element={<CustomerMain/>} />
         <Route path="/manager" element={<ManagerMain />} />

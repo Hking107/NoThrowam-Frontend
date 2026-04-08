@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'; 
 import { 
-  LayoutDashboard, List, ShoppingBag, Wallet, BarChart3, Backpack,
+  LayoutDashboard, List,  Wallet, Backpack,
   Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter, Download,
   LogOut
 } from 'lucide-react';
@@ -13,7 +13,7 @@ import { StatCard } from '../components/Seller/StatCards';
 import { TableRow } from '../components/Seller/TableRows';
 import WalletModal from './WalletModal';
 
-
+import { usePosts } from '../hooks/usePosts';
 
 const SellerDashboard: React.FC = () => {
  
@@ -23,6 +23,9 @@ const SellerDashboard: React.FC = () => {
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [isOpenWallet, setIsOpenWallet ] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const {posts } = usePosts();
+  const [myPosts, setMyPosts] = useState<any[]>([]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -30,7 +33,40 @@ const SellerDashboard: React.FC = () => {
   };
 
   
-  useEffect(() => {
+  // useEffect(() => {
+  //   const fetchUserProfile = async () => {
+  //     try {
+  //       const token = localStorage.getItem("token"); 
+  //       if (!token) {
+  //         setUserEmail("Non connecté");
+  //         return;
+  //       }
+
+  //       const response = await fetch("/api/v0/auth/me/", {
+  //         method: "GET",
+  //         headers: {
+  //           "accept": "application/json",
+  //           "Authorization": `Bearer ${token}`,
+  //           "ngrok-skip-browser-warning": "69420"
+  //         }
+  //       });
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setUserEmail(data.email || data.username || "Utilisateur"); 
+  //       } else {
+  //         setUserEmail("Erreur de session");
+  //       }
+  //     } catch (error) {
+  //       console.error("Erreur réseau :", error);
+  //       setUserEmail("Erreur réseau");
+  //     }
+  //   };
+
+  //   fetchUserProfile();
+  // }, []);
+  
+useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem("token"); 
@@ -51,6 +87,7 @@ const SellerDashboard: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           setUserEmail(data.email || data.username || "Utilisateur"); 
+          setUserId(data.id); 
         } else {
           setUserEmail("Erreur de session");
         }
@@ -62,8 +99,84 @@ const SellerDashboard: React.FC = () => {
 
     fetchUserProfile();
   }, []);
-  
 
+  useEffect(() => {
+    if (userId !== null && posts.length > 0) {
+      const filteredPosts = posts.filter(p => p.seller === userId);
+      // On trie du plus récent au plus ancien
+      filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setMyPosts(filteredPosts);
+    }
+  }, [posts, userId]);
+
+
+useEffect(() => {
+    if (!myPosts) return;
+
+    let sumEarnings = 0;
+    let sumWeight = 0;
+    let activeCount = 0;
+
+    myPosts.forEach((post: any) => {
+      if (post.price) sumEarnings += Number(post.price);
+      if (post.quantity) sumWeight += parseFloat(post.quantity);
+      if (post.status === "PUBLISHED") activeCount++;
+    });
+
+    setDashboardStats({
+      isLoading: false,
+      totalEarnings: sumEarnings,
+      totalWeight: sumWeight,
+      activeListings: activeCount
+    });
+
+    // --- Calcul du Graphique ---
+    const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+    const currentDate = new Date();
+    const last6Months = [];
+    const monthlyTotals = [0, 0, 0, 0, 0, 0];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      last6Months.push(monthNames[d.getMonth()]);
+    }
+
+    myPosts.forEach((post: any) => {
+      if (post.created_at && post.price !== null) {
+        const postDate = new Date(post.created_at);
+        const monthDiff = (currentDate.getFullYear() - postDate.getFullYear()) * 12 + (currentDate.getMonth() - postDate.getMonth());
+
+        if (monthDiff >= 0 && monthDiff < 6) {
+          monthlyTotals[5 - monthDiff] += Number(post.price); 
+        }
+      }
+    });
+
+    const maxTotal = Math.max(...monthlyTotals, 100); 
+    const xPoints = [0, 20, 40, 60, 80, 100]; 
+    
+    const points = monthlyTotals.map((total, index) => {
+      const x = xPoints[index];
+      const y = 35 - ((total / maxTotal) * 30);
+      return { x, y, value: total };
+    });
+
+    let curvePath = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cpX = (prev.x + curr.x) / 2;
+      curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
+    }
+
+    setChartData({
+      path: curvePath,
+      fillPath: `${curvePath} L 100,40 L 0,40 Z`,
+      highlight: points[5], 
+      months: last6Months
+    });
+
+  }, [myPosts]);
 
   const [chartData, setChartData] = useState({});
 
@@ -386,9 +499,7 @@ useEffect(() => {
                 <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
                   <Filter size={16} /> Filter
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
-                  <Download size={16} /> Export
-                </button>
+                
               </div>
             </div>
             
@@ -406,8 +517,9 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {recentPosts.length > 0 ? (
-                    recentPosts.map((post) => (
+                  {/* 🆕 6. On map sur myPosts au lieu de recentPosts */}
+                  {myPosts.length > 0 ? (
+                    myPosts.map((post) => (
                       <TableRow 
                         key={post.id}
                         date={new Date(post.created_at).toLocaleDateString()} 
