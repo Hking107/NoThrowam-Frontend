@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'; 
 import { 
   LayoutDashboard, List,  Wallet, Backpack,
-  Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter, Download,
+  Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter,
   LogOut
 } from 'lucide-react';
 
@@ -28,7 +28,7 @@ const SellerDashboard: React.FC = () => {
   const [myPosts, setMyPosts] = useState<any[]>([]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     window.location.href = "/signin";
   };
 
@@ -36,7 +36,7 @@ const SellerDashboard: React.FC = () => {
   // useEffect(() => {
   //   const fetchUserProfile = async () => {
   //     try {
-  //       const token = localStorage.getItem("token"); 
+  //       const token = localStorage.getItem("access_token"); 
   //       if (!token) {
   //         setUserEmail("Non connecté");
   //         return;
@@ -69,7 +69,7 @@ const SellerDashboard: React.FC = () => {
 useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("access_token"); 
         if (!token) {
           setUserEmail("Non connecté");
           return;
@@ -103,7 +103,6 @@ useEffect(() => {
   useEffect(() => {
     if (userId !== null && posts.length > 0) {
       const filteredPosts = posts.filter(p => p.seller === userId);
-      // On trie du plus récent au plus ancien
       filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setMyPosts(filteredPosts);
     }
@@ -190,7 +189,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("access_token");
         if (!token) return;
 
         const response = await fetch("/api/v0/waste-posts/my/", {
