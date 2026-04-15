@@ -1,37 +1,48 @@
-
 import { useEffect, useState } from 'react';
-import { useWebSockets } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../WebSocketProvider';
 
 export const usePosts = () => {
-  const { postsWs } = useWebSockets();
+  const webSocketService = useWebSocket();
   const [posts, setPosts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleList = (msg: any) => {
-      if (msg.posts) setPosts(msg.posts);
-    };
+    // Si la connexion n'est pas prête, on ne fait rien
+    if (!webSocketService) return;
 
-    const handleCreated = (msg: any) => {
-      if (msg.post) {
-        setPosts((prev) => [...prev, msg.post]);
+    // On crée une fonction pour écouter tous les messages entrants
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const msg = JSON.parse(event.data);
+        
+        // Adapte ces conditions selon la forme exacte des données envoyées par ton Django
+        if (msg.posts || msg.type === 'posts_list') {
+          setPosts(msg.posts || msg.data);
+        } else if (msg.post || msg.type === 'post.created') {
+          setPosts((prev) => [...prev, msg.post || msg.data]);
+        } else if (msg.message && msg.type === 'error') {
+          setError(msg.message);
+        }
+      } catch (err) {
+        console.error("Erreur de parsing WebSocket:", err);
       }
     };
 
-    const handleError = (msg: any) => {
-      if (msg.message) setError(msg.message);
-    };
+    // On attache l'écouteur d'événement à la vraie connexion WebSocket
+    // Note: Remplace "socket" par la bonne propriété si ton service l'appelle autrement (ex: ws)
+    const socketInstance = (webSocketService as any).socket; 
+    
+    if (socketInstance) {
+        socketInstance.addEventListener('message', handleMessage);
+    }
 
-    postsWs.on('posts_list', handleList);
-    postsWs.on('post.created', handleCreated);
-    postsWs.on('error', handleError);
-
+    // Nettoyage quand le composant est démonté
     return () => {
-      postsWs.off('posts_list', handleList);
-      postsWs.off('post.created', handleCreated);
-      postsWs.off('error', handleError);
+      if (socketInstance) {
+          socketInstance.removeEventListener('message', handleMessage);
+      }
     };
-  }, [postsWs]);
+  }, [webSocketService]);
 
   const getMyListings = () => {
     const myUserId = parseInt(localStorage.getItem('user_id') || "0");

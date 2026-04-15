@@ -17,52 +17,49 @@ import { ReportWaste } from "./pages/ReportWaste";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/signin" element={<SignIn />} />
-
-        {/* Must be placed in a protected Route later on */}
-        <Route path="/report-waste" element={<ReportWaste />} />
-
-        {/* Signup Routes */}
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/signup/seller" element={<SellerSignup />} />
-        <Route path="/signup/customer" element={<CustomerSignup />} />
-        <Route path="/signup/manager" element={<ManagerSignup />} />
-
-        {/* OTP Verification */}
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Protected Dashboard Routes */}
-        <Route
-          path="/dashboard_customer"
-          element={
-            <ProtectedRoute requiredRole="CUSTOMER">
-              <CustomerMain />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager"
-          element={
-            <ProtectedRoute requiredRole="MANAGER">
-              <ManagerMain />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard_seller"
-          element={
-            <ProtectedRoute requiredRole="SELLER">
-              <SellerDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </Router>
+    <WebSocketProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/signin" element={<SignIn />} />
+          
+          {/* Signup Routes */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup/seller" element={<SellerSignup />} />
+          <Route path="/signup/customer" element={<CustomerSignup />} />
+          <Route path="/signup/manager" element={<ManagerSignup />} />
+          
+          {/* OTP Verification */}
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          
+          {/* Protected Dashboard Routes */}
+          <Route
+            path="/dashboard_customer"
+            element={
+              <ProtectedRoute requiredRole="CUSTOMER">
+                <CustomerMain />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager"
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <ManagerMain />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard_seller"
+            element={
+              <ProtectedRoute requiredRole="SELLER">
+                <SellerDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </WebSocketProvider>
   );
 }
 
