@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-
+export function Navbar() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navBg, setNavBg] = useState<string>(
