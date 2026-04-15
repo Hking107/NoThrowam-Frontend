@@ -1,14 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ContactModal } from "../components/ContactModal";
 import { ShieldAlert, LogIn, Home, Lock } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 export function Unauthorized() {
   const containerRef = useRef<HTMLDivElement>(null);
-
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   useGSAP(
     () => {
       const tl = gsap.timeline({
@@ -20,19 +21,31 @@ export function Unauthorized() {
         opacity: 0,
         duration: 1.2,
       })
-      .from(".error-title", {
-        y: 30,
-        opacity: 0,
-      }, "-=0.8")
-      .from(".error-desc", {
-        y: 20,
-        opacity: 0,
-      }, "-=0.7")
-      .from(".error-cta", {
-        scale: 0.9,
-        opacity: 0,
-        stagger: 0.1,
-      }, "-=0.7");
+        .from(
+          ".error-title",
+          {
+            y: 30,
+            opacity: 0,
+          },
+          "-=0.8",
+        )
+        .from(
+          ".error-desc",
+          {
+            y: 20,
+            opacity: 0,
+          },
+          "-=0.7",
+        )
+        .from(
+          ".error-cta",
+          {
+            scale: 0.9,
+            opacity: 0,
+            stagger: 0.1,
+          },
+          "-=0.7",
+        );
 
       // Pulsing effect for the lock icon
       gsap.to(".error-lock-icon", {
@@ -43,14 +56,14 @@ export function Unauthorized() {
         ease: "sine.inOut",
       });
     },
-    { scope: containerRef }
+    { scope: containerRef },
   );
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-surface selection:bg-brand-red/10">
-      <Navbar />
+      <Navbar onContactClick={() => setIsContactModalOpen(true)} />
 
-      <main 
+      <main
         ref={containerRef}
         className="grow flex flex-col items-center justify-center px-4 py-20 text-center relative overflow-hidden"
       >
@@ -75,8 +88,8 @@ export function Unauthorized() {
               Access Denied.
             </h1>
             <p className="error-desc text-lg md:text-xl text-brand-text/60 leading-relaxed">
-              It seems you've encountered a restricted area. You don't have the necessary 
-              permissions to view this page's content at the moment.
+              It seems you've encountered a restricted area. You don't have the
+              necessary permissions to view this page's content at the moment.
             </p>
           </div>
 
@@ -97,7 +110,7 @@ export function Unauthorized() {
               Return Home
             </Link>
           </div>
-          
+
           <p className="mt-12 text-sm text-brand-text/40 font-medium tracking-wide uppercase">
             Reason: HTTP 403 / Restricted Access
           </p>
@@ -105,6 +118,7 @@ export function Unauthorized() {
       </main>
 
       <Footer />
+      <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
     </div>
   );
 }

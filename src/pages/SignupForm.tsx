@@ -1,7 +1,10 @@
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
-import { Eye, EyeClosed } from "lucide-react";
+import { Eye, EyeOff, UserPlus, ArrowLeft } from "lucide-react";
+import { Logo } from "../components/Logo";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export interface SignupFormProps {
   role: "SELLER" | "CUSTOMER" | "MANAGER";
@@ -11,6 +14,7 @@ export interface SignupFormProps {
 export function SignupForm({ role, roleName }: SignupFormProps) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -21,6 +25,20 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useGSAP(() => {
+    const tl = gsap.timeline();
+    
+    tl.fromTo(".auth-card", 
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+    )
+    .fromTo(".auth-item", 
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 
+      "-=0.4"
+    );
+  }, { scope: containerRef });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -88,113 +106,141 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
-            Create Account
-          </h1>
-          <p className="text-gray-600">Join NoThrowam and get started</p>
-        </div>
+    <div ref={containerRef} className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden">
+      {/* Decorative Ornaments */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              className="w-full h-12 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Full Name (Optional)
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Your full name"
-              className="w-full h-12 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Min 8 characters"
-                required
-                className="w-full h-12 px-4 pr-12 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
-              type={showPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-              className="w-full h-12 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+      <div className="auth-card w-full max-w-lg relative z-10">
+        <div className="card-tactile !p-8 md:!p-12">
+          {/* Back Button */}
+          <button 
+            onClick={() => navigate("/signup")}
+            className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors cursor-pointer"
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            <ArrowLeft size={20} />
           </button>
-        </form>
 
-        <p className="mt-6 text-center text-gray-600 text-sm">
-          Already have an account?{" "}
-          <span
-            className="text-indigo-600 font-semibold cursor-pointer hover:underline"
-            onClick={() => navigate("/signin")}
-          >
-            Sign in
-          </span>
-        </p>
+          <div className="flex flex-col items-center mb-10 mt-4">
+            <div className="auth-item mb-6">
+              <Logo />
+            </div>
+            <h2 className="auth-item text-3xl font-extrabold text-brand-text text-center tracking-tight">
+              {roleName} Registration
+            </h2>
+            <p className="auth-item text-brand-text/60 text-center mt-2 font-medium">
+              Create your account to join the community
+            </p>
+          </div>
+
+          {error && (
+            <div className="auth-item mb-6 p-4 bg-brand-red/5 border border-brand-red/20 text-brand-red rounded-2xl text-sm font-medium flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="auth-item">
+              <label className="block text-sm font-bold text-brand-text/60 mb-2 ml-1">
+                Full Name (Optional)
+              </label>
+              <input
+                type="text"
+                name="name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+              />
+            </div>
+
+            <div className="auth-item">
+              <label className="block text-sm font-bold text-brand-text/60 mb-2 ml-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+              />
+            </div>
+
+            <div className="auth-item grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-brand-text/60 ml-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full h-14 px-5 pr-14 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-brand-text/30 hover:text-brand-text transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-brand-text/60 ml-1">
+                  Confirm
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="auth-item w-full btn-primary !py-4 flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20 mt-4"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Creating Account...
+                </span>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <UserPlus size={20} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="auth-item mt-10 text-center">
+            <p className="text-brand-text/60 font-medium">
+              Already have an account?{" "}
+              <button
+                onClick={() => navigate("/signin")}
+                className="text-brand-green font-bold hover:underline cursor-pointer"
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           duration: 0.5,
           ease: "back.out(1.7)",
           delay: 0.1,
-        }
+        },
       );
     }
   }, [isOpen]);
@@ -77,7 +77,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
       {/* Modal Content */}
       <div
         ref={contentRef}
-        className="relative w-full max-w-4xl bg-brand-surface rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row opacity-0"
+        className="relative w-full max-w-4xl bg-brand-surface rounded-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row opacity-0"
       >
         {/* Close Button */}
         <button
@@ -96,27 +96,37 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           <div className="relative z-10">
             <h2 className="text-3xl font-bold mb-6">Get in Touch</h2>
             <p className="text-white/80 mb-10 leading-relaxed">
-              Have questions about waste management or want to partner with us? 
+              Have questions about waste management or want to partner with us?
               Our team is here to help you make Cameroon cleaner.
             </p>
 
             <div className="space-y-6">
-              <a href={`mailto:${email}`} className="flex items-center gap-4 group cursor-pointer">
+              <a
+                href={`mailto:${email}`}
+                className="flex items-center gap-4 group cursor-pointer"
+              >
                 <div className="p-3 bg-white/10 rounded-xl group-hover:bg-white/20 transition-colors">
                   <Mail size={20} className="text-brand-yellow" />
                 </div>
                 <div>
-                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">Email Us</p>
+                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">
+                    Email Us
+                  </p>
                   <p className="font-medium">{email}</p>
                 </div>
               </a>
 
-              <a href={`tel:${phone}`} className="flex items-center gap-4 group cursor-pointer">
+              <a
+                href={`tel:${phone}`}
+                className="flex items-center gap-4 group cursor-pointer"
+              >
                 <div className="p-3 bg-white/10 rounded-xl group-hover:bg-white/20 transition-colors">
                   <Phone size={20} className="text-brand-yellow" />
                 </div>
                 <div>
-                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">Call Us</p>
+                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">
+                    Call Us
+                  </p>
                   <p className="font-medium">{phone}</p>
                 </div>
               </a>
@@ -126,7 +136,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                   <MapPin size={20} className="text-brand-yellow" />
                 </div>
                 <div>
-                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">Our Office</p>
+                  <p className="text-xs text-white/50 uppercase tracking-widest font-bold">
+                    Our Office
+                  </p>
                   <p className="font-medium whitespace-pre-line">{address}</p>
                 </div>
               </div>
@@ -143,7 +155,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-brand-text/60 ml-1">Full Name</label>
+                <label className="text-sm font-bold text-brand-text/60 ml-1">
+                  Full Name
+                </label>
                 <input
                   required
                   type="text"
@@ -152,7 +166,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-brand-text/60 ml-1">Email Address</label>
+                <label className="text-sm font-bold text-brand-text/60 ml-1">
+                  Email Address
+                </label>
                 <input
                   required
                   type="email"
@@ -163,7 +179,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-brand-text/60 ml-1">Subject</label>
+              <label className="text-sm font-bold text-brand-text/60 ml-1">
+                Subject
+              </label>
               <select className="w-full px-5 py-3 rounded-xl bg-brand-surface border border-black/5 focus:border-brand-green/30 focus:ring-4 focus:ring-brand-green/10 outline-none transition-all appearance-none cursor-pointer">
                 <option>General Inquiry</option>
                 <option>Partnership Proposal</option>
@@ -173,7 +191,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-brand-text/60 ml-1">Message</label>
+              <label className="text-sm font-bold text-brand-text/60 ml-1">
+                Message
+              </label>
               <textarea
                 required
                 rows={4}
@@ -187,7 +207,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               className="w-full btn-primary py-4 flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20"
             >
               <span>Send Message</span>
-              <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <Send
+                size={18}
+                className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
+              />
             </button>
 
             <p className="text-center text-xs text-brand-text/40">

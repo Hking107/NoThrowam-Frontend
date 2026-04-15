@@ -1,14 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ContactModal } from "../components/ContactModal";
 import { Home, ArrowLeft, Search } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 export function NotFound() {
   const containerRef = useRef<HTMLDivElement>(null);
-
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   useGSAP(
     () => {
       const tl = gsap.timeline({
@@ -21,19 +22,31 @@ export function NotFound() {
         scale: 0.8,
         delay: 0.2,
       })
-      .from(".error-title", {
-        y: 30,
-        opacity: 0,
-      }, "-=0.6")
-      .from(".error-desc", {
-        y: 20,
-        opacity: 0,
-      }, "-=0.7")
-      .from(".error-cta", {
-        scale: 0.9,
-        opacity: 0,
-        stagger: 0.1,
-      }, "-=0.7");
+        .from(
+          ".error-title",
+          {
+            y: 30,
+            opacity: 0,
+          },
+          "-=0.6",
+        )
+        .from(
+          ".error-desc",
+          {
+            y: 20,
+            opacity: 0,
+          },
+          "-=0.7",
+        )
+        .from(
+          ".error-cta",
+          {
+            scale: 0.9,
+            opacity: 0,
+            stagger: 0.1,
+          },
+          "-=0.7",
+        );
 
       // Floating animation for a search icon or something
       gsap.to(".floating-icon", {
@@ -44,14 +57,14 @@ export function NotFound() {
         ease: "sine.inOut",
       });
     },
-    { scope: containerRef }
+    { scope: containerRef },
   );
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-surface selection:bg-brand-green/20">
-      <Navbar />
+      <Navbar onContactClick={() => setIsContactModalOpen(true)} />
 
-      <main 
+      <main
         ref={containerRef}
         className="grow flex flex-col items-center justify-center px-4 py-20 text-center relative overflow-hidden"
       >
@@ -76,7 +89,8 @@ export function NotFound() {
               Oops! Page Not Found.
             </h2>
             <p className="error-desc text-lg md:text-xl text-brand-text/60 max-w-md mx-auto leading-relaxed">
-              Looks like the path you're looking for was either recycled into something else or never existed. 
+              Looks like the path you're looking for was either recycled into
+              something else or never existed.
               <span className="block mt-2 font-medium italic text-brand-green/70 text-sm">
                 "Not all who wander are lost, but this page definitely is."
               </span>
