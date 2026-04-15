@@ -131,7 +131,7 @@ export const SignIn = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                className="w-full h-14 px-5 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
               />
             </div>
 
@@ -156,7 +156,7 @@ export const SignIn = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full h-14 px-5 pr-14 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                  className="w-full h-14 px-5 pr-14 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
                 />
                 <button
                   type="button"
@@ -171,7 +171,7 @@ export const SignIn = () => {
             <button
               type="submit"
               disabled={loading}
-              className="auth-item w-full btn-primary !py-4 flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20 mt-4"
+              className="auth-item w-full btn-primary py-4! flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20 mt-4"
             >
               {loading ? (
                 <span className="flex items-center gap-2">

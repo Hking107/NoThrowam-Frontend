@@ -26,19 +26,23 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    
-    tl.fromTo(".auth-card", 
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-    )
-    .fromTo(".auth-item", 
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 
-      "-=0.4"
-    );
-  }, { scope: containerRef });
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        ".auth-card",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      ).fromTo(
+        ".auth-item",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+        "-=0.4",
+      );
+    },
+    { scope: containerRef },
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -98,7 +102,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
     } catch (err: any) {
       setError(
         err.message ||
-          "An error occurred during registration. Please try again."
+          "An error occurred during registration. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -106,7 +110,10 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
+    >
       {/* Decorative Ornaments */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -114,7 +121,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
       <div className="auth-card w-full max-w-lg relative z-10">
         <div className="card-tactile !p-8 md:!p-12">
           {/* Back Button */}
-          <button 
+          <button
             onClick={() => navigate("/signup")}
             className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors cursor-pointer"
           >
@@ -151,7 +158,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                className="w-full h-14 px-5 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
               />
             </div>
 
@@ -166,7 +173,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                className="w-full h-14 px-5 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
               />
             </div>
 
@@ -183,7 +190,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="w-full h-14 px-5 pr-14 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                    className="w-full h-14 px-5 pr-14 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
                   />
                   <button
                     type="button"
@@ -205,7 +212,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="w-full h-14 px-5 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                  className="w-full h-14 px-5 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
                 />
               </div>
             </div>
@@ -213,7 +220,7 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="auth-item w-full btn-primary !py-4 flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20 mt-4"
+              className="auth-item w-full btn-primary py-4! flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20 mt-4"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -223,7 +230,10 @@ export function SignupForm({ role, roleName }: SignupFormProps) {
               ) : (
                 <>
                   <span>Create Account</span>
-                  <UserPlus size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <UserPlus
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </>
               )}
             </button>

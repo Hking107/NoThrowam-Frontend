@@ -200,7 +200,7 @@ export function VerifyOTP() {
                   setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder="000 000"
-                className="w-full h-20 text-center text-4xl font-black px-4 rounded-2xl border border-black/5 bg-brand-surface focus:ring-8 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all tracking-[0.5em] text-brand-text placeholder:text-brand-text/5"
+                className="w-full h-20 text-center text-4xl font-black px-4 rounded-full border border-black/5 bg-brand-surface focus:ring-8 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all tracking-[0.5em] text-brand-text placeholder:text-brand-text/5"
               />
             </div>
 
