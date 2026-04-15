@@ -4,6 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,6 +12,7 @@ export function CtaSection() {
   const { title, subtitle, primaryCtaText, secondaryCtaText } =
     landingData.ctaSection;
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useGSAP(
     () => {
@@ -58,7 +60,10 @@ export function CtaSection() {
 
             {/* Actions */}
             <div className="reveal-item flex flex-col sm:flex-row gap-4 shrink-0 w-full lg:w-auto px-4 sm:px-0">
-              <button className="flex items-center justify-center gap-2 bg-brand-yellow hover:bg-[#e0b810] text-brand-text px-8 py-4 rounded-full text-lg font-bold shadow-xl transition-all transform active:scale-95">
+              <button
+                onClick={() => navigate("/signup")}
+                className="flex items-center justify-center gap-2 bg-brand-yellow hover:bg-[#e0b810] text-brand-text px-8 py-4 rounded-full text-lg font-bold shadow-xl transition-all transform active:scale-95 cursor-pointer"
+              >
                 {primaryCtaText.en}
                 <ArrowRight className="h-5 w-5" />
               </button>
