@@ -8,10 +8,15 @@ import {
   Loader2,
   ArrowLeft,
   X,
+  XCircle,
+  RotateCcw
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Logo } from "../components/Logo";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 // Fix for default Leaflet marker icons not showing up due to webpack/vite issues
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -60,13 +65,27 @@ export function ReportWaste() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [submissionStatus, setSubmissionStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline();
+    tl.fromTo(".step-content", 
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+    ).fromTo(".step-item",
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: "power2.out" },
+      "-=0.3"
+    );
+  }, { scope: containerRef, dependencies: [currentStep, submissionStatus] });
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -76,7 +95,6 @@ export function ReportWaste() {
     setIsCameraActive(false);
   };
 
-  // Clean up object URLs and camera streams
   useEffect(() => {
     return () => {
       if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -172,8 +190,7 @@ export function ReportWaste() {
           "Unable to retrieve your location. Please drop a pin on the map.",
         );
         setIsLocating(false);
-        // Default to a central location (e.g., somewhere general) if failed
-        setLocation({ lat: 51.505, lng: -0.09 });
+        setLocation({ lat: 3.848, lng: 11.502 }); // Default somewhere in Yaounde
       },
     );
   };
@@ -192,7 +209,7 @@ export function ReportWaste() {
       return;
     }
 
-    setIsSubmitting(true);
+    setSubmissionStatus("submitting");
 
     try {
       const formData = new FormData();
@@ -215,167 +232,215 @@ export function ReportWaste() {
         );
       }
 
-      const data = await response.json();
-      console.log("Report submitted successfully:", data);
-      setIsSuccess(true);
+      setSubmissionStatus("success");
     } catch (error: any) {
       console.error("Error submitting report:", error);
-      alert(error.message || "Failed to submit report. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setSubmissionStatus("error");
+      setSubmitErrorMessage(error.message || "An unexpected error occurred.");
     }
   };
 
-  if (isSuccess) {
+  if (submissionStatus === "success") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-500" />
+      <div ref={containerRef} className="min-h-screen bg-brand-surface flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-green/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-yellow/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+        
+        <div className="step-content card-tactile max-w-md w-full text-center relative z-10 p-10!">
+          <div className="step-item w-24 h-24 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+            <div className="absolute inset-0 bg-brand-green/20 rounded-full animate-ping opacity-75" />
+            <CheckCircle className="w-12 h-12 text-brand-green relative z-10" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Report Sent!</h2>
-          <p className="text-gray-600">
-            Thank you for reporting this waste. Our team will verify and take
-            action shortly.
+          <h2 className="step-item text-3xl font-black text-brand-text tracking-tight mb-4">Report Received!</h2>
+          <p className="step-item text-brand-text/60 font-medium mb-10 leading-relaxed">
+            Thank you for helping keep the community clean. Our team will verify and take action shortly.
           </p>
           <button
             onClick={() => (window.location.href = "/")}
-            className="w-full mt-8 py-3 px-6 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors"
+            className="step-item btn-primary w-full py-4 text-lg"
           >
-            Return to Home
+            Return Home
           </button>
         </div>
       </div>
     );
   }
 
+  if (submissionStatus === "error") {
+    return (
+      <div ref={containerRef} className="min-h-screen bg-brand-surface flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-red/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-yellow/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+        
+        <div className="step-content card-tactile max-w-md w-full text-center relative z-10 p-10!">
+          <div className="step-item w-24 h-24 bg-brand-red/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-brand-red/20">
+            <XCircle className="w-12 h-12 text-brand-red" />
+          </div>
+          <h2 className="step-item text-3xl font-black text-brand-text tracking-tight mb-4">Submission Failed</h2>
+          <p className="step-item text-brand-red/80 font-medium mb-2 p-3 bg-brand-red/5 rounded-xl border border-brand-red/10">
+            {submitErrorMessage}
+          </p>
+          <p className="step-item text-brand-text/60 text-sm mb-10 mt-4 font-medium leading-relaxed">
+            Something went wrong while sending your report. Please check your connection and try again.
+          </p>
+          <div className="step-item flex gap-4">
+            <button
+              onClick={() => (window.location.href = "/")}
+              className="flex-1 px-6 py-4 border-2 border-black/5 hover:border-black/10 bg-white text-brand-text/70 rounded-2xl font-bold transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setSubmissionStatus("idle")}
+              className="flex-1 btn-primary py-4 flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={20} />
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div ref={containerRef} className="min-h-screen bg-brand-surface flex flex-col relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-green/5 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-yellow/5 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
           <button
             onClick={() => window.history.back()}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+            className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors text-brand-text cursor-pointer"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">Report Waste</h1>
-          <div className="w-10" /> {/* Spacer */}
+          <Logo />
+          <div className="w-12" /> {/* Spacer */}
         </div>
       </header>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 py-4">
+      <div className="bg-white/60 backdrop-blur-md border-b border-black/5 py-6">
+        <div className="max-w-md mx-auto px-6">
           <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1.5 bg-black/5 rounded-full" />
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-green-500 rounded-full transition-all duration-500 ease-in-out"
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-brand-green rounded-full transition-all duration-700 ease-in-out"
               style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
             />
 
             {[1, 2, 3].map((stepNumber) => (
               <div
                 key={stepNumber}
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors duration-300 ${
+                className={`relative flex items-center justify-center w-10 h-10 rounded-full border-4 transition-colors duration-500 z-10 ${
                   currentStep >= stepNumber
-                    ? "bg-green-500 border-green-500 text-white"
-                    : "bg-white border-gray-300 text-gray-400"
+                    ? "bg-brand-green border-brand-green text-white shadow-lg shadow-brand-green/20"
+                    : "bg-white border-black/5 text-brand-text/30"
                 }`}
               >
                 {stepNumber < currentStep ? (
-                  <CheckCircle className="w-5 h-5" />
+                  <CheckCircle className="w-6 h-6" />
                 ) : (
-                  stepNumber
+                  <span className="font-bold">{stepNumber}</span>
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-xs font-medium text-gray-500">
-            <span>Photo</span>
-            <span>Location</span>
-            <span>Confirm</span>
+          <div className="flex justify-between mt-3 text-xs font-bold text-brand-text/50 uppercase tracking-widest px-1">
+            <span className={currentStep >= 1 ? "text-brand-green" : ""}>Photo</span>
+            <span className={currentStep >= 2 ? "text-brand-green" : ""}>Location</span>
+            <span className={currentStep >= 3 ? "text-brand-green" : ""}>Confirm</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 flex flex-col">
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-8 flex flex-col relative z-10 mb-10">
+        <div className="step-content flex-1 card-tactile !p-8 flex flex-col">
           {/* STEP 1: PHOTO */}
           {currentStep === 1 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Take a Photo
+            <div className="flex flex-col h-full">
+              <div className="step-item text-center mb-8">
+                <h2 className="text-3xl font-black text-brand-text tracking-tight">
+                  Capture the Waste
                 </h2>
-                <p className="text-gray-500 mt-2">
-                  Clear photos help us identify and locate the waste faster.
+                <p className="text-brand-text/60 mt-3 font-medium">
+                  Provide a clear photo so our team knows what to look for.
                 </p>
               </div>
 
-              {!photoPreview && !isCameraActive ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-2xl aspect-square flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={startCamera}
-                  >
-                    <Camera className="w-10 h-10 text-gray-400 mb-2" />
-                    <span className="font-medium text-sm text-gray-600 text-center px-2">
-                      Take Photo
-                    </span>
-                  </div>
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-2xl aspect-square flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={capturePhoto}
-                  >
-                    <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
-                    <span className="font-medium text-sm text-gray-600 text-center px-2">
-                      Upload from Gallery
-                    </span>
-                  </div>
-                </div>
-              ) : isCameraActive ? (
-                <div className="relative rounded-2xl overflow-hidden aspect-video bg-black">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    playsInline
-                    muted
-                  />
-                  <div className="absolute inset-x-0 bottom-6 flex justify-center items-center gap-6">
+              <div className="step-item flex-1 flex flex-col justify-center min-h-[300px]">
+                {!photoPreview && !isCameraActive ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
-                      onClick={stopCamera}
-                      className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+                      onClick={startCamera}
+                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-[2rem] bg-brand-surface hover:bg-brand-green/5 hover:border-brand-green/40 transition-all cursor-pointer aspect-square"
                     >
-                      <X className="w-6 h-6" />
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                        <Camera className="w-8 h-8 text-brand-green" />
+                      </div>
+                      <span className="font-bold text-brand-text group-hover:text-brand-green transition-colors">
+                        Use Camera
+                      </span>
                     </button>
                     <button
-                      onClick={takePhotoFromStream}
-                      className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+                      onClick={capturePhoto}
+                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-[2rem] bg-brand-surface hover:bg-brand-yellow/5 hover:border-brand-yellow/40 transition-all cursor-pointer aspect-square"
                     >
-                      <div className="w-12 h-12 bg-white rounded-full border-2 border-gray-200" />
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                        <UploadCloud className="w-8 h-8 text-brand-yellow" />
+                      </div>
+                      <span className="font-bold text-brand-text group-hover:text-brand-yellow transition-colors">
+                        Upload Photo
+                      </span>
                     </button>
                   </div>
-                </div>
-              ) : (
-                <div className="relative rounded-2xl overflow-hidden aspect-video group">
-                  <img
-                    src={photoPreview}
-                    alt="Waste preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      onClick={removePhoto}
-                      className="px-4 py-2 bg-white text-red-600 rounded-lg font-medium hover:bg-gray-100"
-                    >
-                      Retake Photo
-                    </button>
+                ) : isCameraActive ? (
+                  <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3] bg-black shadow-xl ring-1 ring-black/5">
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover"
+                      playsInline
+                      muted
+                    />
+                    <div className="absolute inset-0 border-4 border-white/20 rounded-[2rem] pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-6 flex justify-center items-center gap-8">
+                      <button
+                        onClick={stopCamera}
+                        className="w-14 h-14 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={takePhotoFromStream}
+                        className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full border-4 border-white flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+                      >
+                        <div className="w-14 h-14 bg-white rounded-full shadow-inner" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3] shadow-lg ring-1 ring-black/5 group">
+                    <img
+                      src={photoPreview!}
+                      alt="Waste preview"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                      <button
+                        onClick={removePhoto}
+                        className="px-6 py-3 bg-white text-brand-red rounded-full font-bold hover:scale-105 transition-transform shadow-xl flex items-center gap-2 cursor-pointer"
+                      >
+                        <RotateCcw size={18} /> Retake Photo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <input
                 type="file"
@@ -386,49 +451,53 @@ export function ReportWaste() {
                 onChange={handlePhotoUpload}
               />
 
-              <button
-                disabled={!photoPreview && !isCameraActive}
-                onClick={handleNext}
-                className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2"
-              >
-                Continue <ArrowLeft className="w-5 h-5 rotate-180" />
-              </button>
+              <div className="step-item mt-8">
+                <button
+                  disabled={!photoPreview && !isCameraActive}
+                  onClick={handleNext}
+                  className="w-full btn-primary py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
+                >
+                  <span className="text-lg">Continue</span> <ArrowLeft className="w-5 h-5 rotate-180" />
+                </button>
+              </div>
             </div>
           )}
 
           {/* STEP 2: LOCATION */}
           {currentStep === 2 && (
-            <div className="space-y-6 h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Set Location
+            <div className="flex flex-col h-full">
+              <div className="step-item text-center mb-8">
+                <h2 className="text-3xl font-black text-brand-text tracking-tight">
+                  Pinpoint Location
                 </h2>
-                <p className="text-gray-500 mt-2">
-                  Where is the waste located?
+                <p className="text-brand-text/60 mt-3 font-medium">
+                  Where exactly did you find this waste?
                 </p>
               </div>
 
-              <div className="flex-1 min-h-[300px] relative rounded-2xl overflow-hidden border border-gray-200">
+              <div className="step-item flex-1 relative rounded-[2rem] overflow-hidden border-4 border-brand-surface shadow-xl bg-gray-100 min-h-[400px]">
                 {!location ? (
-                  <div className="absolute inset-0 bg-gray-50 flex flex-col items-center justify-center p-6 text-center z-10">
-                    <Navigation className="w-12 h-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600 mb-6">
-                      We need your location to pinpoint the waste.
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10 bg-white/50 backdrop-blur-sm">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6 text-blue-500 shadow-inner">
+                      <Navigation className="w-10 h-10" />
+                    </div>
+                    <p className="text-brand-text font-medium mb-8 text-lg">
+                      We need your location to map the report accurately.
                     </p>
                     <button
                       onClick={getCurrentLocation}
                       disabled={isLocating}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                      className="btn-accent bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 px-8 py-4 flex items-center gap-3 text-lg disabled:opacity-70"
                     >
                       {isLocating ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
                         <MapPin className="w-5 h-5" />
                       )}
-                      Use My Current Location
+                      {isLocating ? "Locating..." : "Use Current Location"}
                     </button>
                     {locationError && (
-                      <p className="text-red-500 mt-4 text-sm">
+                      <p className="text-brand-red mt-6 font-bold bg-brand-red/10 px-4 py-2 rounded-xl">
                         {locationError}
                       </p>
                     )}
@@ -436,11 +505,12 @@ export function ReportWaste() {
                 ) : (
                   <MapContainer
                     center={[location.lat, location.lng]}
-                    zoom={16}
+                    zoom={17}
                     style={{
                       height: "100%",
-                      minHeight: "300px",
+                      minHeight: "400px",
                       width: "100%",
+                      zIndex: 1
                     }}
                   >
                     <TileLayer
@@ -455,26 +525,28 @@ export function ReportWaste() {
                 )}
 
                 {location && (
-                  <div className="absolute bottom-4 left-4 right-4 z-400 bg-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-green-500 shrink-0" />
-                    <span className="truncate text-gray-700">
-                      Location selected. Tap map to adjust.
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl border border-black/5 flex items-center gap-3 whitespace-nowrap">
+                    <div className="w-8 h-8 rounded-full bg-brand-green/20 flex items-center justify-center text-brand-green">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <span className="font-bold text-brand-text text-sm">
+                      Location pinned. Tap map to adjust.
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="step-item flex gap-4 mt-8">
                 <button
                   onClick={handleBack}
-                  className="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+                  className="px-8 py-4 border border-black/10 hover:bg-black/5 text-brand-text rounded-2xl font-bold transition-all cursor-pointer"
                 >
                   Back
                 </button>
                 <button
                   disabled={!location}
                   onClick={handleNext}
-                  className="flex-1 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 btn-primary py-4 flex items-center justify-center gap-2 disabled:opacity-50 text-lg cursor-pointer"
                 >
                   Continue <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
@@ -484,22 +556,27 @@ export function ReportWaste() {
 
           {/* STEP 3: CONFIRM */}
           {currentStep === 3 && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Review & Submit
+            <div className="flex flex-col h-full">
+              <div className="step-item text-center mb-8">
+                <h2 className="text-3xl font-black text-brand-text tracking-tight">
+                  Final Review
                 </h2>
-                <p className="text-gray-500 mt-2">
-                  Almost done! Please review your report details.
+                <p className="text-brand-text/60 mt-3 font-medium">
+                  Does everything look correct? Submit to finalize.
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 space-y-6">
+              <div className="step-item flex-1 bg-brand-surface border border-black/5 rounded-[2rem] p-6 sm:p-8 space-y-8">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    Photo
-                  </h3>
-                  <div className="aspect-video rounded-xl overflow-hidden shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-brand-yellow/20 rounded-lg flex items-center justify-center text-brand-yellow">
+                      <Camera size={16} />
+                    </div>
+                    <h3 className="font-bold text-brand-text uppercase tracking-widest text-sm">
+                      Proof Image
+                    </h3>
+                  </div>
+                  <div className="aspect-video rounded-2xl overflow-hidden shadow-inner border border-black/5">
                     {photoPreview && (
                       <img
                         src={photoPreview}
@@ -511,46 +588,46 @@ export function ReportWaste() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    Location Data
-                  </h3>
-                  <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5 text-green-600" />
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-brand-green/20 rounded-lg flex items-center justify-center text-brand-green">
+                      <MapPin size={16} />
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 shrink-0">
-                        Coordinates Captured
-                      </p>
-                      <p className="text-sm text-gray-500 font-mono mt-1">
-                        Lat: {location?.lat.toFixed(6)} <br />
-                        Lng: {location?.lng.toFixed(6)}
-                      </p>
-                    </div>
+                    <h3 className="font-bold text-brand-text uppercase tracking-widest text-sm">
+                      Location Data
+                    </h3>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-black/5">
+                    <p className="font-bold text-brand-text text-lg">Coordinates Blocked</p>
+                    <p className="text-brand-text/50 font-mono mt-2 flex gap-4 text-sm">
+                      <span>Lat: {location?.lat.toFixed(6)}</span>
+                      <span>Lng: {location?.lng.toFixed(6)}</span>
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="step-item flex gap-4 mt-8">
                 <button
                   onClick={handleBack}
-                  disabled={isSubmitting}
-                  className="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors disabled:opacity-50"
+                  disabled={submissionStatus === "submitting"}
+                  className="px-8 py-4 border border-black/10 hover:bg-black/5 text-brand-text rounded-2xl font-bold transition-all cursor-pointer disabled:opacity-50"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-lg transition-all flex items-center justify-center gap-2 disabled:bg-green-400"
+                  disabled={submissionStatus === "submitting"}
+                  className="flex-1 btn-primary py-4 flex items-center justify-center gap-3 text-lg cursor-pointer disabled:opacity-80"
                 >
-                  {isSubmitting ? (
+                  {submissionStatus === "submitting" ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> Submitting...
+                      <Loader2 className="w-6 h-6 animate-spin text-white/80" /> 
+                      <span>Directing...</span>
                     </>
                   ) : (
                     <>
-                      <UploadCloud className="w-5 h-5" /> Submit Report
+                      <UploadCloud className="w-6 h-6" /> 
+                      <span>Submit Report</span>
                     </>
                   )}
                 </button>
@@ -562,3 +639,4 @@ export function ReportWaste() {
     </div>
   );
 }
+
