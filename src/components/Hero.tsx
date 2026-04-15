@@ -11,6 +11,7 @@ import {
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { landingData } from "../contexts/constants/landingData";
+import { useNavigate } from "react-router-dom";
 
 // Register GSAP plugins if needed (none needed for basic animations here)
 
@@ -43,15 +44,10 @@ export function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
   const bgBlobsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const handleReportWaste = () => {
-    console.log("Triggering Report Waste Flow...");
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => console.log("Position:", position.coords),
-        (error) => console.log("Geolocation error:", error),
-      );
-    }
+    navigate("/report-waste");
   };
 
   useGSAP(

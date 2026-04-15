@@ -48,7 +48,7 @@ export const authService = {
    */
   sendOTP: async (
     email: string,
-    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL" = "SIGNUP"
+    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL"
   ) => {
     const response = await fetch(`${API_BASE}/api/v0/auth/otp/send/`, {
       method: "POST",
@@ -72,7 +72,7 @@ export const authService = {
   },
 
   /**
-   * Verify OTP and complete signup or password reset
+   * Verify OTP and complete signup
    */
   verifyOTP: async (
     email: string,
@@ -104,6 +104,42 @@ export const authService = {
     }
 
     return data;
+  },
+
+  /**
+   * Trigger forgot-password flow (send OTP for password reset)
+   */
+  forgotPassword: async (email: string) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/forgot-password/`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.detail || errorData?.message || "Failed to request password reset");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Validate OTP and set new password (used in forgot password flow)
+   */
+  validateNewPassword: async (email: string, otp_code: string, new_password: string) => {
+    const response = await fetch(`${API_BASE}/api/v0/auth/validate-new-password/`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ email, otp_code, new_password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.detail || errorData?.message || "Failed to reset password");
+    }
+
+    return await response.json();
   },
 
   /**

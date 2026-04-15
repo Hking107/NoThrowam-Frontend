@@ -7,10 +7,13 @@ import { SellerSignup } from "./pages/SellerSignup";
 import { CustomerSignup } from "./pages/CustomerSignup";
 import { ManagerSignup } from "./pages/ManagerSignup";
 import { VerifyOTP } from "./pages/VerifyOTP";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
+import { ReportWaste } from "./pages/ReportWaste";
 
 function App() {
   return (
