@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function CtaSection() {
+export function CtaSection({ onContactClick }: { onContactClick: () => void }) {
   const { title, subtitle, primaryCtaText, secondaryCtaText } =
     landingData.ctaSection;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,7 +68,10 @@ export function CtaSection() {
                 <ArrowRight className="h-5 w-5" />
               </button>
 
-              <button className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-bold transition-all transform active:scale-95">
+              <button 
+                onClick={onContactClick}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-bold transition-all transform active:scale-95 cursor-pointer"
+              >
                 <Mail className="h-5 w-5" />
                 {secondaryCtaText.en}
               </button>

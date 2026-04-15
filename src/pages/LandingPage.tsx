@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
 import { HowToUse } from "../components/HowToUse3";
@@ -8,8 +8,11 @@ import { Footer } from "../components/Footer";
 import { CtaSection } from "../components/CtaSection";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Testimonials } from "../components/Testimonials";
+import { ContactModal } from "../components/ContactModal";
 
 export function LandingPage() {
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
   useEffect(() => {
     // Refresh ScrollTrigger after a short delay to account for any layout shifts
     // from pinning or image loading.
@@ -22,7 +25,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text">
       {/* 1. Header & Navigation */}
-      <Navbar />
+      <Navbar onContactClick={() => setIsContactModalOpen(true)} />
 
       {/* Main Content Area */}
       <main data-nav-bg="" className="grow">
@@ -41,8 +44,14 @@ export function LandingPage() {
 
       {/* Standard Footer */}
       <Testimonials />
-      <CtaSection />
+      <CtaSection onContactClick={() => setIsContactModalOpen(true)} />
       <Footer />
+
+      {/* Global Modals */}
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onClose={() => setIsContactModalOpen(false)} 
+      />
     </div>
   );
 }

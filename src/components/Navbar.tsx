@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-export function Navbar() {
+export function Navbar({ onContactClick }: { onContactClick: () => void }) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navBg, setNavBg] = useState<string>(
@@ -72,8 +72,14 @@ export function Navbar() {
               {landingData.header.links.map((link) => (
                 <a
                   key={link.name}
-                  href={link.href}
-                  className="relative text-brand-text/80 hover:text-brand-green font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-brand-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  href={link.name === "Contact" ? undefined : link.href}
+                  onClick={(e) => {
+                    if (link.name === "Contact") {
+                      e.preventDefault();
+                      onContactClick();
+                    }
+                  }}
+                  className="relative text-brand-text/80 hover:text-brand-green font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-brand-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left cursor-pointer"
                 >
                   {link.name}
                 </a>
@@ -119,9 +125,17 @@ export function Navbar() {
             {landingData.header.links.map((link) => (
               <a
                 key={link.name}
-                href={link.href}
-                className="block px-3 py-2 rounded-md text-base font-medium text-brand-text/80 hover:text-brand-green hover:bg-brand-green/5"
-                onClick={() => setIsMenuOpen(false)}
+                href={link.name === "Contact" ? undefined : link.href}
+                className="block px-3 py-2 rounded-md text-base font-medium text-brand-text/80 hover:text-brand-green hover:bg-brand-green/5 cursor-pointer"
+                onClick={(e) => {
+                  if (link.name === "Contact") {
+                    e.preventDefault();
+                    onContactClick();
+                    setIsMenuOpen(false);
+                  } else {
+                    setIsMenuOpen(false);
+                  }
+                }}
               >
                 {link.name}
               </a>
