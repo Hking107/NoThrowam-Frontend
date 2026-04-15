@@ -109,9 +109,9 @@ export const landingData = {
       { name: "Cookie Policy", href: "#cookies" },
     ],
     contactInfo: {
-      address: "123 Green Avenue, Akwa, Douala, Cameroon",
-      email: "hello@nothrowam.cm",
-      phone: "+237 600 000 000",
+      address: "Cité universitaire Ngoa-Ekelle ,Yaoundé , Cameroon",
+      email: "nothrowam@gmail.com",
+      phone: "+237 681 144 815",
     },
     socialLinks: {
       facebook: "#",

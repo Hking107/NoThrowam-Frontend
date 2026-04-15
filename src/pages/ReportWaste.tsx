@@ -26,6 +26,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 });
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
 type Step = 1 | 2 | 3;
 
 interface LocationData {
@@ -184,11 +187,43 @@ export function ReportWaste() {
   };
 
   const handleSubmit = async () => {
+    if (!_file) {
+      alert("Please select a photo first.");
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsSuccess(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", _file);
+
+      if (location) {
+        formData.append("latitude", location.lat.toString());
+        formData.append("longitude", location.lng.toString());
+      }
+
+      const response = await fetch(`${API_BASE}/api/v0/deposits/report/`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || errorData.message || "Failed to submit report",
+        );
+      }
+
+      const data = await response.json();
+      console.log("Report submitted successfully:", data);
+      setIsSuccess(true);
+    } catch (error: any) {
+      console.error("Error submitting report:", error);
+      alert(error.message || "Failed to submit report. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {

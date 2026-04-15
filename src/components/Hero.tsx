@@ -181,7 +181,10 @@ export function Hero() {
             </div>
 
             {/* Secondary CTA */}
-            <button className="hero-cta flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20 hover:border-white/40 px-7 py-4 rounded-full text-lg font-semibold transition-all duration-300 active:scale-95">
+            <button
+              onClick={() => navigate("/signup")}
+              className="hero-cta flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20 hover:border-white/40 px-7 py-4 rounded-full text-lg font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
+            >
               Learn More
               <ArrowRight className="h-4 w-4" />
             </button>

@@ -9,12 +9,14 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function ActorCards() {
   const { seller, customer, manager } = landingData.actorFunnel;
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useGSAP(
     () => {
@@ -61,7 +63,10 @@ export function ActorCards() {
               <p className="text-brand-text/70 mb-8">{seller.description}</p>
             </div>
 
-            <button className="w-full btn border-2 border-brand-yellow/30 bg-white hover:bg-brand-yellow/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-yellow transition-colors">
+            <button
+              onClick={() => navigate("/signup/seller")}
+              className="w-full btn border-2 border-brand-yellow/30 bg-white hover:bg-brand-yellow/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-yellow transition-colors cursor-pointer"
+            >
               <span>{seller.ctaText}</span>
               <ArrowRight className="w-5 h-5 text-brand-yellow group-hover:translate-x-1 transition-transform" />
             </button>
@@ -77,7 +82,10 @@ export function ActorCards() {
               <p className="text-brand-text/70 mb-8">{customer.description}</p>
             </div>
 
-            <button className="w-full btn border-2 border-brand-red/30 bg-white hover:bg-brand-red/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-red transition-colors">
+            <button
+              onClick={() => navigate("/signup/customer")}
+              className="w-full btn border-2 border-brand-red/30 bg-white hover:bg-brand-red/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-red transition-colors cursor-pointer"
+            >
               <span>{customer.ctaText}</span>
               <ArrowRight className="w-5 h-5 text-brand-red group-hover:translate-x-1 transition-transform" />
             </button>
@@ -93,7 +101,10 @@ export function ActorCards() {
               <p className="text-brand-text/70 mb-8">{manager.description}</p>
             </div>
 
-            <button className="w-full btn border-2 border-brand-green/30 bg-white hover:bg-brand-green/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-green transition-colors">
+            <button
+              onClick={() => navigate("/signup/manager")}
+              className="w-full btn border-2 border-brand-green/30 bg-white hover:bg-brand-green/10 text-brand-text font-bold flex items-center justify-between group-hover:border-brand-green transition-colors cursor-pointer"
+            >
               <span>{manager.ctaText}</span>
               <ArrowRight className="w-5 h-5 text-brand-green group-hover:translate-x-1 transition-transform" />
             </button>
