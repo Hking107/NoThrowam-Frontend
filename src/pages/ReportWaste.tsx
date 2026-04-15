@@ -18,6 +18,8 @@ import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,
   iconUrl,
@@ -400,7 +402,11 @@ export function ReportWaste() {
                   <MapContainer
                     center={[location.lat, location.lng]}
                     zoom={16}
-                    style={{ height: "100%", width: "100%" }}
+                    style={{
+                      height: "100%",
+                      minHeight: "300px",
+                      width: "100%",
+                    }}
                   >
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
