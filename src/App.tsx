@@ -19,17 +19,19 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<SignIn />} />
+
+        {/* Must be placed in a protected Route later on */}
         <Route path="/report-waste" element={<ReportWaste />} />
-        
+
         {/* Signup Routes */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/signup/seller" element={<SellerSignup />} />
         <Route path="/signup/customer" element={<CustomerSignup />} />
         <Route path="/signup/manager" element={<ManagerSignup />} />
-        
+
         {/* OTP Verification */}
         <Route path="/verify-otp" element={<VerifyOTP />} />
-        
+
         {/* Protected Dashboard Routes */}
         <Route
           path="/dashboard_customer"
@@ -57,8 +59,6 @@ function App() {
         />
       </Routes>
     </Router>
-
-    
   );
 }
 

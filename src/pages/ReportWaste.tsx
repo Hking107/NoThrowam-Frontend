@@ -402,7 +402,11 @@ export function ReportWaste() {
                   <MapContainer
                     center={[location.lat, location.lng]}
                     zoom={16}
-                    style={{ height: "100%", minHeight: "300px", width: "100%" }}
+                    style={{
+                      height: "100%",
+                      minHeight: "300px",
+                      width: "100%",
+                    }}
                   >
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
