@@ -14,6 +14,8 @@ import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
 import { ReportWaste } from "./pages/ReportWaste";
+import { NotFound } from "./pages/NotFound";
+import { Unauthorized } from "./pages/Unauthorized";
 
 function App() {
   return (
@@ -61,6 +63,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Error Pages */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

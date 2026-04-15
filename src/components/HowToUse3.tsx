@@ -162,7 +162,7 @@ export function HowToUse() {
   return (
     <section
       ref={containerRef}
-      id="how-to-use"
+      id="about"
       className="h-screen w-full flex flex-col justify-center bg-brand-surface overflow-hidden relative py-12"
     >
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col h-full">
