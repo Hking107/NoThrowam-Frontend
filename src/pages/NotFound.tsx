@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { ContactModal } from "../components/ContactModal";
-import { Home, ArrowLeft, Search } from "lucide-react";
+import { Home, ArrowLeft, Search, Mail } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -16,35 +16,23 @@ export function NotFound() {
         defaults: { ease: "power3.out", duration: 1 },
       });
 
-      tl.from(".error-code", {
-        y: 50,
-        opacity: 0,
-        scale: 0.8,
-        delay: 0.2,
-      })
-        .from(
-          ".error-title",
-          {
-            y: 30,
-            opacity: 0,
-          },
+      tl.fromTo(".error-code", 
+        { y: 50, opacity: 0, scale: 0.8 },
+        { y: 0, opacity: 1, scale: 1, duration: 1, delay: 0.2 }
+      )
+        .fromTo(".error-title",
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1 },
           "-=0.6",
         )
-        .from(
-          ".error-desc",
-          {
-            y: 20,
-            opacity: 0,
-          },
+        .fromTo(".error-desc",
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1 },
           "-=0.7",
         )
-        .from(
-          ".error-cta",
-          {
-            scale: 0.9,
-            opacity: 0,
-            stagger: 0.1,
-          },
+        .fromTo(".error-cta",
+          { scale: 0.9, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 1, stagger: 0.1 },
           "-=0.7",
         );
 
@@ -107,8 +95,15 @@ export function NotFound() {
               Return Home
             </Link>
             <button
-              onClick={() => window.history.back()}
+              onClick={() => setIsContactModalOpen(true)}
               className="btn border-2 border-brand-green/20 hover:border-brand-green/40 bg-white text-brand-text px-8 py-4 flex items-center gap-2 text-lg transition-all"
+            >
+              <Mail size={20} />
+              Contact Support
+            </button>
+            <button
+              onClick={() => window.history.back()}
+              className="btn border-2 border-brand-green/10 hover:border-brand-green/20 bg-white text-brand-text/60 px-8 py-4 flex items-center gap-2 text-lg transition-all"
             >
               <ArrowLeft size={20} />
               Go Back
