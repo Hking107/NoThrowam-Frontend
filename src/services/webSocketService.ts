@@ -17,14 +17,24 @@ export class WebSocketService {
   public connect() {
     this.intentionalDisconnect = false;
     
-    // Auth: Le backend accepte le token via querystring (recommandé pour les WS dans le navigateur)
     const token = localStorage.getItem('token');
-    const finalUrl = token ? `${this.url}?token=${token}` : this.url;
+    let finalUrl = this.url;
 
+    if (token) {
+      try {
+        const urlObj = new URL(this.url);
+        urlObj.searchParams.set('token', token); 
+        finalUrl = urlObj.toString();
+      } catch (e) {
+        console.error("[WS] Erreur lors de la construction de l'URL", e);
+      }
+    }
+
+    console.log(`[WS] Tentative de connexion à : ${finalUrl}`);
     this.ws = new WebSocket(finalUrl);
 
     this.ws.onopen = () => {
-      console.log(` [WS] Connecté à ${this.url}`);
+      console.log(`✅ [WS] Connecté à ${finalUrl}`);
       this.reconnectAttempts = 0;
       this.startHeartbeat();
     };
@@ -33,11 +43,9 @@ export class WebSocketService {
       try {
         const parsed = JSON.parse(event.data);
         
-        // On récupère le type d'événement (ex: "posts_list", "post.created", "error")
         const eventType = parsed.type;
         const typeHandlers = this.handlers.get(eventType) || [];
         
-        // car le backend utilise des clés variables ("posts", "post", "message", etc.)
         typeHandlers.forEach(fn => fn(parsed));
         
       } catch (e) {
@@ -56,8 +64,7 @@ export class WebSocketService {
 
     this.ws.onerror = (err) => {
       console.error(` [WS] Erreur sur ${this.url}:`, err);
-      this.ws?.close();
-    };
+      };
   }
 
   public sendEvent(type: string, payload?: any) {
