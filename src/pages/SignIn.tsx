@@ -20,19 +20,23 @@ export const SignIn = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    
-    tl.fromTo(".auth-card", 
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-    )
-    .fromTo(".auth-item", 
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 
-      "-=0.4"
-    );
-  }, { scope: containerRef });
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        ".auth-card",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      ).fromTo(
+        ".auth-item",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+        "-=0.4",
+      );
+    },
+    { scope: containerRef },
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,7 +74,7 @@ export const SignIn = () => {
     } catch (err: any) {
       setError(
         err.message ||
-          "An error occurred during login. Please check your credentials."
+          "An error occurred during login. Please check your credentials.",
       );
     } finally {
       setLoading(false);
@@ -78,15 +82,18 @@ export const SignIn = () => {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
+    >
       {/* Decorative Ornaments */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-      
+
       <div className="auth-card w-full max-w-lg relative z-10">
-        <div className="card-tactile !p-8 md:!p-12">
+        <div className="card-tactile p-8! md:p-12!">
           {/* Back Button */}
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors"
           >
@@ -174,7 +181,10 @@ export const SignIn = () => {
               ) : (
                 <>
                   <span>Sign In</span>
-                  <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <LogIn
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </>
               )}
             </button>
