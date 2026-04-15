@@ -1,5 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { User, ShoppingBag, ShieldCheck, ArrowLeft, ChevronRight } from "lucide-react";
+import {
+  User,
+  ShoppingBag,
+  ShieldCheck,
+  ArrowLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Logo } from "../components/Logo";
 import { useRef } from "react";
 import gsap from "gsap";
@@ -9,19 +15,23 @@ export function Signup() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    
-    tl.fromTo(".signup-header", 
-      { y: -20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
-    )
-    .fromTo(".role-card", 
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" }, 
-      "-=0.3"
-    );
-  }, { scope: containerRef });
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        ".signup-header",
+        { y: -20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+      ).fromTo(
+        ".role-card",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" },
+        "-=0.3",
+      );
+    },
+    { scope: containerRef },
+  );
 
   const roles = [
     {
@@ -32,7 +42,7 @@ export function Signup() {
       icon: <User size={32} className="text-brand-green" />,
       colorClass: "border-b-brand-green",
       hoverBg: "hover:bg-brand-green/5",
-      path: "/signup/customer"
+      path: "/signup/customer",
     },
     {
       id: "seller",
@@ -42,7 +52,7 @@ export function Signup() {
       icon: <ShoppingBag size={32} className="text-brand-yellow" />,
       colorClass: "border-b-brand-yellow",
       hoverBg: "hover:bg-brand-yellow/5",
-      path: "/signup/seller"
+      path: "/signup/seller",
     },
     {
       id: "manager",
@@ -52,12 +62,15 @@ export function Signup() {
       icon: <ShieldCheck size={32} className="text-brand-red" />,
       colorClass: "border-b-brand-red",
       hoverBg: "hover:bg-brand-red/5",
-      path: "/signup/manager"
-    }
+      path: "/signup/manager",
+    },
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col items-center justify-center bg-brand-surface p-6 relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="min-h-screen flex flex-col items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
+    >
       {/* Decorative Ornaments */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-green/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-yellow/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
@@ -71,7 +84,8 @@ export function Signup() {
           Join the Movement
         </h1>
         <p className="text-brand-text/60 text-center mt-4 text-lg font-medium max-w-lg">
-          Choose your role below to start making Cameroon cleaner and more sustainable.
+          Choose your role below to start making Cameroon cleaner and more
+          sustainable.
         </p>
       </div>
 
@@ -81,7 +95,7 @@ export function Signup() {
           <button
             key={role.id}
             onClick={() => navigate(role.path)}
-            className={`role-card flex flex-col p-8 bg-white rounded-[2rem] border border-black/5 shadow-sm transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border-b-4 ${role.colorClass} ${role.hoverBg} text-left group cursor-pointer`}
+            className={`role-card flex flex-col p-8 bg-white rounded-4xl border border-black/5 shadow-sm transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border-b-4 ${role.colorClass} ${role.hoverBg} text-left group cursor-pointer`}
           >
             <div className="mb-6 p-4 bg-brand-surface rounded-2xl w-fit group-hover:scale-110 transition-transform duration-300">
               {role.icon}
@@ -94,7 +108,10 @@ export function Signup() {
             </p>
             <div className="mt-auto flex items-center gap-2 text-brand-green font-bold text-sm uppercase tracking-wider">
               <span>Sign Up as {role.roleName}</span>
-              <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              <ChevronRight
+                size={16}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </div>
           </button>
         ))}
@@ -114,7 +131,7 @@ export function Signup() {
       </div>
 
       {/* Back to Home */}
-      <button 
+      <button
         onClick={() => navigate("/")}
         className="signup-header fixed top-8 left-8 p-3 rounded-full bg-white border border-black/5 shadow-sm text-brand-text/40 hover:text-brand-text transition-all hover:scale-110 z-50 cursor-pointer"
       >

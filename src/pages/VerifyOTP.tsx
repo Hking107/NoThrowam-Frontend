@@ -11,7 +11,8 @@ export function VerifyOTP() {
   const navigate = useNavigate();
   const location = useLocation();
   const { verifyOTP } = useAuth();
-  const email = location.state?.email || sessionStorage.getItem("pending_email");
+  const email =
+    location.state?.email || sessionStorage.getItem("pending_email");
   const isSignup = location.state?.isSignup || false;
 
   const [otp, setOtp] = useState("");
@@ -23,19 +24,23 @@ export function VerifyOTP() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    
-    tl.fromTo(".auth-card", 
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-    )
-    .fromTo(".auth-item", 
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 
-      "-=0.4"
-    );
-  }, { scope: containerRef });
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        ".auth-card",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      ).fromTo(
+        ".auth-item",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+        "-=0.4",
+      );
+    },
+    { scope: containerRef },
+  );
 
   // Countdown timer for OTP expiry
   useEffect(() => {
@@ -119,7 +124,7 @@ export function VerifyOTP() {
     } catch (err: any) {
       setError(
         err.message ||
-          "OTP verification failed. Please try again or request a new OTP."
+          "OTP verification failed. Please try again or request a new OTP.",
       );
     } finally {
       setLoading(false);
@@ -132,10 +137,7 @@ export function VerifyOTP() {
     setResendCooldown(60);
 
     try {
-      await authService.sendOTP(
-        email,
-        isSignup ? "SIGNUP" : "PASSWORD_RESET"
-      );
+      await authService.sendOTP(email, isSignup ? "SIGNUP" : "PASSWORD_RESET");
       setOtp("");
       setCountdown(600);
     } catch (err: any) {
@@ -146,15 +148,18 @@ export function VerifyOTP() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
+    >
       {/* Decorative Ornaments */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="auth-card w-full max-w-lg relative z-10">
-        <div className="card-tactile !p-8 md:!p-12">
+        <div className="card-tactile p-8! md:p-12!">
           {/* Back Button */}
-          <button 
+          <button
             onClick={() => navigate("/signin")}
             className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors cursor-pointer"
           >
@@ -169,7 +174,8 @@ export function VerifyOTP() {
               Verify Email
             </h2>
             <p className="auth-item text-brand-text/60 text-center mt-2 font-medium">
-              We've sent a 6-digit code to <span className="text-brand-green">{email}</span>
+              We've sent a 6-digit code to{" "}
+              <span className="text-brand-green">{email}</span>
             </p>
           </div>
 
@@ -206,7 +212,9 @@ export function VerifyOTP() {
               </div>
               <span
                 className={`text-xl font-bold ${
-                  countdown < 60 ? "text-brand-red animate-pulse" : "text-brand-green"
+                  countdown < 60
+                    ? "text-brand-red animate-pulse"
+                    : "text-brand-green"
                 }`}
               >
                 {formatTime(countdown)}
@@ -216,7 +224,7 @@ export function VerifyOTP() {
             <button
               type="submit"
               disabled={loading || otp.length !== 6}
-              className="auth-item w-full btn-primary !py-4 flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20"
+              className="auth-item w-full btn-primary py-4! flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -226,7 +234,10 @@ export function VerifyOTP() {
               ) : (
                 <>
                   <span>Verify Account</span>
-                  <CheckCircle2 size={20} className="group-hover:scale-110 transition-transform" />
+                  <CheckCircle2
+                    size={20}
+                    className="group-hover:scale-110 transition-transform"
+                  />
                 </>
               )}
             </button>
@@ -242,7 +253,10 @@ export function VerifyOTP() {
               disabled={!canResend}
               className="flex items-center justify-center gap-2 mx-auto text-brand-green font-bold hover:underline disabled:text-brand-text/20 disabled:cursor-not-allowed transition-all group"
             >
-              <RefreshCw size={18} className={`${!canResend ? "" : "group-hover:rotate-180"} transition-transform duration-500`} />
+              <RefreshCw
+                size={18}
+                className={`${!canResend ? "" : "group-hover:rotate-180"} transition-transform duration-500`}
+              />
               <span>
                 {canResend
                   ? "Resend New Code"
