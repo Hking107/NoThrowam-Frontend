@@ -17,40 +17,8 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const categories = ['All Categories', 'Plastic', 'Metal', 'Paper', 'Compost', 'Glass', 'Other'];
-  // J'ai remis Active et Pending au cas où ton backend les utiliserait
   const statuses = ['All Statuses', 'ACTIVE', 'PENDING', 'PUBLISHED', 'DRAFT', 'RESERVED', 'SOLD', 'REJECTED'];
 
-  // useEffect(() => {
-  //   const fetchMyListings = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       const token = localStorage.getItem("token"); 
-        
-  //       const response = await fetch('/api/v0/waste-posts/my/', {
-  //         method: 'GET',
-  //         headers: {
-  //           'accept': 'application/json',
-  //           'Authorization': `Bearer ${token}`,
-  //           'ngrok-skip-browser-warning': 'true' 
-  //         }
-  //       });
-
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         setListings(Array.isArray(data) ? data : (data.results || []));
-  //       } else {
-  //         console.error("Server Error:", response.status);
-  //       }
-  //     } catch (error) {
-  //       console.error("Network Error:", error);
-  //     } finally {
-  //       setIsLoading(false); 
-  //     }
-  //   };
-
-  //   fetchMyListings();
-  // }, []);
-  
   useEffect(() => {
     const fetchMyListings = async () => {
       setIsLoading(true);
@@ -202,7 +170,6 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
                             <Edit2 size={18} />
                           </button>
                           
-                          {/* CORRECTION ICI : Affiche le bouton tant que ce n'est pas un DRAFT */}
                           {displayStatus !== 'DRAFT' && (
                             <button 
                               onClick={() => {

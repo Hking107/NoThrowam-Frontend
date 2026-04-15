@@ -130,15 +130,25 @@ export const SignIn = () => {
 
         </form>
 
-        <p className="mt-6 text-center text-gray-600 text-sm">
-          Don't have an account?{" "}
-          <span
-            className="text-indigo-600 font-semibold cursor-pointer hover:underline"
-            onClick={() => navigate("/signup")}
-          >
-            Sign up
-          </span>
-        </p>
+        <div className="mt-6 text-center text-gray-600 text-sm space-y-2">
+          <p>
+            <span
+              className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot password?
+            </span>
+          </p>
+          <p>
+            Don't have an account?{" "}
+            <span
+              className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+              onClick={() => navigate("/signup")}
+            >
+              Sign up
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );
