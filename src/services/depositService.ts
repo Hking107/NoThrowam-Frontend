@@ -39,8 +39,12 @@ export interface ReportDepositResponse {
   insights: DepositInsights | null;
 }
 
+export interface UploadImageResponse {
+  image_url: string;
+}
+
 export interface ReportDepositPayload {
-  image: File;
+  image: string; // URL returned by uploadImage
   description?: string;
   latitude?: number;
   longitude?: number;
@@ -50,29 +54,16 @@ export interface ReportDepositPayload {
 
 export const depositService = {
   /**
-   * Report a waste deposit (guest — no auth required).
+   * Upload a waste image to the server.
    *
-   * Sends the image as multipart/form-data along with optional
-   * description and GPS coordinates.
-   *
-   * The backend runs AI analysis and returns both the deposit
-   * record and any insights it was able to generate.
+   * Posts the image as multipart/form-data to the waste-posts
+   * upload endpoint and returns the hosted image URL.
    */
-  report: async (payload: ReportDepositPayload): Promise<ReportDepositResponse> => {
+  uploadImage: async (file: File): Promise<string> => {
     const formData = new FormData();
-    formData.append("image", payload.image);
+    formData.append("image", file);
 
-    if (payload.description) {
-      formData.append("description", payload.description);
-    }
-    if (payload.latitude !== undefined) {
-      formData.append("latitude", payload.latitude.toString());
-    }
-    if (payload.longitude !== undefined) {
-      formData.append("longitude", payload.longitude.toString());
-    }
-
-    const response = await fetch(`${API_BASE}/api/v0/deposits/report/`, {
+    const response = await fetch(`${API_BASE}/api/v0/deposits/upload-image/`, {
       method: "POST",
       body: formData,
       // No Content-Type header — the browser sets it with the boundary
@@ -82,7 +73,68 @@ export const depositService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorText = await response.text();
+      console.error("[uploadImage] HTTP", response.status, errorText);
+      let errorData: any = {};
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {}
+      throw new Error(
+        errorData.detail ||
+          errorData.message ||
+          `Image upload failed (HTTP ${response.status})`,
+      );
+    }
+
+    const data = await response.json();
+    console.log("[uploadImage] success response:", data);
+    return data.url;
+  },
+
+  /**
+   * Report a waste deposit (guest — no auth required).
+   *
+   * Sends the image URL (obtained from uploadImage) along with
+   * optional description and GPS coordinates.
+   *
+   * The backend runs AI analysis and returns both the deposit
+   * record and any insights it was able to generate.
+   */
+  report: async (
+    payload: ReportDepositPayload,
+  ): Promise<ReportDepositResponse> => {
+    const body: Record<string, unknown> = {
+      image_url: payload.image,
+    };
+
+    if (payload.description) {
+      body.description = payload.description;
+    }
+    if (payload.latitude !== undefined) {
+      body.latitude = parseFloat(payload.latitude.toFixed(6));
+    }
+    if (payload.longitude !== undefined) {
+      body.longitude = parseFloat(payload.longitude.toFixed(6));
+    }
+
+    console.log("[report] sending body:", body);
+
+    const response = await fetch(`${API_BASE}/api/v0/deposits/report/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[report] HTTP", response.status, errorText);
+      let errorData: any = {};
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {}
       throw new Error(
         errorData.detail ||
           errorData.message ||

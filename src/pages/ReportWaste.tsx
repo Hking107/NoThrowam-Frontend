@@ -321,6 +321,10 @@ export function ReportWaste() {
 
   // ── Submit using the depositService ──────────────────────────────────────
 
+  const [submitPhase, setSubmitPhase] = useState<
+    "idle" | "uploading" | "analyzing"
+  >("idle");
+
   const handleSubmit = async () => {
     if (!_file) {
       alert("Please select a photo first.");
@@ -328,11 +332,17 @@ export function ReportWaste() {
     }
 
     setSubmissionStatus("submitting");
+    setSubmitPhase("uploading");
     setSubmitErrorMessage("");
 
     try {
+      // Step 1 – upload the image and get a hosted URL
+      const imageUrl = await depositService.uploadImage(_file);
+
+      // Step 2 – submit the report using the image URL
+      setSubmitPhase("analyzing");
       const result = await depositService.report({
-        image: _file,
+        image: imageUrl,
         description: description || undefined,
         latitude: location?.lat,
         longitude: location?.lng,
@@ -347,6 +357,8 @@ export function ReportWaste() {
       setSubmitErrorMessage(
         error.message || "An unexpected error occurred. Please try again.",
       );
+    } finally {
+      setSubmitPhase("idle");
     }
   };
 
@@ -835,7 +847,11 @@ export function ReportWaste() {
                   {submissionStatus === "submitting" ? (
                     <>
                       <Loader2 className="w-6 h-6 animate-spin text-white/80" />
-                      <span>Analyzing…</span>
+                      <span>
+                        {submitPhase === "uploading"
+                          ? "Uploading…"
+                          : "Analyzing…"}
+                      </span>
                     </>
                   ) : (
                     <>
