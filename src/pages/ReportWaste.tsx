@@ -9,7 +9,11 @@ import {
   ArrowLeft,
   X,
   XCircle,
-  RotateCcw
+  RotateCcw,
+  Sparkles,
+  AlertTriangle,
+  Leaf,
+  ShieldCheck,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -17,6 +21,11 @@ import L from "leaflet";
 import { Logo } from "../components/Logo";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import {
+  depositService,
+  type ReportDepositResponse,
+  type DepositInsights,
+} from "../services/depositService";
 
 // Fix for default Leaflet marker icons not showing up due to webpack/vite issues
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -30,9 +39,6 @@ L.Icon.Default.mergeOptions({
   iconUrl,
   shadowUrl,
 });
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
 
 type Step = 1 | 2 | 3;
 
@@ -58,16 +64,121 @@ function LocationSelector({
   return location ? <Marker position={[location.lat, location.lng]} /> : null;
 }
 
+// ── Severity helpers ─────────────────────────────────────────────────────────
+
+function severityLabel(score: number): string {
+  if (score >= 80) return "Critical";
+  if (score >= 60) return "High";
+  if (score >= 40) return "Moderate";
+  if (score >= 20) return "Low";
+  return "Minimal";
+}
+
+function severityColor(score: number): string {
+  if (score >= 80) return "text-red-500";
+  if (score >= 60) return "text-orange-500";
+  if (score >= 40) return "text-yellow-500";
+  if (score >= 20) return "text-brand-green";
+  return "text-emerald-400";
+}
+
+function severityBarColor(score: number): string {
+  if (score >= 80) return "bg-red-500";
+  if (score >= 60) return "bg-orange-500";
+  if (score >= 40) return "bg-yellow-500";
+  if (score >= 20) return "bg-brand-green";
+  return "bg-emerald-400";
+}
+
+// ── Insights Panel ───────────────────────────────────────────────────────────
+
+function InsightsPanel({ insights }: { insights: DepositInsights }) {
+  return (
+    <div className="space-y-6">
+      {/* Waste Type */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-brand-yellow/15 rounded-2xl flex items-center justify-center text-brand-yellow shrink-0">
+          <Leaf size={22} />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
+            Waste Type
+          </p>
+          <p className="text-xl font-black text-brand-text mt-0.5">
+            {insights.waste_type}
+          </p>
+        </div>
+      </div>
+
+      {/* Severity */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} className={severityColor(insights.severity)} />
+            <span className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
+              Severity
+            </span>
+          </div>
+          <span className={`text-sm font-black ${severityColor(insights.severity)}`}>
+            {severityLabel(insights.severity)} ({insights.severity}/100)
+          </span>
+        </div>
+        <div className="w-full h-2.5 bg-black/5 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${severityBarColor(insights.severity)}`}
+            style={{ width: `${insights.severity}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Confidence */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-brand-green/15 rounded-2xl flex items-center justify-center text-brand-green shrink-0">
+          <ShieldCheck size={22} />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
+            AI Confidence
+          </p>
+          <p className="text-xl font-black text-brand-text mt-0.5">
+            {(insights.confidence * 100).toFixed(0)}%
+          </p>
+        </div>
+      </div>
+
+      {/* Recommendation */}
+      {insights.recommendation && (
+        <div className="bg-brand-surface border border-black/5 rounded-2xl p-5">
+          <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest mb-2">
+            Recommendation
+          </p>
+          <p className="text-brand-text/80 font-medium leading-relaxed text-sm">
+            {insights.recommendation}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────────────────────
+
 export function ReportWaste() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [_file, setFile] = useState<File | null>(null);
+  const [description, setDescription] = useState("");
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  
-  const [submissionStatus, setSubmissionStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  const [submissionStatus, setSubmissionStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
   const [submitErrorMessage, setSubmitErrorMessage] = useState("");
+  const [apiResponse, setApiResponse] = useState<ReportDepositResponse | null>(
+    null,
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -75,17 +186,22 @@ export function ReportWaste() {
   const streamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    tl.fromTo(".step-content", 
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
-    ).fromTo(".step-item",
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: "power2.out" },
-      "-=0.3"
-    );
-  }, { scope: containerRef, dependencies: [currentStep, submissionStatus] });
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        ".step-content",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
+      ).fromTo(
+        ".step-item",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: "power2.out" },
+        "-=0.3",
+      );
+    },
+    { scope: containerRef, dependencies: [currentStep, submissionStatus] },
+  );
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -190,7 +306,7 @@ export function ReportWaste() {
           "Unable to retrieve your location. Please drop a pin on the map.",
         );
         setIsLocating(false);
-        setLocation({ lat: 3.848, lng: 11.502 }); // Default somewhere in Yaounde
+        setLocation({ lat: 3.848, lng: 11.502 }); // Default somewhere in Yaoundé
       },
     );
   };
@@ -203,6 +319,8 @@ export function ReportWaste() {
     if (currentStep > 1) setCurrentStep((prev) => (prev - 1) as Step);
   };
 
+  // ── Submit using the depositService ──────────────────────────────────────
+
   const handleSubmit = async () => {
     if (!_file) {
       alert("Please select a photo first.");
@@ -210,89 +328,140 @@ export function ReportWaste() {
     }
 
     setSubmissionStatus("submitting");
+    setSubmitErrorMessage("");
 
     try {
-      const formData = new FormData();
-      formData.append("image", _file);
-
-      if (location) {
-        formData.append("latitude", location.lat.toString());
-        formData.append("longitude", location.lng.toString());
-      }
-
-      const response = await fetch(`${API_BASE}/api/v0/deposits/report/`, {
-        method: "POST",
-        body: formData,
+      const result = await depositService.report({
+        image: _file,
+        description: description || undefined,
+        latitude: location?.lat,
+        longitude: location?.lng,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || errorData.message || "Failed to submit report",
-        );
-      }
-
+      console.log("Deposit reported successfully:", result);
+      setApiResponse(result);
       setSubmissionStatus("success");
     } catch (error: any) {
       console.error("Error submitting report:", error);
       setSubmissionStatus("error");
-      setSubmitErrorMessage(error.message || "An unexpected error occurred.");
+      setSubmitErrorMessage(
+        error.message || "An unexpected error occurred. Please try again.",
+      );
     }
   };
 
+  // ── SUCCESS STATE ────────────────────────────────────────────────────────
+
   if (submissionStatus === "success") {
+    const insights = apiResponse?.insights ?? null;
+    const depositId = apiResponse?.deposit?.id;
+
     return (
-      <div ref={containerRef} className="min-h-screen bg-brand-surface flex items-center justify-center p-6 relative overflow-hidden">
+      <div
+        ref={containerRef}
+        className="min-h-screen bg-brand-surface flex items-center justify-center p-4 sm:p-6 relative overflow-hidden"
+      >
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-green/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-yellow/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-        
-        <div className="step-content card-tactile max-w-md w-full text-center relative z-10 p-10!">
-          <div className="step-item w-24 h-24 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
-            <div className="absolute inset-0 bg-brand-green/20 rounded-full animate-ping opacity-75" />
-            <CheckCircle className="w-12 h-12 text-brand-green relative z-10" />
+
+        <div className="step-content card-tactile max-w-lg w-full relative z-10 p-6! sm:p-10!">
+          {/* Header */}
+          <div className="step-item text-center mb-8">
+            <div className="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-brand-green/20 rounded-full animate-ping opacity-75" />
+              <CheckCircle className="w-10 h-10 text-brand-green relative z-10" />
+            </div>
+            <h2 className="text-3xl font-black text-brand-text tracking-tight mb-2">
+              Report Received!
+            </h2>
+            {depositId && (
+              <p className="text-brand-text/30 font-mono text-xs">
+                Deposit #{depositId}
+              </p>
+            )}
+            <p className="text-brand-text/60 font-medium mt-3 leading-relaxed">
+              Thank you for helping keep the community clean. Our team will
+              verify and take action shortly.
+            </p>
           </div>
-          <h2 className="step-item text-3xl font-black text-brand-text tracking-tight mb-4">Report Received!</h2>
-          <p className="step-item text-brand-text/60 font-medium mb-10 leading-relaxed">
-            Thank you for helping keep the community clean. Our team will verify and take action shortly.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="step-item btn-primary w-full py-4 text-lg"
-          >
-            Return Home
-          </button>
+
+          {/* AI Insights Card */}
+          {insights && (
+            <div className="step-item mb-8">
+              <div className="flex items-center gap-2 mb-5">
+                <Sparkles size={18} className="text-brand-yellow" />
+                <h3 className="font-black text-brand-text uppercase tracking-widest text-xs">
+                  AI Analysis
+                </h3>
+              </div>
+              <InsightsPanel insights={insights} />
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="step-item flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {
+                // Reset everything for a new report
+                setSubmissionStatus("idle");
+                setApiResponse(null);
+                setFile(null);
+                setPhotoPreview(null);
+                setDescription("");
+                setLocation(null);
+                setCurrentStep(1);
+              }}
+              className="flex-1 px-6 py-4 border-2 border-black/5 hover:border-black/10 bg-white text-brand-text/70 rounded-2xl font-bold transition-all cursor-pointer text-center"
+            >
+              Report Another
+            </button>
+            <button
+              onClick={() => (window.location.href = "/")}
+              className="flex-1 btn-primary py-4 text-lg cursor-pointer"
+            >
+              Return Home
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // ── ERROR STATE ──────────────────────────────────────────────────────────
+
   if (submissionStatus === "error") {
     return (
-      <div ref={containerRef} className="min-h-screen bg-brand-surface flex items-center justify-center p-6 relative overflow-hidden">
+      <div
+        ref={containerRef}
+        className="min-h-screen bg-brand-surface flex items-center justify-center p-6 relative overflow-hidden"
+      >
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-red/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-yellow/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-        
+
         <div className="step-content card-tactile max-w-md w-full text-center relative z-10 p-10!">
           <div className="step-item w-24 h-24 bg-brand-red/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-brand-red/20">
             <XCircle className="w-12 h-12 text-brand-red" />
           </div>
-          <h2 className="step-item text-3xl font-black text-brand-text tracking-tight mb-4">Submission Failed</h2>
+          <h2 className="step-item text-3xl font-black text-brand-text tracking-tight mb-4">
+            Submission Failed
+          </h2>
           <p className="step-item text-brand-red/80 font-medium mb-2 p-3 bg-brand-red/5 rounded-xl border border-brand-red/10">
             {submitErrorMessage}
           </p>
           <p className="step-item text-brand-text/60 text-sm mb-10 mt-4 font-medium leading-relaxed">
-            Something went wrong while sending your report. Please check your connection and try again.
+            Something went wrong while sending your report. Please check your
+            connection and try again.
           </p>
           <div className="step-item flex gap-4">
             <button
               onClick={() => (window.location.href = "/")}
-              className="flex-1 px-6 py-4 border-2 border-black/5 hover:border-black/10 bg-white text-brand-text/70 rounded-2xl font-bold transition-all"
+              className="flex-1 px-6 py-4 border-2 border-black/5 hover:border-black/10 bg-white text-brand-text/70 rounded-2xl font-bold transition-all cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={() => setSubmissionStatus("idle")}
-              className="flex-1 btn-primary py-4 flex items-center justify-center gap-2"
+              className="flex-1 btn-primary py-4 flex items-center justify-center gap-2 cursor-pointer"
             >
               <RotateCcw size={20} />
               Retry
@@ -303,8 +472,13 @@ export function ReportWaste() {
     );
   }
 
+  // ── WIZARD ───────────────────────────────────────────────────────────────
+
   return (
-    <div ref={containerRef} className="min-h-screen bg-brand-surface flex flex-col relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-brand-surface flex flex-col relative overflow-hidden"
+    >
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-green/5 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-yellow/5 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/3 pointer-events-none" />
@@ -351,9 +525,15 @@ export function ReportWaste() {
             ))}
           </div>
           <div className="flex justify-between mt-3 text-xs font-bold text-brand-text/50 uppercase tracking-widest px-1">
-            <span className={currentStep >= 1 ? "text-brand-green" : ""}>Photo</span>
-            <span className={currentStep >= 2 ? "text-brand-green" : ""}>Location</span>
-            <span className={currentStep >= 3 ? "text-brand-green" : ""}>Confirm</span>
+            <span className={currentStep >= 1 ? "text-brand-green" : ""}>
+              Photo
+            </span>
+            <span className={currentStep >= 2 ? "text-brand-green" : ""}>
+              Location
+            </span>
+            <span className={currentStep >= 3 ? "text-brand-green" : ""}>
+              Confirm
+            </span>
           </div>
         </div>
       </div>
@@ -451,13 +631,28 @@ export function ReportWaste() {
                 onChange={handlePhotoUpload}
               />
 
-              <div className="step-item mt-8">
+              {/* Optional description */}
+              <div className="step-item mt-6">
+                <label className="text-xs font-bold text-brand-text/40 uppercase tracking-widest mb-2 block">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Pile of plastic bags near the road…"
+                  rows={2}
+                  className="w-full px-5 py-3 rounded-2xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium text-sm resize-none"
+                />
+              </div>
+
+              <div className="step-item mt-6">
                 <button
                   disabled={!photoPreview && !isCameraActive}
                   onClick={handleNext}
-                  className="w-full btn-primary py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
+                  className="w-full btn-primary py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none cursor-pointer"
                 >
-                  <span className="text-lg">Continue</span> <ArrowLeft className="w-5 h-5 rotate-180" />
+                  <span className="text-lg">Continue</span>{" "}
+                  <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
               </div>
             </div>
@@ -487,7 +682,7 @@ export function ReportWaste() {
                     <button
                       onClick={getCurrentLocation}
                       disabled={isLocating}
-                      className="btn-accent bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 px-8 py-4 flex items-center gap-3 text-lg disabled:opacity-70"
+                      className="btn-accent bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 px-8 py-4 flex items-center gap-3 text-lg disabled:opacity-70 cursor-pointer"
                     >
                       {isLocating ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -510,7 +705,7 @@ export function ReportWaste() {
                       height: "100%",
                       minHeight: "400px",
                       width: "100%",
-                      zIndex: 1
+                      zIndex: 1,
                     }}
                   >
                     <TileLayer
@@ -587,6 +782,22 @@ export function ReportWaste() {
                   </div>
                 </div>
 
+                {description && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 bg-brand-text/5 rounded-lg flex items-center justify-center text-brand-text/40">
+                        <Sparkles size={16} />
+                      </div>
+                      <h3 className="font-bold text-brand-text uppercase tracking-widest text-sm">
+                        Description
+                      </h3>
+                    </div>
+                    <p className="text-brand-text/70 font-medium text-sm bg-white p-4 rounded-2xl border border-black/5">
+                      {description}
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-brand-green/20 rounded-lg flex items-center justify-center text-brand-green">
@@ -597,7 +808,9 @@ export function ReportWaste() {
                     </h3>
                   </div>
                   <div className="bg-white p-5 rounded-2xl shadow-sm border border-black/5">
-                    <p className="font-bold text-brand-text text-lg">Coordinates Blocked</p>
+                    <p className="font-bold text-brand-text text-lg">
+                      Coordinates Captured
+                    </p>
                     <p className="text-brand-text/50 font-mono mt-2 flex gap-4 text-sm">
                       <span>Lat: {location?.lat.toFixed(6)}</span>
                       <span>Lng: {location?.lng.toFixed(6)}</span>
@@ -621,12 +834,12 @@ export function ReportWaste() {
                 >
                   {submissionStatus === "submitting" ? (
                     <>
-                      <Loader2 className="w-6 h-6 animate-spin text-white/80" /> 
-                      <span>Directing...</span>
+                      <Loader2 className="w-6 h-6 animate-spin text-white/80" />
+                      <span>Analyzing…</span>
                     </>
                   ) : (
                     <>
-                      <UploadCloud className="w-6 h-6" /> 
+                      <UploadCloud className="w-6 h-6" />
                       <span>Submit Report</span>
                     </>
                   )}
@@ -639,4 +852,3 @@ export function ReportWaste() {
     </div>
   );
 }
-
