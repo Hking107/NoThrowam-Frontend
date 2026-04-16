@@ -1,13 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
+import { Logo } from "../components/Logo";
+import { CheckCircle2, ArrowLeft, RefreshCw, Timer } from "lucide-react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export function VerifyOTP() {
   const navigate = useNavigate();
   const location = useLocation();
   const { verifyOTP } = useAuth();
-  const email = location.state?.email || sessionStorage.getItem("pending_email");
+  const email =
+    location.state?.email || sessionStorage.getItem("pending_email");
   const isSignup = location.state?.isSignup || false;
 
   const [otp, setOtp] = useState("");
@@ -16,6 +21,26 @@ export function VerifyOTP() {
   const [countdown, setCountdown] = useState(600); // 10 minutes
   const [canResend, setCanResend] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        ".auth-card",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      ).fromTo(
+        ".auth-item",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+        "-=0.4",
+      );
+    },
+    { scope: containerRef },
+  );
 
   // Countdown timer for OTP expiry
   useEffect(() => {
@@ -36,17 +61,20 @@ export function VerifyOTP() {
 
   if (!email) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface p-6">
+        <div className="card-tactile text-center max-w-md">
+          <div className="w-16 h-16 bg-brand-red/10 text-brand-red rounded-full flex items-center justify-center mx-auto mb-6">
+            <ArrowLeft size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-brand-text mb-4">
             Invalid Access
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-brand-text/60 mb-8 font-medium">
             Please start the signup or login process again.
           </p>
           <button
             onClick={() => navigate("/signup")}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
+            className="btn-primary w-full"
           >
             Go to Sign Up
           </button>
@@ -80,7 +108,6 @@ export function VerifyOTP() {
     try {
       await verifyOTP(email, otp);
       if (isSignup) {
-        // Get user role for redirect
         const role = localStorage.getItem("user_role");
         if (role === "CUSTOMER") {
           navigate("/dashboard_customer");
@@ -92,13 +119,12 @@ export function VerifyOTP() {
           navigate("/");
         }
       } else {
-        // Password reset flow - navigate to reset password page
         navigate("/reset-password", { state: { email } });
       }
     } catch (err: any) {
       setError(
         err.message ||
-          "OTP verification failed. Please try again or request a new OTP."
+          "OTP verification failed. Please try again or request a new OTP.",
       );
     } finally {
       setLoading(false);
@@ -111,10 +137,7 @@ export function VerifyOTP() {
     setResendCooldown(60);
 
     try {
-      await authService.sendOTP(
-        email,
-        isSignup ? "SIGNUP" : "PASSWORD_RESET"
-      );
+      await authService.sendOTP(email, isSignup ? "SIGNUP" : "PASSWORD_RESET");
       setOtp("");
       setCountdown(600);
     } catch (err: any) {
@@ -125,78 +148,122 @@ export function VerifyOTP() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
-            Verify Your Email
-          </h1>
-          <p className="text-gray-600">
-            We've sent a verification code to <span className="font-semibold">{email}</span>
-          </p>
-        </div>
+    <div
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
+    >
+      {/* Decorative Ornaments */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            {error}
-          </div>
-        )}
+      <div className="auth-card w-full max-w-lg relative z-10">
+        <div className="card-tactile p-8! md:p-12!">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/signin")}
+            className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={20} />
+          </button>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* OTP Input */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              6-Digit Code
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="000000"
-              className="w-full h-14 text-center text-2xl font-bold px-4 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all tracking-widest"
-            />
+          <div className="flex flex-col items-center mb-10 mt-4">
+            <div className="auth-item mb-6">
+              <Logo />
+            </div>
+            <h2 className="auth-item text-3xl font-extrabold text-brand-text text-center tracking-tight">
+              Verify Email
+            </h2>
+            <p className="auth-item text-brand-text/60 text-center mt-2 font-medium">
+              We've sent a 6-digit code to{" "}
+              <span className="text-brand-green">{email}</span>
+            </p>
           </div>
 
-          {/* Timer */}
-          <div className="flex items-center justify-between px-4 py-3 bg-blue-50 rounded-lg">
-            <span className="text-sm text-gray-700">Code expires in:</span>
-            <span
-              className={`text-lg font-bold ${
-                countdown < 60 ? "text-red-600" : "text-blue-600"
-              }`}
+          {error && (
+            <div className="auth-item mb-6 p-4 bg-brand-red/5 border border-brand-red/20 text-brand-red rounded-2xl text-sm font-medium flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="auth-item">
+              <label className="block text-sm font-bold text-brand-text/60 mb-4 text-center uppercase tracking-widest">
+                Verification Code
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                placeholder="000 000"
+                className="w-full h-20 text-center text-4xl font-black px-4 rounded-full border border-black/5 bg-brand-surface focus:ring-8 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all tracking-[0.5em] text-brand-text placeholder:text-brand-text/5"
+              />
+            </div>
+
+            {/* Timer Section */}
+            <div className="auth-item flex items-center justify-between px-6 py-4 bg-brand-surface border border-black/5 rounded-2xl">
+              <div className="flex items-center gap-3 text-brand-text/60 font-medium">
+                <Timer size={18} />
+                <span className="text-sm">Expires in</span>
+              </div>
+              <span
+                className={`text-xl font-bold ${
+                  countdown < 60
+                    ? "text-brand-red animate-pulse"
+                    : "text-brand-green"
+                }`}
+              >
+                {formatTime(countdown)}
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="auth-item w-full btn-primary py-4! flex items-center justify-center gap-3 text-lg group shadow-xl hover:shadow-brand-green/20"
             >
-              {formatTime(countdown)}
-            </span>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Verifying...
+                </span>
+              ) : (
+                <>
+                  <span>Verify Account</span>
+                  <CheckCircle2
+                    size={20}
+                    className="group-hover:scale-110 transition-transform"
+                  />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Resend Section */}
+          <div className="auth-item mt-12 pt-8 border-t border-black/5 text-center">
+            <p className="text-brand-text/60 font-medium mb-4">
+              Didn't receive the code?
+            </p>
+            <button
+              onClick={handleResendOTP}
+              disabled={!canResend}
+              className="flex items-center justify-center gap-2 mx-auto text-brand-green font-bold hover:underline disabled:text-brand-text/20 disabled:cursor-not-allowed transition-all group"
+            >
+              <RefreshCw
+                size={18}
+                className={`${!canResend ? "" : "group-hover:rotate-180"} transition-transform duration-500`}
+              />
+              <span>
+                {canResend
+                  ? "Resend New Code"
+                  : `Resend in ${formatTime(resendCooldown)}`}
+              </span>
+            </button>
           </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading || otp.length !== 6}
-            className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Verifying..." : "Verify Email"}
-          </button>
-        </form>
-
-        {/* Resend OTP */}
-        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-          <p className="text-sm text-gray-600 mb-4">
-            Didn't receive the code?
-          </p>
-          <button
-            onClick={handleResendOTP}
-            disabled={!canResend}
-            className="text-indigo-600 font-semibold hover:underline disabled:text-gray-400 disabled:cursor-not-allowed transition"
-          >
-            {canResend
-              ? "Resend Code"
-              : `Resend in ${formatTime(resendCooldown)}s`}
-          </button>
         </div>
       </div>
     </div>
