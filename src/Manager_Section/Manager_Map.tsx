@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {  Loader, RefreshCw } from "lucide-react";
-import { MapEventBus } from "./AgentChat";
+import { ManagerMapBus as MapEventBus } from "../services/eventBus";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import type { ApiDeposit, GarbagePoint, Status } from "../types/ManagerMap";

@@ -2,35 +2,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Send, Mic, MicOff, Bot, Zap, ShoppingCart, Loader, Package, Compass } from "lucide-react";
 import type { AgentApiResponse } from "../types/AgentAPIResponse";
 import type { AgentResult, AgentStep, MapCommand, MapStateSnapshot, MapStateSnapshotLocal, Msg, PurchaseState } from "../types/AIMessage";
+import { CustomerMapBus as MapEventBus } from "../services/eventBus";
 import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-
-const BUS = {
-  _cmdListeners: [] as Array<(cmd: MapCommand) => void>,
-  sendCommand(cmd: MapCommand) { this._cmdListeners.forEach(fn => fn(cmd)); },
-  onCommand(fn: (cmd: MapCommand) => void) {
-    this._cmdListeners.push(fn);
-    return () => { this._cmdListeners = this._cmdListeners.filter(f => f !== fn); };
-  },
-  registerStateProvider(fn: () => MapStateSnapshot) { (window as any).__custMapState = fn; },
-  getState(): MapStateSnapshot {
-    const p = (window as any).__custMapState;
-    return p ? p() : { points: [], cart: [] };
-  },
-};
-export const MapEventBus = BUS;
-
-export const PurchaseBus = {
-  _listeners: [] as Array<(s: PurchaseState) => void>,
-  _state: { phase: "idle" } as PurchaseState,
-  setState(s: PurchaseState) { this._state = s; this._listeners.forEach(fn => fn(s)); },
-  getState() { return this._state; },
-  onChange(fn: (s: PurchaseState) => void) {
-    this._listeners.push(fn);
-    return () => { this._listeners = this._listeners.filter(f => f !== fn); };
-  },
-};
+import { PurchaseBus } from "../services/eventBus";
 
 async function callAgent(
   message: string,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Loader, RefreshCw } from "lucide-react";
-import { MapEventBus, PurchaseBus } from "./Customeragentchat";
+import { CustomerMapBus as MapEventBus, PurchaseBus } from "../services/eventBus";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -370,14 +370,3 @@ export const CustomerMap = () => {
     </div>
   );
 };
-
-export { MapEventBus };
-{() => setPayment(null)}
-          onComplete={() => { setTimeout(() => setPayment(null), 3500); }}
-        />
-      )}
-    </div>
-  );
-};
-
-export { MapEventBus };

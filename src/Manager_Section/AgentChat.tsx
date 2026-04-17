@@ -8,20 +8,7 @@ import { MsgBubble } from "../components/Manager/MessageBubble";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
-const BUS = {
-  _cmdListeners: [] as Array<(cmd: MapCommand) => void>,
-  sendCommand(cmd: MapCommand) { this._cmdListeners.forEach(fn => fn(cmd)); },
-  onCommand(fn: (cmd: MapCommand) => void) {
-    this._cmdListeners.push(fn);
-    return () => { this._cmdListeners = this._cmdListeners.filter(f => f !== fn); };
-  },
-  registerStateProvider(fn: () => MapStateSnapshot) { (window as any).__mapStateProvider = fn; },
-  getState(): MapStateSnapshot {
-    const p = (window as any).__mapStateProvider;
-    return p ? p() : { points: [] };
-  },
-};
-export const MapEventBus = BUS;
+import { ManagerMapBus as MapEventBus } from "../services/eventBus";
 
 async function callAgent(
   message: string,
