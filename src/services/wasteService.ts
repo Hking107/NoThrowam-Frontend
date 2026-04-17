@@ -45,8 +45,10 @@
 
 import { WebSocketService } from "./webSocketService";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
 const getHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access_token");
   return {
     'accept': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -58,7 +60,7 @@ const getHeaders = () => {
 export const wasteService = {
   
   getProposals: async (listingId: number | string) => {
-    const response = await fetch(`/api/v0/waste-posts/${listingId}/proposals/`, {
+    const response = await fetch(`${API_BASE}/api/v0/waste-posts/${listingId}/proposals/`, {
       method: 'GET',
       headers: getHeaders(),
     });

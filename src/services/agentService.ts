@@ -7,6 +7,8 @@ import type {
   PurchaseState 
 } from "../types/AIMessage";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
 function mkStep(label: string): AgentStep {
   return { id: Math.random().toString(36).slice(2), label, done: true };
 }
@@ -20,12 +22,12 @@ export const agentService = {
     
     const userId = localStorage.getItem("user_id");
 
-    const res = await fetch("/api/v0/agents/agentic-message/", {
+    const res = await fetch(`${API_BASE}/api/v0/agents/agentic-message/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
         "ngrok-skip-browser-warning": "69420",
       },
       body: JSON.stringify({

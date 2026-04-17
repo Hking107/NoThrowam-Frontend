@@ -1,17 +1,24 @@
 import type { ApiDeposit, GarbagePoint } from "../types/ManagerMap";
 import { toPoint } from "../Manager_Section/Manager_Map";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
+function getCsrfToken() {
+  const match = document.cookie.match(/(^|;)\s*csrftoken=([^;]+)/);
+  return match ? match[2] : "";
+}
+
 export function authHeaders(): HeadersInit {
   return {
     "Accept":                      "application/json",
-    "Authorization":               `Bearer ${localStorage.getItem("token") || ""}`,
+    "Authorization":               `Bearer ${localStorage.getItem("access_token") || ""}`,
     "ngrok-skip-browser-warning":  "69420",
-    "X-CSRFTOKEN":                 "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
+    "X-CSRFTOKEN":                 getCsrfToken() || "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
   };
 }
 
 export async function collectDeposit(id: number): Promise<void> {
-  const res = await fetch(`/api/v0/deposits/${id}/collect/`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/${id}/collect/`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -21,7 +28,7 @@ export async function collectDeposit(id: number): Promise<void> {
 }
 
 export async function fetchDepositDetail(id: number): Promise<GarbagePoint> {
-  const res = await fetch(`/api/v0/deposits/${id}/`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/${id}/`, {
     method: "GET",
     headers: authHeaders(),
   });
@@ -31,7 +38,7 @@ export async function fetchDepositDetail(id: number): Promise<GarbagePoint> {
 }
 
 export async function fetchUncollected(): Promise<GarbagePoint[]> {
-  const res = await fetch(`/api/v0/deposits/?collected=false`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/?collected=false`, {
     method: "GET",
     headers: authHeaders(),
   });

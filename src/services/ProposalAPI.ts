@@ -1,10 +1,12 @@
+const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
 export async function createProposal(postId: number): Promise<{ alreadyExists: boolean }> {
-  const res = await fetch(`/api/v0/proposals/waste-posts/${postId}/create/`, {
+  const res = await fetch(`${API_BASE}/api/v0/proposals/waste-posts/${postId}/create/`, {
     method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
       "ngrok-skip-browser-warning": "69420",
     },
   });
