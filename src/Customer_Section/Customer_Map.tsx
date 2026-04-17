@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Loader, RefreshCw } from "lucide-react";
 import { MapEventBus, PurchaseBus } from "./Customeragentchat";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 import MarketPopup from "../components/Customer/MarketPopup";
 import type { MarketPoint } from "../types/MarketPoint";
@@ -9,10 +11,7 @@ import { CATEGORY_LABEL, CATEGORY_COLORS, CATEGORY_EMOJI } from "../contexts/con
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
 
-
 declare global { interface Window { L: any } }
-
-
 
 function toMarketPoint(p: WastePost): MarketPoint {
   const cat = CATEGORY_LABEL[p.category] || "Autre";
@@ -39,7 +38,7 @@ async function fetchWastePosts(): Promise<MarketPoint[]> {
   const res = await fetch(`/api/v0/waste-posts/`, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
       "ngrok-skip-browser-warning": "69420",
     },
   });
@@ -51,43 +50,26 @@ async function fetchWastePosts(): Promise<MarketPoint[]> {
     .filter(p => p.lat !== 0 && p.lng !== 0);
 }
 
-
-
-/* ─── Payment Panel ──────────────────────────── */
-type PaymentPhase = "choose" | "processing" | "done" | "error";
-
-// const arSt = (side: "left" | "right"): React.CSSProperties => ({
-//   position: "absolute", top: "50%", transform: "translateY(-50%)",
-//   ...(side === "left" ? { left: 8 } : { right: 8 }),
-//   zIndex: 10,
-//   display: "flex", alignItems: "center", justifyContent: "center",
-//   width: 30, height: 30,
-//   background: "rgba(0,0,0,.35)", backdropFilter: "blur(6px)",
-//   border: "1px solid rgba(255,255,255,.3)", borderRadius: "50%",
-//   color: "white", cursor: "pointer",
-// });
-
 const CustToast = ({ msg }: { msg: string }) => (
-  <div style={{
-    position: "absolute", bottom: 80, left: "50%", transform: "translateX(-50%)",
-    background: "rgba(255,255,255,.96)", backdropFilter: "blur(16px)",
-    border: "1px solid rgba(34,197,94,.25)", borderRadius: 12,
-    padding: "9px 18px", color: "#15803d",
-    fontSize: 12, fontWeight: 700, zIndex: 1300,
-    whiteSpace: "nowrap", boxShadow: "0 6px 20px rgba(0,0,0,.1)",
-    fontFamily: "'Plus Jakarta Sans',sans-serif",
-    animation: "toastIn .22s ease both",
-  }}>{msg}</div>
+  <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] px-5 py-2.5
+                  bg-white/90 backdrop-blur-xl border border-brand-green/20 rounded-2xl
+                  shadow-2xl shadow-brand-green/10 text-brand-green font-bold text-sm
+                  flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="w-2 h-2 rounded-full bg-brand-green animate-pulse" />
+    {msg}
+  </div>
 );
 
 const Ring = ({ x, y, color }: { x: number; y: number; color: string }) => (
-  <div style={{
-    position: "fixed", left: x - 22, top: y - 22, width: 44, height: 44, borderRadius: "50%",
-    border: `2px solid ${color}`,
-    boxShadow: `0 0 0 3px ${color}44, 0 0 18px ${color}66`,
-    pointerEvents: "none", zIndex: 1800,
-    animation: "ringOut 1.4s ease-out forwards",
-  }} />
+  <div 
+    className="fixed pointer-events-none z-[1800] rounded-full border-2"
+    style={{ 
+      left: x - 22, top: y - 22, width: 44, height: 44, 
+      borderColor: color,
+      boxShadow: `0 0 0 3px ${color}44, 0 0 18px ${color}66`,
+      animation: "ringOut 1.4s ease-out forwards"
+    }} 
+  />
 );
 
 export const CustomerMap = () => {
@@ -95,6 +77,12 @@ export const CustomerMap = () => {
   const leafRef    = useRef<any>(null);
   const markersRef = useRef<Record<number, any>>({});
   const pointsRef  = useRef<MarketPoint[]>([]);
+  
+  const uiRefs = {
+    stats: useRef<HTMLDivElement>(null),
+    legend: useRef<HTMLDivElement>(null),
+    loading: useRef<HTMLDivElement>(null),
+  };
 
   const [points, setPoints]       = useState<MarketPoint[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -108,7 +96,15 @@ export const CustomerMap = () => {
 
   pointsRef.current = points;
 
-  /* ── Fetch posts ── */
+  useGSAP(() => {
+    if (!loading && !fetchError) {
+      gsap.fromTo([uiRefs.stats.current, uiRefs.legend.current],
+        { opacity: 0, scale: 0.95 },
+        { opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)", delay: 0.2 }
+      );
+    }
+  }, [loading, fetchError]);
+
   const loadPoints = useCallback(async () => {
     setLoading(true);
     setFetchErr(null);
@@ -129,7 +125,6 @@ export const CustomerMap = () => {
 
   useEffect(() => { loadPoints(); }, [loadPoints]);
 
-  /* ── Load Leaflet ── */
   useEffect(() => {
     if (window.L) { setLeaf(true); return; }
     const link = document.createElement("link");
@@ -142,7 +137,6 @@ export const CustomerMap = () => {
     document.head.appendChild(s);
   }, []);
 
-  /* ── Init map ── */
   useEffect(() => {
     if (!leafReady || !mapRef.current || leafRef.current) return;
     const L   = window.L;
@@ -157,14 +151,12 @@ export const CustomerMap = () => {
     style.textContent = `
       @keyframes ripple2{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.8);opacity:0}}
       @keyframes ringOut{0%{transform:scale(.4);opacity:1}70%{transform:scale(2.6);opacity:.5}100%{transform:scale(3.2);opacity:0}}
-      @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     `;
     document.head.appendChild(style);
 
     return () => { map.remove(); leafRef.current = null; };
   }, [leafReady]);
 
-  /* ── Sync markers ── */
   useEffect(() => {
     const map = leafRef.current;
     if (!map || !window.L) return;
@@ -196,7 +188,6 @@ export const CustomerMap = () => {
     });
   }, [points, leafReady]);
 
-  /* ── State provider for agent ── */
   useEffect(() => {
     MapEventBus.registerStateProvider(() => ({
       points: pointsRef.current.map(p => ({
@@ -224,7 +215,6 @@ export const CustomerMap = () => {
     setTimeout(() => setToast(null), 2800);
   }, []);
 
-  /* ── Bus commands ── */
   useEffect(() => {
     const unsub = MapEventBus.onCommand(cmd => {
       const map = leafRef.current;
@@ -267,127 +257,98 @@ export const CustomerMap = () => {
   const totalWeight = points.reduce((s, p) => s + p.fixedWeight, 0);
 
   return (
-    <div
-      style={{ position: "relative", width: "100%", height: "100%", background: "#f8fafc" }}
-      onClick={() => setPopup(null)}
-    >
-      <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+    <div className="relative w-full h-full bg-slate-50" onClick={() => setPopup(null)}>
+      <div ref={mapRef} className="w-full h-full" />
 
       {rings.map(r => <Ring key={r.id} x={r.x} y={r.y} color={r.color} />)}
       {toast && <CustToast msg={toast} />}
 
       {/* Loading overlay */}
       {loading && (
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 1500,
-          background: "rgba(248,250,252,.8)", backdropFilter: "blur(4px)",
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: 12,
-        }}>
-          <Loader size={28} color="#22c55e" style={{ animation: "custSpin 1s linear infinite" }} />
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13, fontWeight: 600, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-            Chargement des lots…
-          </p>
-          <style>{`@keyframes custSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+        <div className="absolute inset-0 z-[1500] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+          <Loader size={32} className="text-brand-green animate-spin" />
+          <p className="text-slate-600 font-bold tracking-tight">Chargement des lots…</p>
         </div>
       )}
 
       {/* Error banner */}
       {fetchError && !loading && (
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)", zIndex: 1400,
-          background: "white", borderRadius: 16,
-          border: "1px solid rgba(239,68,68,.25)",
-          padding: "20px 24px", textAlign: "center", maxWidth: 280,
-          boxShadow: "0 8px 32px rgba(0,0,0,.1)",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-        }}>
-          <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: "#ef4444" }}>⚠️ Erreur de chargement</p>
-          <p style={{ margin: "0 0 14px", fontSize: 12, color: "#94a3b8" }}>{fetchError}</p>
-          <button onClick={loadPoints} style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "8px 16px", borderRadius: 10, border: "none",
-            background: "#22c55e", color: "#fff",
-            fontWeight: 700, fontSize: 12, cursor: "pointer",
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
-          }}>
-            <RefreshCw size={13} /> Réessayer
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
+                        bg-white p-8 rounded-3xl border border-red-100 shadow-2xl shadow-red-500/10 
+                        text-center max-w-xs animate-in zoom-in duration-300">
+          <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100">
+            <p className="text-xl">⚠️</p>
+          </div>
+          <p className="text-lg font-black text-slate-800 mb-2">Erreur de chargement</p>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">{fetchError}</p>
+          <button onClick={loadPoints} className="btn-primary w-full shadow-lg shadow-brand-green/20">
+            <RefreshCw size={16} className="mr-2" /> Réessayer
           </button>
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)", zIndex: 500,
-          background: "white", borderRadius: 16,
-          border: "1px solid rgba(34,197,94,.15)",
-          padding: "20px 28px", textAlign: "center",
-          boxShadow: "0 6px 24px rgba(0,0,0,.08)",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-        }}>
-          <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "#374151" }}>Aucun lot disponible</p>
-          <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Revenez plus tard pour de nouvelles offres.</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
+                        bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
+                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500">
+          <div className="text-4xl mb-4">📦</div>
+          <p className="text-xl font-black text-slate-800 mb-1 leading-tight">Aucun lot disponible</p>
+          <p className="text-slate-400 text-sm leading-relaxed">Revenez plus tard pour de nouvelles offres.</p>
         </div>
       )}
 
       {/* Stats badge */}
-      <div style={{
-        position: "absolute", top: 16, left: 16, zIndex: 1000,
-        background: "rgba(255,255,255,.95)", backdropFilter: "blur(16px)",
-        border: "1px solid rgba(34,197,94,.15)", borderRadius: 18,
-        padding: "12px 18px", display: "flex", gap: 20, alignItems: "center",
-        boxShadow: "0 6px 24px rgba(0,0,0,.08)",
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
-      }}>
-        <div>
-          <p style={{ margin: 0, fontSize: 9, color: "#94a3b8", fontWeight: 700, letterSpacing: 1.2 }}>LOTS</p>
-          <p style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 800, color: "#22c55e" }}>
-            {points.length}<span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}> lots</span>
-          </p>
-        </div>
-        <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }} />
-        <div>
-          <p style={{ margin: 0, fontSize: 9, color: "#94a3b8", fontWeight: 700, letterSpacing: 1.2 }}>TOTAL</p>
-          <p style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 800, color: "#6366f1" }}>
-            {totalWeight.toFixed(0)}<span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}> kg</span>
-          </p>
-        </div>
-        <button onClick={loadPoints} title="Rafraîchir" style={{
-          alignSelf: "center",
-          background: "rgba(34,197,94,.08)", border: "1px solid rgba(34,197,94,.2)",
-          borderRadius: 8, color: "#22c55e", cursor: "pointer",
-          padding: "5px 7px", display: "flex", alignItems: "center",
-          transition: "background .18s",
-        }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,.16)"}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,.08)"}
+      {!loading && !fetchError && (
+        <div 
+          ref={uiRefs.stats}
+          className="absolute top-6 left-6 z-[1000] bg-white/90 backdrop-blur-xl border border-brand-green/15 
+                     rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
         >
-          <RefreshCw size={13} style={loading ? { animation: "custSpin 1s linear infinite" } : undefined} />
-        </button>
-      </div>
+          <div>
+            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">Lots</p>
+            <p className="text-3xl font-black text-brand-green leading-none">
+              {points.length}<span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">dispo</span>
+            </p>
+          </div>
+          <div className="w-px h-10 bg-slate-200/50" />
+          <div>
+            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">Poids Total</p>
+            <p className="text-3xl font-black text-blue-500 leading-none">
+              {totalWeight.toFixed(0)}<span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">kg</span>
+            </p>
+          </div>
+          <button 
+            onClick={loadPoints} 
+            className="w-10 h-10 rounded-2xl bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
+                       text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+      )}
 
       {/* Category legend */}
-      <div style={{
-        position: "absolute", top: 16, right: 16, zIndex: 1000,
-        background: "rgba(255,255,255,.95)", backdropFilter: "blur(16px)",
-        border: "1px solid rgba(0,0,0,.07)", borderRadius: 16,
-        padding: "12px 16px", display: "flex", flexDirection: "column", gap: 7,
-        boxShadow: "0 6px 24px rgba(0,0,0,.08)",
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
-      }}>
-        <p style={{ margin: 0, fontSize: 9, fontWeight: 700, color: "#94a3b8", letterSpacing: 1.2 }}>CATÉGORIES</p>
-        {Object.entries(CATEGORY_COLORS).filter(([c]) => c !== "Autre").map(([cat, color]) => (
-          <div key={cat} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 9, height: 9, borderRadius: "50%", background: color, boxShadow: `0 0 6px ${color}88` }} />
-            <span style={{ fontSize: 11, color: "#374151", fontWeight: 500 }}>
-              {CATEGORY_EMOJI[cat]} {cat}
-            </span>
-          </div>
-        ))}
-      </div>
+      {!loading && !fetchError && (
+        <div 
+          ref={uiRefs.legend}
+          className="absolute top-6 right-6 z-[1000] bg-white/90 backdrop-blur-xl border border-slate-200/50 
+                     rounded-3xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
+        >
+          <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">Catégories</p>
+          {Object.entries(CATEGORY_COLORS).filter(([c]) => c !== "Autre").map(([cat, color]) => (
+            <div key={cat} className="flex items-center gap-4 group">
+              <div 
+                className="w-3 h-3 rounded-full shadow-lg transition-transform group-hover:scale-125"
+                style={{ background: color, boxShadow: `0 0 10px ${color}66` }} 
+              />
+              <span className="text-sm text-slate-600 font-semibold tracking-tight">
+                {CATEGORY_EMOJI[cat]} {cat}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {popup && (
         <MarketPopup
@@ -403,6 +364,15 @@ export const CustomerMap = () => {
         <PaymentPanel
           point={payment}
           onClose={() => setPayment(null)}
+          onComplete={() => { setTimeout(() => setPayment(null), 3500); }}
+        />
+      )}
+    </div>
+  );
+};
+
+export { MapEventBus };
+{() => setPayment(null)}
           onComplete={() => { setTimeout(() => setPayment(null), 3500); }}
         />
       )}

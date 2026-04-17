@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {  Loader, RefreshCw } from "lucide-react";
 import { MapEventBus } from "./AgentChat";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import type { ApiDeposit, GarbagePoint, Status } from "../types/ManagerMap";
 import { GarbagePopup } from "../components/Manager/GarbagePopup";
 import { fetchUncollected, fetchDepositDetail, collectDeposit } from "../services/ManagerService";
@@ -26,41 +28,38 @@ export function toPoint(d: ApiDeposit): GarbagePoint {
 const CLR: Record<Status, string> = { collected: "#22c55e", pending: "#ef4444" };
 
 
-/* ─── AgentRing — UNCHANGED ─────────────────── */
 const AgentRing = ({ x, y, color }: { x: number; y: number; color: string }) => (
-  <div style={{
-    position: "fixed", left: x - 22, top: y - 22,
-    width: 44, height: 44, borderRadius: "50%",
-    border: `2px solid ${color}`,
-    boxShadow: `0 0 0 3px ${color}44, 0 0 20px ${color}88`,
-    pointerEvents: "none", zIndex: 1800,
-    animation: "agentRing 1.4s ease-out forwards",
-  }} />
+  <div 
+    className="fixed pointer-events-none z-[1800] rounded-full border-2"
+    style={{ 
+      left: x - 22, top: y - 22, width: 44, height: 44, 
+      borderColor: color,
+      boxShadow: `0 0 0 3px ${color}44, 0 0 20px ${color}88`,
+      animation: "agentRing 1.4s ease-out forwards"
+    }} 
+  />
 );
 
-/* ─── AgentToast — UNCHANGED ────────────────── */
 const AgentToast = ({ msg }: { msg: string }) => (
-  <div style={{
-    position: "absolute", bottom: 72, left: "50%", transform: "translateX(-50%)",
-    background: "rgba(5,10,22,.92)", backdropFilter: "blur(16px)",
-    border: "1px solid rgba(34,197,94,.28)", borderRadius: 11,
-    padding: "8px 16px", color: "rgba(255,255,255,.88)",
-    fontSize: 11, fontWeight: 600, zIndex: 1300,
-    whiteSpace: "nowrap", boxShadow: "0 6px 20px rgba(0,0,0,.5)",
-    fontFamily: "'JetBrains Mono',monospace",
-    animation: "toastIn .22s ease both",
-  }}>
+  <div className="fixed bottom-18 left-1/2 -translate-x-1/2 z-[1300] px-4 py-2
+                  bg-slate-950/90 backdrop-blur-xl border border-brand-green/30 rounded-xl
+                  shadow-2xl shadow-black/50 text-white font-mono text-[11px] font-semibold
+                  flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
     {msg}
   </div>
 );
 
-/* ─── Main ───────────────────────────────────── */
 export const ManagerMap = () => {
   const mapRef      = useRef<HTMLDivElement>(null);
   const leafletRef  = useRef<any>(null);
   const markersRef  = useRef<Record<number, any>>({});
+  
+  const uiRefs = {
+    stats: useRef<HTMLDivElement>(null),
+    legend: useRef<HTMLDivElement>(null),
+  };
 
-  /* ── CHANGED: start empty, fill from API ── */
   const [points, setPoints]       = useState<GarbagePoint[]>([]);
   const [loading, setLoading]     = useState(true);
   const [fetchError, setFetchErr] = useState<string | null>(null);
@@ -68,20 +67,26 @@ export const ManagerMap = () => {
   const [popup, setPopup]         = useState<{ point: GarbagePoint; origin: { x: number; y: number } } | null>(null);
   const [leafletReady, setReady]  = useState(!!window.L);
 
-  /* agent visual layer — UNCHANGED */
   const [rings, setRings]   = useState<{ id: string; x: number; y: number; color: string }[]>([]);
   const [toast, setToast]   = useState<string | null>(null);
   const pointsRef           = useRef<GarbagePoint[]>(points);
   pointsRef.current         = points;
 
-  /* ── Fetch from backend ── */
+  useGSAP(() => {
+    if (!loading && !fetchError) {
+      gsap.fromTo([uiRefs.stats.current, uiRefs.legend.current],
+        { opacity: 0, scale: 0.95, y: -10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.6, stagger: 0.15, ease: "expo.out", delay: 0.3 }
+      );
+    }
+  }, [loading, fetchError]);
+
   const loadPoints = useCallback(async () => {
     setLoading(true);
     setFetchErr(null);
     try {
       const pts = await fetchUncollected();
       setPoints(pts);
-      /* auto-fit map to loaded points */
       const map = leafletRef.current;
       if (map && window.L && pts.length > 0) {
         const valid = pts.filter(p => p.lat !== 0 && p.lng !== 0);
@@ -99,7 +104,6 @@ export const ManagerMap = () => {
 
   useEffect(() => { loadPoints(); }, [loadPoints]);
 
-  /* inject Leaflet — UNCHANGED */
   useEffect(() => {
     if (window.L) { setReady(true); return; }
     const link = document.createElement("link");
@@ -112,11 +116,10 @@ export const ManagerMap = () => {
     document.head.appendChild(s);
   }, []);
 
-  /* build map once — UNCHANGED */
   useEffect(() => {
     if (!leafletReady || !mapRef.current || leafletRef.current) return;
     const L = window.L;
-    const map = L.map(mapRef.current, { center: [48.857, 2.352], zoom: 14, zoomControl: false });
+    const map = L.map(mapRef.current, { center: [3.848, 11.502], zoom: 14, zoomControl: false });
     L.control.zoom({ position: "bottomright" }).addTo(map);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
@@ -127,15 +130,12 @@ export const ManagerMap = () => {
     style.textContent = `
       @keyframes ripple    { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(2.6);opacity:0} }
       @keyframes agentRing { 0%{transform:scale(.4);opacity:1} 70%{transform:scale(2.8);opacity:.5} 100%{transform:scale(3.4);opacity:0} }
-      @keyframes toastIn   { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-      @keyframes spin      { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     `;
     document.head.appendChild(style);
 
     return () => { map.remove(); leafletRef.current = null; };
   }, [leafletReady]);
 
-  /* sync markers — UNCHANGED */
   useEffect(() => {
     const map = leafletRef.current;
     if (!map || !window.L) return;
@@ -163,38 +163,31 @@ export const ManagerMap = () => {
         const rect = mapRef.current!.getBoundingClientRect();
         const origin = { x: rect.left + cp.x, y: rect.top + cp.y };
 
-        // Open popup immediately with cached data, then refresh from API
         setPoints(prev => {
           const cached = prev.find(p => p.id === pt.id)!;
           setPopup({ point: cached, origin });
           return prev;
         });
 
-        // Fetch fresh detail from GET /deposits/{id}/ and update popup
         try {
           const fresh = await fetchDepositDetail(pt.id);
           setPopup(prev => prev?.point.id === pt.id
             ? { ...prev, point: fresh }
             : prev
           );
-          // Also sync into points array
           setPoints(prev => prev.map(p => p.id === pt.id ? fresh : p));
         } catch {
-          // Keep cached data on fetch error — popup already open
         }
       });
       markersRef.current[pt.id] = marker;
     });
   }, [points, leafletReady]);
 
-  /* toggle status — calls POST /deposits/{id}/collect/ on backend */
   const handleToggle = async (id: number) => {
     const pt = pointsRef.current.find(p => p.id === id);
     if (!pt) return;
 
-    // Only "Mark as Collected" hits the API — pending → collected
     if (pt.status === "pending") {
-      // Optimistic UI update immediately
       setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "collected" } : p));
       setPopup(prev => prev?.point.id === id
         ? { ...prev, point: { ...prev.point, status: "collected" } }
@@ -205,13 +198,11 @@ export const ManagerMap = () => {
       try {
         await collectDeposit(id);
         showToast(`✅ Dépôt #${id} marqué collecté`);
-        // Remove from map after short delay (it's now collected, list shows only pending)
         setTimeout(() => {
           setPoints(prev => prev.filter(p => p.id !== id));
           setPopup(prev => prev?.point.id === id ? null : prev);
         }, 1200);
       } catch (err: any) {
-        // Rollback on error
         setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "pending" } : p));
         setPopup(prev => prev?.point.id === id
           ? { ...prev, point: { ...prev.point, status: "pending" } }
@@ -220,7 +211,6 @@ export const ManagerMap = () => {
         showToast(`⚠️ ${err.message ?? "Erreur lors de la collecte"}`);
       }
     } else {
-      // collected → pending: local toggle only (no "uncollect" endpoint)
       setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "pending" } : p));
       setPopup(prev => prev?.point.id === id
         ? { ...prev, point: { ...prev.point, status: "pending" } }
@@ -229,7 +219,6 @@ export const ManagerMap = () => {
     }
   };
 
-  /* flash ring — UNCHANGED */
   const flashRing = useCallback((ptId: number, color: string) => {
     const map = leafletRef.current;
     if (!map || !mapRef.current) return;
@@ -305,126 +294,96 @@ export const ManagerMap = () => {
   const pending   = points.filter(p => p.status === "pending").length;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }} onClick={() => setPopup(null)}>
-      <div ref={mapRef} style={{ width: "100%", height: "100%", background: "#0a0f1e" }} />
+    <div className="relative w-full h-full bg-slate-950" onClick={() => setPopup(null)}>
+      <div ref={mapRef} className="w-full h-full grayscale opacity-80 contrast-[1.1]" />
 
-      {/* Agent visual rings — UNCHANGED */}
       {rings.map(r => <AgentRing key={r.id} x={r.x} y={r.y} color={r.color} />)}
-
-      {/* Agent toast — UNCHANGED */}
       {toast && <AgentToast msg={toast} />}
 
-      {/* ── Loading overlay ── */}
+      {/* Loading overlay */}
       {loading && (
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 1500,
-          background: "rgba(10,15,30,.72)", backdropFilter: "blur(4px)",
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: 12,
-        }}>
-          <Loader size={30} color="#22c55e" style={{ animation: "spin 1s linear infinite" }} />
-          <p style={{ margin: 0, color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 600 }}>
-            Chargement des dépôts…
-          </p>
+        <div className="absolute inset-0 z-[1500] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+          <Loader size={32} className="text-brand-green animate-spin" />
+          <p className="text-slate-400 font-bold tracking-tight">Analyse des flux…</p>
         </div>
       )}
 
-      {/* ── Error banner ── */}
+      {/* Error banner */}
       {fetchError && !loading && (
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)", zIndex: 1400,
-          background: "rgba(8,15,30,.92)", backdropFilter: "blur(14px)",
-          border: "1px solid rgba(239,68,68,.35)", borderRadius: 16,
-          padding: "20px 24px", textAlign: "center", maxWidth: 280,
-        }}>
-          <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: "#f87171" }}>
-            ⚠️ Erreur de chargement
-          </p>
-          <p style={{ margin: "0 0 14px", fontSize: 12, color: "rgba(255,255,255,.45)" }}>
-            {fetchError}
-          </p>
-          <button
-            onClick={loadPoints}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "8px 16px", borderRadius: 10, border: "none",
-              background: "rgba(34,197,94,.85)", color: "#fff",
-              fontWeight: 700, fontSize: 12, cursor: "pointer",
-            }}
-          >
-            <RefreshCw size={13} /> Réessayer
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
+                        bg-slate-900/95 backdrop-blur-xl p-8 rounded-3xl border border-red-500/30 
+                        shadow-2xl shadow-red-500/10 text-center max-w-xs animate-in zoom-in duration-300">
+          <p className="text-3xl mb-4">🚨</p>
+          <p className="text-lg font-black text-white mb-2">Erreur système</p>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed font-mono">{fetchError}</p>
+          <button onClick={loadPoints} className="w-full py-3 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95">
+             Réinitialiser la connexion
           </button>
         </div>
       )}
 
+      {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)", zIndex: 500,
-          background: "rgba(8,15,30,.82)", backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,.09)", borderRadius: 16,
-          padding: "20px 28px", color: "white", textAlign: "center",
-        }}>
-          <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700 }}>✅ Aucun dépôt en attente</p>
-          <p style={{ margin: 0, fontSize: 12, opacity: .5 }}>Tous les dépôts ont été collectés.</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
+                        bg-slate-900/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/20 
+                        shadow-2xl shadow-black/50 text-center animate-in fade-in zoom-in duration-500">
+          <div className="text-4xl mb-4">🛰️</div>
+          <p className="text-xl font-black text-white mb-1 leading-tight">Secteur Nettoyé</p>
+          <p className="text-slate-500 text-sm leading-relaxed">Aucun dépôt en attente de collecte.</p>
         </div>
       )}
 
-      <div style={{
-        position: "absolute", top: 16, left: 16, zIndex: 1000,
-        background: "rgba(8,15,30,.82)", backdropFilter: "blur(16px)",
-        border: "1px solid rgba(255,255,255,.09)", borderRadius: 16,
-        padding: "12px 18px", color: "white", display: "flex", gap: 20,
-        boxShadow: "0 8px 32px rgba(0,0,0,.4)",
-      }}>
-        <div>
-          <p style={{ margin: 0, fontSize: 9, opacity: .45, fontWeight: 700, letterSpacing: 1.2 }}>COLLECTED</p>
-          <p style={{ margin: "3px 0 0", fontSize: 22, fontWeight: 800, color: "#22c55e" }}>
-            {collected}<span style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 400 }}> pts</span>
-          </p>
-        </div>
-        <div style={{ width: 1, background: "rgba(255,255,255,.07)" }} />
-        <div>
-          <p style={{ margin: 0, fontSize: 9, opacity: .45, fontWeight: 700, letterSpacing: 1.2 }}>PENDING</p>
-          <p style={{ margin: "3px 0 0", fontSize: 22, fontWeight: 800, color: "#ef4444" }}>
-            {pending}<span style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 400 }}> pts</span>
-          </p>
-        </div>
-        {/* Refresh */}
-        <button
-          onClick={loadPoints}
-          title="Rafraîchir"
-          style={{
-            alignSelf: "center",
-            background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.1)",
-            borderRadius: 8, color: "rgba(255,255,255,.5)", cursor: "pointer",
-            padding: "5px 7px", display: "flex", alignItems: "center",
-            transition: "background .18s",
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.14)"}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.07)"}
+      {/* Stats overlay */}
+      {!loading && !fetchError && (
+        <div 
+          ref={uiRefs.stats}
+          className="absolute top-6 left-6 z-[1000] bg-slate-900/80 backdrop-blur-xl border border-white/10 
+                     rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/40 opacity-0 -translate-y-2"
         >
-          <RefreshCw size={13} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
-        </button>
-      </div>
-
-      <div style={{
-        position: "absolute", top: 16, right: 16, zIndex: 1000,
-        background: "rgba(8,15,30,.82)", backdropFilter: "blur(16px)",
-        border: "1px solid rgba(255,255,255,.09)", borderRadius: 14,
-        padding: "12px 16px", color: "white", fontSize: 12,
-        display: "flex", flexDirection: "column", gap: 8,
-        boxShadow: "0 8px 32px rgba(0,0,0,.4)",
-      }}>
-        <p style={{ margin: 0, fontSize: 9, fontWeight: 700, letterSpacing: 1.2, opacity: .4 }}>LEGEND</p>
-        {(Object.entries(CLR) as [Status, string][]).map(([s, c]) => (
-          <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 9, height: 9, borderRadius: "50%", background: c, boxShadow: `0 0 7px ${c}` }} />
-            <span style={{ textTransform: "capitalize", opacity: .75 }}>{s}</span>
+          <div>
+            <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">Collectés</p>
+            <p className="text-2xl font-black text-brand-green leading-none">
+              {collected}<span className="text-[10px] text-white/20 font-bold ml-1 uppercase">pts</span>
+            </p>
           </div>
-        ))}
-      </div>
+          <div className="w-px h-10 bg-white/5" />
+          <div>
+            <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">En attente</p>
+            <p className="text-2xl font-black text-red-500 leading-none">
+              {pending}<span className="text-[10px] text-white/20 font-bold ml-1 uppercase">pts</span>
+            </p>
+          </div>
+          <button 
+            onClick={loadPoints} 
+            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center
+                       text-white/40 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+      )}
+
+      {/* Legend overlay */}
+      {!loading && !fetchError && (
+        <div 
+          ref={uiRefs.legend}
+          className="absolute top-6 right-6 z-[1000] bg-slate-900/80 backdrop-blur-xl border border-white/10 
+                     rounded-2xl p-4 flex flex-col gap-3 shadow-2xl shadow-black/40 opacity-0 -translate-y-2"
+        >
+          <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">Légende</p>
+          {(Object.entries(CLR) as [Status, string][]).map(([s, c]) => (
+            <div key={s} className="flex items-center gap-4 group">
+              <div 
+                className="w-2.5 h-2.5 rounded-full transition-shadow duration-300"
+                style={{ background: c, boxShadow: `0 0 10px ${c}` }} 
+              />
+              <span className="text-xs text-white/60 font-medium capitalize tracking-wide group-hover:text-white transition-colors">
+                {s}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {popup && (
         <GarbagePopup
