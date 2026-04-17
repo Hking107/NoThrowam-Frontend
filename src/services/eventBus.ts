@@ -1,5 +1,5 @@
-import { MapCommand, MapStateSnapshot, PurchaseState } from "../types/AIMessage";
-import { MapCommand as ManagerMapCommand, MapStateSnapshot as ManagerMapStateSnapshot } from "../types/ManagerAgentChat";
+import type { MapCommand, MapStateSnapshot, PurchaseState } from "../types/AIMessage";
+import type { MapCommand as ManagerMapCommand, MapStateSnapshot as ManagerMapStateSnapshot } from "../types/ManagerAgentChat";
 
 // Customer Event Bus
 export const CustomerMapBus = {
