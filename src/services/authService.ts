@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
 
 const headers = {
   "Content-Type": "application/json",
@@ -31,8 +32,8 @@ export const authService = {
       throw new Error(
         errorData?.detail ||
           errorData?.message ||
-            errorData?.email ||
-            "Registration failed. Please check your information."
+          errorData?.email ||
+          "Registration failed. Please check your information.",
       );
     }
 
@@ -48,7 +49,7 @@ export const authService = {
    */
   sendOTP: async (
     email: string,
-    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL"
+    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL",
   ) => {
     const response = await fetch(`${API_BASE}/api/v0/auth/otp/send/`, {
       method: "POST",
@@ -60,11 +61,11 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       if (response.status === 429) {
         throw new Error(
-          `Please wait ${errorData?.cooldown_seconds || 60} seconds before requesting another OTP`
+          `Please wait ${errorData?.cooldown_seconds || 60} seconds before requesting another OTP`,
         );
       }
       throw new Error(
-        errorData?.detail || errorData?.message || "Failed to send OTP"
+        errorData?.detail || errorData?.message || "Failed to send OTP",
       );
     }
 
@@ -77,7 +78,7 @@ export const authService = {
   verifyOTP: async (
     email: string,
     code: string,
-    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL" = "SIGNUP"
+    purpose: "SIGNUP" | "PASSWORD_RESET" | "WITHDRAWAL" = "SIGNUP",
   ) => {
     const response = await fetch(`${API_BASE}/api/v0/auth/otp/verify/`, {
       method: "POST",
@@ -91,7 +92,7 @@ export const authService = {
         errorData?.reason ||
           errorData?.detail ||
           errorData?.message ||
-          "OTP verification failed"
+          "OTP verification failed",
       );
     }
 
@@ -118,7 +119,11 @@ export const authService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.detail || errorData?.message || "Failed to request password reset");
+      throw new Error(
+        errorData?.detail ||
+          errorData?.message ||
+          "Failed to request password reset",
+      );
     }
 
     return await response.json();
@@ -127,16 +132,25 @@ export const authService = {
   /**
    * Validate OTP and set new password (used in forgot password flow)
    */
-  validateNewPassword: async (email: string, otp_code: string, new_password: string) => {
-    const response = await fetch(`${API_BASE}/api/v0/auth/validate-new-password/`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ email, otp_code, new_password }),
-    });
+  validateNewPassword: async (
+    email: string,
+    otp_code: string,
+    new_password: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE}/api/v0/auth/validate-new-password/`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email, otp_code, new_password }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.detail || errorData?.message || "Failed to reset password");
+      throw new Error(
+        errorData?.detail || errorData?.message || "Failed to reset password",
+      );
     }
 
     return await response.json();
@@ -156,11 +170,11 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       if (response.status === 401) {
         throw new Error(
-          "Invalid email or password. If you haven't verified your email yet, check for OTP in your inbox."
+          "Invalid email or password. If you haven't verified your email yet, check for OTP in your inbox.",
         );
       }
       throw new Error(
-        errorData?.detail || errorData?.message || "Login failed"
+        errorData?.detail || errorData?.message || "Login failed",
       );
     }
 
@@ -219,12 +233,15 @@ export const authService = {
   storeTokens: (accessToken: string, refreshToken: string) => {
     localStorage.setItem("access_token", accessToken);
     localStorage.setItem("refresh_token", refreshToken);
-    
+
     // Decode and store role and expiry
     try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const payload = JSON.parse(atob(accessToken.split(".")[1]));
       console.log("Decoded token payload:", payload);
-      localStorage.setItem("user_role", payload.role || sessionStorage.getItem("pending_role") || "");
+      localStorage.setItem(
+        "user_role",
+        payload.role || sessionStorage.getItem("pending_role") || "",
+      );
       sessionStorage.removeItem("pending_role");
       localStorage.setItem("token_exp", payload.exp || "");
     } catch (e) {
@@ -253,7 +270,7 @@ export const authService = {
 
     // Check if token is expired
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.exp > Date.now() / 1000;
     } catch {
       return false;
