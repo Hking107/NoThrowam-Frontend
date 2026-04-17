@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import {  X, Send, Mic, MicOff, Bot, Zap, ShoppingCart, Loader, Package } from "lucide-react";
+import { X, Send, Mic, MicOff, Bot, Zap, ShoppingCart, Loader, Package, Compass } from "lucide-react";
 import type { AgentApiResponse } from "../types/AgentAPIResponse";
 import type { AgentResult, AgentStep, MapCommand, MapStateSnapshot, MapStateSnapshotLocal, Msg, PurchaseState } from "../types/AIMessage";
 import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
-import { agentService } from "../services/agentService";
-
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const BUS = {
   _cmdListeners: [] as Array<(cmd: MapCommand) => void>,
@@ -21,10 +21,6 @@ const BUS = {
 };
 export const MapEventBus = BUS;
 
-/* ─────────────────────────────────────────────────────
-   PURCHASE BUS
-───────────────────────────────────────────────────── */
-
 export const PurchaseBus = {
   _listeners: [] as Array<(s: PurchaseState) => void>,
   _state: { phase: "idle" } as PurchaseState,
@@ -35,13 +31,6 @@ export const PurchaseBus = {
     return () => { this._listeners = this._listeners.filter(f => f !== fn); };
   },
 };
-
-/* ─────────────────────────────────────────────────────
-   REAL API CALL  →  POST /api/v0/agents/agentic-message/
-───────────────────────────────────────────────────── */
-function mkStep(label: string): AgentStep {
-  return { id: Math.random().toString(36).slice(2), label, done: true };
-}
 
 async function callAgent(
   message: string,
@@ -70,14 +59,11 @@ async function callAgent(
   }
 
   const data: AgentApiResponse = await res.json();
-
-  /* ── Derive map commands from action results ── */
   const commands: MapCommand[] = [];
   let purchaseState: PurchaseState | undefined;
 
   if (data.mode === "action" && data.results?.length) {
     for (const r of data.results) {
-      // Proposal created → open payment panel for that post
       if (r?.post_id || r?.proposal?.post) {
         const postId = r.post_id ?? r.proposal?.post;
         const pt = state.points.find(p => p.id === postId);
@@ -91,16 +77,15 @@ async function callAgent(
     }
   }
 
-  /* ── If the reply asks to show available ── */
   const lower = data.response.toLowerCase();
   if (/available|market|lot|post|recyclable/i.test(lower) && commands.length === 0) {
     commands.push({ type: "highlight_all_available" });
   }
 
   const steps: AgentStep[] = [
-    mkStep(`Mode: ${data.mode}`),
-    mkStep(`Role: ${data.role}`),
-    ...(data.results?.length ? [mkStep(`${data.results.length} action(s) completed`)] : []),
+    { id: "m", label: `Mode: ${data.mode}`, done: true },
+    { id: "r", label: `Role: ${data.role}`, done: true },
+    ...(data.results?.length ? [{ id: "a", label: `${data.results.length} action(s) completed`, done: true }] : []),
   ];
 
   return { reply: data.response, commands, steps, purchaseState };
@@ -114,18 +99,28 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
   const [input, setInput]         = useState("");
   const [recording, setRecording] = useState(false);
   const [busy, setBusy]           = useState(false);
-  const [mounted, setMounted]     = useState(false);
-  const [closing, setClosing]     = useState(false);
   const [purchase, setPurchase]   = useState<PurchaseState>({ phase: "idle" });
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const mediaRef  = useRef<MediaRecorder | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef   = useRef<HTMLDivElement>(null);
+  const bottomRef    = useRef<HTMLDivElement>(null);
+  const mediaRef     = useRef<MediaRecorder | null>(null);
 
-  useEffect(() => { requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true))); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  useGSAP(() => {
+    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+    gsap.fromTo(containerRef.current, 
+      { x: 50, opacity: 0, scale: 0.95, filter: "blur(12px)" }, 
+      { x: 0, opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.5, ease: "back.out(1.2)" }
+    );
+  }, []);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
   useEffect(() => PurchaseBus.onChange(s => setPurchase(s)), []);
 
-  const handleClose = () => { setClosing(true); setTimeout(onClose, 360); };
+  const handleClose = () => {
+    gsap.to(containerRef.current, { x: 50, opacity: 0, scale: 0.9, filter: "blur(12px)", duration: 0.3, ease: "power2.in" });
+    gsap.to(overlayRef.current, { opacity: 0, duration: 0.3, onComplete: onClose });
+  };
 
   const send = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
@@ -133,19 +128,17 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
 
     const userMsg: Msg = { id: Date.now().toString(), role: "user", ts: new Date(), text };
     setMsgs(p => [...p, userMsg]);
-    setInput("");
-    setBusy(true);
+    setInput(""); setBusy(true);
 
     const thinkId = "think_" + Date.now();
     setMsgs(p => [...p, {
       id: thinkId, role: "agent", ts: new Date(), text: "",
-      steps: [{ id: "t", label: "Thinking…", done: false }], thinking: true,
+      steps: [{ id: "t", label: "Searching market…", done: false }], thinking: true,
     }]);
 
     try {
       const state  = MapEventBus.getState();
       const result = await callAgent(text, state, purchase);
-
       result.commands.forEach((cmd, i) => setTimeout(() => MapEventBus.sendCommand(cmd), i * 240));
 
       if (result.purchaseState) {
@@ -158,8 +151,8 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
         : m));
     } catch (e: any) {
       setMsgs(p => p.map(m => m.id === thinkId
-        ? { ...m, text: `⚠️ ${e?.message ?? "Something went wrong. Please try again."}`, thinking: false,
-            steps: [{ id: "e", label: "Request failed", done: true }] }
+        ? { ...m, text: `⚠️ ${e?.message ?? "Execution error. Please try again."}`, thinking: false,
+            steps: [{ id: "e", label: "Failed", done: true }] }
         : m));
     } finally {
       setBusy(false);
@@ -169,209 +162,149 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
   const toggleMic = async () => {
     if (recording) {
       mediaRef.current?.stop(); setRecording(false);
-      setTimeout(() => send("Show me what's available to buy"), 350);
+      setTimeout(() => send("Show available items to buy"), 350);
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const rec = new MediaRecorder(stream);
         rec.start(); mediaRef.current = rec; setRecording(true);
-        setTimeout(() => { if (mediaRef.current?.state === "recording") toggleMic(); }, 8000);
-      } catch { setInput("🎤 Microphone unavailable."); }
+        setTimeout(() => { if (mediaRef.current?.state === "recording") toggleMic(); }, 5000);
+      } catch { setInput("Mic unavailable"); }
     }
   };
 
-  const QUICK = ["What's available?", "Create a proposal", "My proposals", "How does it work?"];
+  const QUICK = ["Search lots", "My offers", "How it works"];
 
-  const phaseColor = purchase.phase === "done" ? "#16a34a"
-                   : purchase.phase === "payment" ? "#d97706"
-                   : purchase.phase === "selecting" ? "#2563eb" : "#94a3b8";
-  const phaseLabel = purchase.phase === "done" ? "✅ Order Placed"
-                   : purchase.phase === "payment" ? "💳 Choose Payment"
-                   : purchase.phase === "selecting" ? "🛒 Cart Active" : "💬 Browsing";
+  const phaseColor = purchase.phase === "done" ? "text-emerald-500"
+                   : purchase.phase === "payment" ? "text-amber-500"
+                   : purchase.phase === "selecting" ? "text-blue-500" : "text-slate-400";
+  const phaseBg    = purchase.phase === "done" ? "bg-emerald-50"
+                   : purchase.phase === "payment" ? "bg-amber-50"
+                   : purchase.phase === "selecting" ? "bg-blue-50" : "bg-slate-50";
+  const phaseLabel = purchase.phase === "done" ? "✓ Commandé"
+                   : purchase.phase === "payment" ? "💳 Paiement"
+                   : purchase.phase === "selecting" ? "🛒 Panier" : "💬 Exploration";
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap');
-        .cac-root *{box-sizing:border-box;}
-        .cac-root ::-webkit-scrollbar{width:3px;}
-        .cac-root ::-webkit-scrollbar-thumb{background:rgba(34,197,94,.3);border-radius:3px;}
-        .cac-msg b,.cac-msg strong{color:#15803d;font-weight:700;}
-        .cac-msg em{color:#64748b;font-style:italic;}
-        @keyframes cacIn{from{opacity:0;transform:translateX(48px) scale(.94);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
-        @keyframes cacOut{from{opacity:1}to{opacity:0;transform:translateX(48px) scale(.94);filter:blur(6px)}}
-        @keyframes msgPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
-        @keyframes stepIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-        @keyframes dot{0%,80%,100%{transform:scale(0);opacity:0}40%{transform:scale(1);opacity:1}}
-        @keyframes glow2{0%,100%{box-shadow:0 0 12px rgba(34,197,94,.2)}50%{box-shadow:0 0 24px rgba(34,197,94,.45)}}
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        .cac-qbtn:hover{background:rgba(34,197,94,.15)!important;}
-        .cac-ibtn:hover{background:rgba(0,0,0,.06)!important;}
-        .cac-send:hover:not(:disabled){transform:scale(1.07);}
-        .cac-send:active:not(:disabled){transform:scale(.95);}
-      `}</style>
+    <div className="fixed inset-0 z-[2000] flex items-center justify-end p-4 font-sans">
+      <div 
+        ref={overlayRef}
+        onClick={handleClose} 
+        className="absolute inset-0 bg-black/10 backdrop-blur-[4px]" 
+      />
 
-      <div onClick={handleClose} style={{
-        position:"fixed",inset:0,zIndex:2000,
-        background:"rgba(0,0,0,.18)",backdropFilter:"blur(3px)",
-        transition:"opacity .36s",opacity:mounted&&!closing?1:0,
-      }}/>
+      <div 
+        ref={containerRef}
+        onClick={e => e.stopPropagation()} 
+        className="relative w-full max-w-[390px] h-full max-h-[820px] bg-white/95 backdrop-blur-3xl 
+                   border border-brand-green/10 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
+      >
+        {/* Soft Aura */}
+        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-brand-green/20 to-transparent pointer-events-none" />
 
-      <div className="cac-root" onClick={e=>e.stopPropagation()} style={{
-        position:"fixed",top:14,right:14,bottom:14,width:375,zIndex:2100,
-        display:"flex",flexDirection:"column",
-        background:"rgba(255,255,255,.97)",
-        backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",
-        border:"1px solid rgba(34,197,94,.2)",borderRadius:24,overflow:"hidden",
-        boxShadow:"0 32px 80px rgba(0,0,0,.18), 0 0 0 .5px rgba(34,197,94,.15) inset",
-        fontFamily:"'Plus Jakarta Sans',sans-serif",
-        animation:closing?"cacOut .36s cubic-bezier(.4,0,1,1) forwards":"cacIn .42s cubic-bezier(.34,1.56,.64,1) both",
-      }}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:200,pointerEvents:"none",zIndex:0,
-          background:"linear-gradient(180deg,rgba(220,252,231,.5) 0%,transparent 100%)",borderRadius:"24px 24px 0 0"}}/>
-
-        {/* HEADER */}
-        <div style={{
-          position:"relative",zIndex:2,
-          display:"flex",alignItems:"center",gap:12,padding:"15px 16px 13px",
-          borderBottom:"1px solid rgba(34,197,94,.12)",
-          background:"rgba(240,253,244,.8)",
-        }}>
-          <div style={{
-            width:42,height:42,borderRadius:14,flexShrink:0,
-            background:"linear-gradient(135deg,#22c55e,#16a34a)",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            boxShadow:"0 4px 14px rgba(34,197,94,.35)",
-            animation:"glow2 3s ease-in-out infinite",
-          }}>
-            <Bot size={20} color="white"/>
+        {/* Header */}
+        <div className="relative z-10 p-6 pb-4 flex items-center gap-4 bg-white/50 backdrop-blur-xl border-b border-slate-50">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-green to-emerald-600 flex items-center justify-center shadow-lg shadow-brand-green/20">
+            <Bot size={24} className="text-white" />
           </div>
-          <div style={{flex:1}}>
-            <p style={{margin:0,color:"#15803d",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,letterSpacing:".02em"}}>
-              Shopping Assistant
-            </p>
-            <div style={{display:"flex",alignItems:"center",gap:5,marginTop:2}}>
-              <div style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",boxShadow:"0 0 6px #22c55e"}}/>
-              <span style={{fontSize:9,color:"#4ade80",letterSpacing:".06em",fontWeight:600}}>ONLINE · AI POWERED</span>
+          <div className="flex-1">
+            <h2 className="text-[15px] font-black text-slate-800 tracking-tight">EcoAssistant</h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="w-2 h-2 rounded-full bg-brand-green animate-pulse" />
+              <span className="text-[10px] font-black text-brand-green uppercase tracking-widest">En ligne</span>
             </div>
           </div>
-          <div style={{
-            padding:"4px 10px",borderRadius:20,fontSize:10,fontWeight:700,
-            background:`${phaseColor}18`,border:`1px solid ${phaseColor}40`,color:phaseColor,
-            whiteSpace:"nowrap",
-          }}>{phaseLabel}</div>
-          <button onClick={handleClose} className="cac-ibtn" style={{
-            width:30,height:30,borderRadius:9,
-            background:"rgba(0,0,0,.04)",border:"1px solid rgba(0,0,0,.07)",
-            color:"#94a3b8",cursor:"pointer",
-            display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s",
-          }}><X size={13}/></button>
+          <div className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${phaseBg} ${phaseColor} shadow-sm border border-black/5`}>
+            {phaseLabel}
+          </div>
+          <button 
+            onClick={handleClose}
+            className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <CustomerContextStrip purchase={purchase}/>
+        <CustomerContextStrip purchase={purchase} />
 
-        {/* MESSAGES */}
-        <div style={{
-          flex:1,overflowY:"auto",padding:"12px 12px 6px",
-          display:"flex",flexDirection:"column",gap:10,
-          position:"relative",zIndex:2,
-        }}>
-          {msgs.map((m,i) => <CustMsgBubble key={m.id} msg={m} delay={i*30}/>)}
-          <div ref={bottomRef}/>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
+          {msgs.map((m, i) => (
+            <CustMsgBubble key={m.id} msg={m} delay={i * 40} />
+          ))}
+          <div ref={bottomRef} className="h-4" />
         </div>
 
-        {/* INPUT BAR */}
-        <div style={{position:"relative",zIndex:2,padding:"8px 12px 13px",
-          borderTop:"1px solid rgba(34,197,94,.1)",background:"rgba(240,253,244,.5)"}}>
-          <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto",paddingBottom:2}}>
-            {QUICK.map(q=>(
-              <button key={q} onClick={()=>send(q)} className="cac-qbtn" style={{
-                padding:"4px 10px",borderRadius:7,flexShrink:0,
-                border:"1px solid rgba(34,197,94,.25)",
-                background:"rgba(34,197,94,.08)",color:"#16a34a",
-                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",
-                transition:"background .15s",whiteSpace:"nowrap",
-              }}>{q}</button>
+        {/* Input Bar */}
+        <div className="relative z-10 px-6 pt-2 pb-8 bg-white border-t border-slate-100">
+           <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+            {QUICK.map(q => (
+              <button 
+                key={q} 
+                onClick={() => send(q)}
+                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-100 text-slate-500 rounded-xl hover:bg-brand-green/5 hover:text-brand-green hover:border-brand-green/20 transition-all whitespace-nowrap shadow-sm"
+              >
+                {q}
+              </button>
             ))}
           </div>
 
-          <div style={{display:"flex",gap:7,alignItems:"flex-end",
-            background:"white",
-            border:"1.5px solid rgba(34,197,94,.2)",borderRadius:13,
-            padding:"7px 7px 7px 11px",
-            boxShadow:"0 2px 8px rgba(34,197,94,.08)"}}>
+          <div className="flex items-end gap-3 bg-slate-50 border border-slate-100 p-2 pl-5 rounded-[1.8rem] focus-within:bg-white focus-within:border-brand-green/30 focus-within:shadow-xl focus-within:shadow-brand-green/5 transition-all">
             <textarea
               value={input}
-              onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-              placeholder="Ask about products, prices, or proposals…"
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder="Chercher un lot, poser une question…"
               rows={1}
-              style={{
-                flex:1,background:"none",border:"none",outline:"none",
-                color:"#1e293b",fontSize:13,
-                fontFamily:"'Plus Jakarta Sans',sans-serif",
-                resize:"none",maxHeight:90,overflowY:"auto",lineHeight:1.5,
-              }}
+              className="flex-1 bg-transparent border-none outline-none py-3 text-sm text-slate-700 placeholder:text-slate-400 resize-none max-h-32 font-medium"
             />
-            <button onClick={toggleMic} className={recording?"":"cac-ibtn"} style={{
-              width:30,height:30,borderRadius:8,flexShrink:0,
-              background:recording?"rgba(34,197,94,.15)":"rgba(0,0,0,.03)",
-              border:recording?"1.5px solid rgba(34,197,94,.4)":"1px solid transparent",
-              cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-              transition:"background .15s",
-            }}>
-              {recording?<MicOff size={14} color="#22c55e"/>:<Mic size={14} color="#94a3b8"/>}
-            </button>
-            <button onClick={()=>send()} disabled={busy} className="cac-send" style={{
-              width:34,height:34,borderRadius:9,flexShrink:0,border:"none",
-              background:busy?"rgba(34,197,94,.3)":"linear-gradient(135deg,#22c55e,#16a34a)",
-              cursor:busy?"not-allowed":"pointer",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              transition:"transform .15s",
-              boxShadow:"0 4px 12px rgba(34,197,94,.35)",
-            }}>
-              {busy
-                ?<Loader size={14} color="white" style={{animation:"spin 1s linear infinite"}}/>
-                :<Send size={14} color="white"/>}
-            </button>
+            
+            <div className="flex gap-1.5 p-1">
+              <button 
+                onClick={toggleMic}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${recording ? 'bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10' : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm'}`}
+              >
+                {recording ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+
+              <button 
+                onClick={() => send()}
+                disabled={busy || !input.trim()}
+                className="w-12 h-10 rounded-2xl bg-gradient-to-br from-brand-green to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95 disabled:opacity-30 transition-all"
+              >
+                {busy ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
-
 
 const CustomerContextStrip = ({ purchase }: { purchase: PurchaseState }) => {
   const [snap, setSnap] = useState<MapStateSnapshotLocal>({ points: [], cart: [] });
   useEffect(() => {
     const tick = () => setSnap(MapEventBus.getState());
     tick();
-    const id = setInterval(tick, 1500);
+    const id = setInterval(tick, 2000);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <div style={{
-      position:"relative",zIndex:2,
-      display:"flex",gap:6,padding:"6px 12px",
-      borderBottom:"1px solid rgba(0,0,0,.05)",overflowX:"auto",
-    }}>
-      {[
-        {label:`${snap.points.length} lots`,color:"#16a34a",Icon:Package},
-        {label:"Mes propositions",color:"#6366f1",Icon:ShoppingCart},
-        {label:"LIVE",color:"#22c55e",Icon:Zap},
-      ].map(({label,color,Icon})=>(
-        <div key={label} style={{
-          display:"flex",alignItems:"center",gap:5,
-          padding:"3px 9px",borderRadius:7,whiteSpace:"nowrap",
-          background:`${color}10`,border:`1px solid ${color}22`,
-          color,fontSize:9,fontWeight:700,
-        }}>
-          <Icon size={10}/>{label}
-        </div>
-      ))}
+    <div className="relative z-10 px-6 py-3 border-b border-slate-50 flex gap-3 overflow-x-auto scrollbar-hide bg-slate-50/30">
+       <ContextBadge label={`${snap.points.length} Lots`} color="text-brand-green" bg="bg-emerald-50" Icon={Package} />
+       <ContextBadge label="Mes Offres" color="text-indigo-500" bg="bg-indigo-50" Icon={ShoppingCart} />
+       <ContextBadge label="Exploration" color="text-amber-500" bg="bg-amber-50" Icon={Compass} />
     </div>
   );
 };
+
+const ContextBadge = ({ label, color, bg, Icon }: any) => (
+  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${bg} border border-black/[0.03] shrink-0 transition-all hover:scale-105 shadow-sm`}>
+    <Icon size={12} className={color} />
+    <span className={`text-[10px] font-black uppercase tracking-tight ${color}`}>{label}</span>
+  </div>
+);
+
 

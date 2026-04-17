@@ -1,16 +1,8 @@
-import { X, ChevronLeft, ChevronRight, RotateCcw, CheckCircle } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { X, ChevronLeft, ChevronRight, RotateCcw, CheckCircle, MapPin, Trash2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 import type { GarbagePoint } from "../../types/ManagerMap";
-
-const arrowStyle = (side: "left" | "right"): React.CSSProperties => ({
-  position: "absolute", top: "50%", transform: "translateY(-50%)",
-  [side]: 10, zIndex: 10,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  width: 34, height: 34,
-  background: "rgba(0,0,0,.45)", backdropFilter: "blur(8px)",
-  border: "1px solid rgba(255,255,255,.15)", borderRadius: "50%",
-  color: "white", cursor: "pointer",
-});
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export const GarbagePopup = ({
   point,
@@ -23,36 +15,39 @@ export const GarbagePopup = ({
   onClose: () => void;
   onToggle: (id: number) => void;
 }) => {
-  const [idx, setIdx]         = useState(0);
-  const [dir, setDir]         = useState<"left" | "right" | null>(null);
-  const [animating, setAnim]  = useState(false);
-  const [visible, setVisible] = useState(false);
-  const [closing, setClosing] = useState(false);
-
+  const [idx, setIdx] = useState(0);
+  const [animating, setAnim] = useState(false);
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
   const imgs = point.images;
   const isCollected = point.status === "collected";
 
-  useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+  useGSAP(() => {
+    gsap.fromTo(containerRef.current,
+      { opacity: 0, scale: 0.6, y: 20, filter: "blur(10px)" },
+      { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "back.out(1.7)" }
+    );
   }, []);
 
-  const close = useCallback(() => {
-    setClosing(true);
-    setTimeout(onClose, 350);
+  const handleClose = useCallback(() => {
+    gsap.to(containerRef.current, {
+      opacity: 0, scale: 0.8, y: 15, filter: "blur(8px)", duration: 0.3, ease: "power2.in", onComplete: onClose
+    });
   }, [onClose]);
 
   const go = (d: "left" | "right") => {
     if (animating) return;
-    setDir(d);
+    setDirection(d);
     setAnim(true);
     setTimeout(() => {
       setIdx(i => d === "right" ? (i + 1) % imgs.length : (i - 1 + imgs.length) % imgs.length);
-      setDir(null);
+      setDirection(null);
       setAnim(false);
     }, 280);
   };
 
-  const W = 280, H = 400;
+  const W = 300, H = 420;
   const vw = window.innerWidth, vh = window.innerHeight;
   let left = origin.x + 28;
   let top  = origin.y - H / 2;
@@ -60,125 +55,114 @@ export const GarbagePopup = ({
   if (top < 12)           top  = 12;
   if (top + H > vh - 12)  top  = vh - H - 12;
 
-  const originX = origin.x < left + W / 2 ? "left" : "right";
-
-  const popupStyle: React.CSSProperties = {
-    position:      "fixed",
-    left, top, width: W, height: H,
-    zIndex:        3000,
-    borderRadius:  22,
-    overflow:      "hidden",
-    boxShadow:     "0 24px 64px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.08)",
-    transformOrigin: `${originX} center`,
-    transition:    closing
-      ? "opacity .3s ease, transform .35s cubic-bezier(.4,0,1,1), filter .3s ease"
-      : "opacity .35s cubic-bezier(.34,1.56,.64,1), transform .4s cubic-bezier(.34,1.56,.64,1), filter .3s ease",
-    opacity:  visible && !closing ? 1 : 0,
-    transform: visible && !closing ? "scale(1)" : "scale(0.55)",
-    filter:   visible && !closing ? "blur(0px)" : "blur(6px)",
-  };
-
-  const imgStyle: React.CSSProperties = {
-    position:  "absolute", inset: 0,
-    width:     "100%", height: "100%",
-    objectFit: "cover", display: "block",
-    transition: "transform .28s cubic-bezier(.4,0,.2,1), opacity .28s ease",
-    transform: animating
-      ? dir === "right" ? "translateX(-8%) scale(.96)" : "translateX(8%) scale(.96)"
-      : "translateX(0) scale(1)",
-    opacity: animating ? 0 : 1,
-  };
+  const originSide = origin.x < left + W / 2 ? "left" : "right";
 
   return (
-    <div style={popupStyle} onClick={e => e.stopPropagation()}>
-      <div style={{ position: "absolute", inset: 0, background: "#0a0f1e" }}>
+    <div 
+      ref={containerRef}
+      onClick={e => e.stopPropagation()}
+      className="fixed z-[3000] rounded-[2.5rem] bg-slate-950 shadow-2xl overflow-hidden border border-white/5"
+      style={{ left, top, width: W, height: H, transformOrigin: `${originSide} center` }}
+    >
+      {/* Visual Header / Media */}
+      <div className="relative h-[220px] bg-slate-900 overflow-hidden group">
         {imgs.length > 0 ? (
-          <img src={imgs[idx].url} alt="" style={imgStyle} />
+          <img 
+            src={imgs[idx].url} 
+            alt={point.label} 
+            className={`w-full h-full object-cover transition-all duration-300 ${
+              animating ? (direction === "right" ? "-translate-x-6 scale-95 opacity-0" : "translate-x-6 scale-95 opacity-0") : "translate-x-0 scale-100 opacity-100"
+            }`}
+          />
         ) : (
-          /* No image fallback */
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "rgba(255,255,255,.18)", fontSize: 13, fontStyle: "italic",
-          }}>
-            Aucune image
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 gap-3">
+            <Trash2 size={48} className="opacity-20" />
+            <span className="text-[10px] font-black tracking-widest uppercase opacity-40">Sans média</span>
           </div>
         )}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, rgba(0,0,0,.55) 0%, transparent 35%, transparent 55%, rgba(0,0,0,.72) 100%)",
-          pointerEvents: "none",
-        }} />
-      </div>
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/40 pointer-events-none" />
 
-      {/* top bar */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 14px", zIndex: 10,
-      }}>
-        <div style={{ display: "flex", gap: 5 }}>
-          {imgs.map((_, i) => (
-            <button key={i}
-              onClick={() => { setDir(i > idx ? "right" : "left"); setIdx(i); }}
-              style={{
-                width: i === idx ? 18 : 6, height: 6,
-                borderRadius: 3, border: "none", cursor: "pointer",
-                background: i === idx ? "#fff" : "rgba(255,255,255,.4)",
-                transition: "width .25s cubic-bezier(.34,1.56,.64,1), background .2s",
-                padding: 0,
-              }}
-            />
-          ))}
+        {/* HUD Elements */}
+        <div className="absolute top-5 inset-x-5 flex justify-between items-center">
+          <div className="flex gap-2">
+            {imgs.map((_, i) => (
+              <div 
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-500 ${i === idx ? "w-8 bg-brand-green" : "w-2 bg-white/20"}`}
+              />
+            ))}
+          </div>
+          <button 
+            onClick={handleClose}
+            className="w-9 h-9 rounded-full bg-slate-950/50 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white/10 hover:scale-110 active:scale-90 transition-all"
+          >
+            <X size={16} />
+          </button>
         </div>
-        <button onClick={close} style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          width: 30, height: 30,
-          background: "rgba(0,0,0,.45)", backdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,255,255,.15)",
-          borderRadius: "50%", color: "white", cursor: "pointer", fontSize: 14,
-          transition: "background .18s, transform .18s",
-        }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,.75)"; (e.currentTarget as HTMLElement).style.transform = "scale(1.12)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,.45)"; (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-        >
-          <X size={13} />
-        </button>
+
+        {/* Nav Overlays */}
+        {imgs.length > 1 && (
+          <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={() => go("left")}
+              className="w-10 h-10 rounded-full bg-slate-950/40 backdrop-blur-md border border-white/5 flex items-center justify-center text-white hover:bg-brand-green/20 hover:border-brand-green/30 transition-all font-bold"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button 
+              onClick={() => go("right")}
+              className="w-10 h-10 rounded-full bg-slate-950/40 backdrop-blur-md border border-white/5 flex items-center justify-center text-white hover:bg-brand-green/20 hover:border-brand-green/30 transition-all font-bold"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+
+        {/* Status Badge */}
+        <div className="absolute bottom-4 left-5">
+           <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-lg border ${
+             isCollected ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-orange-500/20 text-orange-400 border-orange-500/30"
+           }`}>
+             {isCollected ? "Collecté" : "En attente"}
+           </div>
+        </div>
       </div>
 
-      {/* arrows */}
-      {imgs.length > 1 && (
-        <>
-          <button onClick={() => go("left")}  style={arrowStyle("left")}><ChevronLeft size={18} /></button>
-          <button onClick={() => go("right")} style={arrowStyle("right")}><ChevronRight size={18} /></button>
-        </>
-      )}
+      {/* Details Section */}
+      <div className="p-6 flex flex-col h-[200px] justify-between">
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <MapPin size={16} className="text-brand-green mt-0.5 shrink-0" />
+            <div className="overflow-hidden">
+              <h4 className="text-white font-black text-sm leading-tight truncate">{point.label}</h4>
+              <p className="text-[10px] text-slate-500 font-mono mt-1">LAT: {point.lat.toFixed(4)} / LNG: {point.lng.toFixed(4)}</p>
+            </div>
+          </div>
+          
+          <div className="h-px bg-white/5 w-full" />
+          
+          <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+             Analyse de l'image suggère un volume de type {point.label.split(' ')[0] || "ménager"}. 
+             Prêt pour traitement logistique immédiat.
+          </p>
+        </div>
 
-      {/* bottom */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "0 14px 16px", zIndex: 10,
-        display: "flex", flexDirection: "column", gap: 8,
-      }}>
-        <p style={{ margin: 0, color: "rgba(255,255,255,.75)", fontSize: 11, fontWeight: 600, letterSpacing: ".02em", textShadow: "0 1px 4px rgba(0,0,0,.8)" }}>
-          📍 {point.label}
-        </p>
+        {/* Action Button */}
         <button
           onClick={() => onToggle(point.id)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-            width: "100%", padding: "11px 0", borderRadius: 14, border: "none",
-            cursor: "pointer", fontWeight: 700, fontSize: 13, letterSpacing: ".01em",
-            backdropFilter: "blur(12px)",
-            transition: "transform .18s cubic-bezier(.34,1.56,.64,1), background .2s, box-shadow .2s",
-            background: isCollected ? "rgba(239,68,68,.82)" : "rgba(34,197,94,.82)",
-            color: "#fff",
-            boxShadow: isCollected ? "0 4px 20px rgba(239,68,68,.5)" : "0 4px 20px rgba(34,197,94,.5)",
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "scale(1.04)"}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = "scale(1)"}
+          className={`group relative flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all
+            ${isCollected 
+              ? "bg-slate-900 text-slate-400 hover:text-white border border-white/5" 
+              : "bg-brand-green text-slate-950 hover:shadow-brand-green/20 shadow-xl"
+            }
+          `}
         >
-          {isCollected ? <><RotateCcw size={14} /> Mark as Pending</> : <><CheckCircle size={14} /> Mark as Collected</>}
+          {isCollected ? (
+            <><RotateCcw size={16} className="group-hover:rotate-[-45deg] transition-transform" /> Rétablir</>
+          ) : (
+            <><CheckCircle size={16} className="group-hover:scale-125 transition-transform" /> Valider Collecte</>
+          )}
         </button>
       </div>
     </div>

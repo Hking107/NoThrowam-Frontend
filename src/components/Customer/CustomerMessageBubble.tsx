@@ -1,6 +1,8 @@
-import React from 'react';
-import { Bot, User, CheckCircle } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Bot, User, CheckCircle, Zap } from 'lucide-react';
 import type { Msg } from '../../types/AIMessage';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface CustMsgBubbleProps {
   msg: Msg;
@@ -9,92 +11,99 @@ interface CustMsgBubbleProps {
 
 const CustMsgBubble: React.FC<CustMsgBubbleProps> = ({ msg, delay: d }) => {
   const isAgent = msg.role === "agent";
+  const bubbleRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo(bubbleRef.current,
+      { opacity: 0, x: isAgent ? -15 : 15, scale: 0.96 },
+      { opacity: 1, x: 0, scale: 1, duration: 0.4, delay: d / 1000, ease: "back.out(1.4)" }
+    );
+  }, [msg.id]);
   
   return (
-    <div style={{
-      display: "flex", flexDirection: isAgent ? "row" : "row-reverse", gap: 7, alignItems: "flex-start",
-      animation: `msgPop .28s ease ${d}ms both`,
-    }}>
+    <div 
+      ref={bubbleRef}
+      className={`flex gap-3 items-start ${isAgent ? "flex-row" : "flex-row-reverse"}`}
+    >
       {/* Avatar */}
-      <div style={{
-        width: 28, height: 28, borderRadius: 9, flexShrink: 0, marginTop: 2,
-        background: isAgent ? "linear-gradient(135deg,#22c55e,#16a34a)" : "rgba(0,0,0,.05)",
-        border: isAgent ? "none" : "1px solid rgba(0,0,0,.08)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: isAgent ? "0 3px 10px rgba(34,197,94,.3)" : "none",
-      }}>
-        {isAgent ? <Bot size={13} color="white"/> : <User size={13} color="#64748b"/>}
+      <div className={`w-9 h-9 rounded-xl shrink-0 flex items-center justify-center transition-all duration-300 shadow-sm
+        ${isAgent 
+          ? "bg-gradient-to-br from-brand-green to-emerald-600 text-white shadow-brand-green/20" 
+          : "bg-slate-100 border border-slate-200 text-slate-400"
+        }`}
+      >
+        {isAgent ? <Bot size={18} /> : <User size={18} />}
       </div>
 
-      <div style={{ maxWidth: "86%", display: "flex", flexDirection: "column", gap: 5 }}>
+      <div className={`max-w-[85%] flex flex-col gap-2 ${isAgent ? "items-start" : "items-end"}`}>
         
         {/* Thinking Steps / System Messages */}
         {isAgent && msg.steps && msg.steps.length > 0 && (
-          <div style={{
-            background: "rgba(240,253,244,.8)", border: "1px solid rgba(34,197,94,.15)",
-            borderRadius: 10, padding: "7px 10px", display: "flex", flexDirection: "column", gap: 3,
-          }}>
+          <div className="w-full bg-emerald-50/50 backdrop-blur-sm border border-emerald-100 rounded-2xl p-3 space-y-2">
             {msg.thinking ? (
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{
-                    width: 5, height: 5, borderRadius: "50%", background: "#22c55e",
-                    animation: `dot 1.2s ease-in-out ${i * .2}s infinite`
-                  }}/>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  {[0, 1, 2].map(i => (
+                    <div 
+                      key={i} 
+                      className="w-1.5 h-1.5 rounded-full bg-brand-green animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-bold text-brand-green tracking-tight uppercase">Récupération des lots…</span>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {msg.steps.map((s, i) => (
+                  <div key={s.id} className="flex items-center gap-2 opacity-0 animate-in fade-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'forwards' }}>
+                    <CheckCircle size={10} className="text-brand-green" />
+                    <span className="text-[10px] font-bold text-emerald-800/60 uppercase tracking-tight">{s.label}</span>
+                  </div>
                 ))}
-                <span style={{ fontSize: 10, color: "#4ade80", marginLeft: 4, fontWeight: 600 }}>Thinking…</span>
               </div>
-            ) : msg.steps.map((s: any, i: number) => (
-              <div key={s.id} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                fontSize: 10, color: "#4ade80",
-                animation: `stepIn .22s ease ${i * 70}ms both`,
-                fontWeight: 600,
-              }}>
-                <CheckCircle size={9}/>{s.label}
-              </div>
-            ))}
+            )}
           </div>
         )}
 
         {/* Commands / Action tags */}
         {isAgent && msg.commands && msg.commands.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-            {msg.commands.map((c: any, i: number) => (
-              <span key={i} style={{
-                padding: "2px 8px", borderRadius: 5,
-                background: "rgba(34,197,94,.1)", border: "1px solid rgba(34,197,94,.2)",
-                color: "#16a34a", fontSize: 9, fontWeight: 700, letterSpacing: ".04em",
-              }}>⚡ {c.type.replace(/_/g, " ").toUpperCase()}</span>
+          <div className="flex flex-wrap gap-2">
+            {msg.commands.map((c, i) => (
+              <div 
+                key={i} 
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-700 uppercase tracking-widest shadow-sm"
+              >
+                <Zap size={10} fill="currentColor" />
+                {c.type.replace(/_/g, " ")}
+              </div>
             ))}
           </div>
         )}
 
         {/* Actual Message Text */}
-        {!!msg.text && (
+        {msg.text && (
           <div
-            className="cac-msg"
-            style={{
-              padding: "10px 12px",
-              borderRadius: isAgent ? "4px 14px 14px 14px" : "14px 4px 14px 14px",
-              background: isAgent ? "white" : "rgba(34,197,94,.12)",
-              border: isAgent ? "1px solid rgba(0,0,0,.07)" : "1px solid rgba(34,197,94,.2)",
-              color: isAgent ? "#1e293b" : "#15803d",
-              fontSize: 13, lineHeight: 1.65, whiteSpace: "pre-wrap",
-              boxShadow: isAgent ? "0 2px 8px rgba(0,0,0,.06)" : "none",
-            }}
+            className={`px-4 py-3 text-[13px] leading-relaxed font-medium break-words shadow-sm
+              ${isAgent 
+                ? "bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none" 
+                : "bg-brand-green text-white border border-brand-green/20 rounded-2xl rounded-tr-none shadow-brand-green/10"
+              }`}
             dangerouslySetInnerHTML={{
               __html: msg.text
-                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                .replace(/\*\*(.*?)\*\*/g, `<strong class="${isAgent ? 'text-brand-green' : 'text-white'} font-black">$1</strong>`)
+                .replace(/\*(.*?)\*/g, '<em class="opacity-80 italic">$1</em>')
             }}
           />
         )}
 
         {/* Timestamp */}
-        <span style={{ fontSize: 9, color: "#94a3b8", textAlign: isAgent ? "left" : "right", fontWeight: 500 }}>
-          {msg.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </span>
+        <div className="flex items-center gap-2 px-1">
+           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+            {msg.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          {isAgent && <div className="w-1 h-1 rounded-full bg-brand-green" />}
+        </div>
       </div>
     </div>
   );

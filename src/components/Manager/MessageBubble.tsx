@@ -1,92 +1,117 @@
-import { Bot, User } from "lucide-react";
+import { Bot, User, CheckCircle2, Zap } from "lucide-react";
 import type { Msg } from "../../types/ManagerAgentChat";
+import { useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export const MsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
   const isAgent = msg.role === "agent";
+  const bubbleRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo(bubbleRef.current,
+      { opacity: 0, y: 10, scale: 0.95 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.35, delay: d / 1000, ease: "out" }
+    );
+  }, [msg.id]);
+
   return (
-    <div style={{
-      display:"flex",flexDirection:isAgent?"row":"row-reverse",gap:7,alignItems:"flex-start",
-      animation:`msgPop .28s ease ${d}ms both`,
-    }}>
-      <div style={{
-        width:26,height:26,borderRadius:8,flexShrink:0,marginTop:2,
-        background:isAgent?"linear-gradient(135deg,rgba(34,197,94,.25),rgba(34,197,94,.08))":"rgba(255,255,255,.06)",
-        border:isAgent?"1px solid rgba(34,197,94,.28)":"1px solid rgba(255,255,255,.09)",
-        display:"flex",alignItems:"center",justifyContent:"center",
-      }}>
-        {isAgent?<Bot size={13} color="#22c55e"/>:<User size={13} color="rgba(255,255,255,.55)"/>}
+    <div 
+      ref={bubbleRef}
+      className={`flex gap-3 items-start ${isAgent ? "flex-row" : "flex-row-reverse"}`}
+    >
+      {/* Avatar */}
+      <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border transition-all duration-500
+        ${isAgent 
+          ? "bg-brand-green/10 border-brand-green/20 text-brand-green shadow-[0_0_15px_rgba(34,197,94,0.1)]" 
+          : "bg-white/5 border-white/10 text-slate-400"
+        }`}
+      >
+        {isAgent ? <Bot size={16} /> : <User size={16} />}
       </div>
 
-      <div style={{maxWidth:"86%",display:"flex",flexDirection:"column",gap:5}}>
+      <div className={`max-w-[85%] flex flex-col gap-2 ${isAgent ? "items-start" : "items-end"}`}>
+        {/* Attachment */}
         {msg.image && (
-          <img src={msg.image} alt="" style={{
-            width:"100%",maxHeight:130,objectFit:"cover",borderRadius:9,
-            border:"1px solid rgba(255,255,255,.09)",
-          }}/>
+          <div className="relative group overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+            <img 
+              src={msg.image} 
+              alt="Uploaded context" 
+              className="max-h-48 w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
+          </div>
         )}
 
+        {/* Steps / Thinking */}
         {isAgent && msg.steps && msg.steps.length > 0 && (
-          <div style={{
-            background:"rgba(34,197,94,.04)",border:"1px solid rgba(34,197,94,.1)",
-            borderRadius:9,padding:"7px 9px",display:"flex",flexDirection:"column",gap:3,
-          }}>
+          <div className="w-full bg-brand-green/5 border border-brand-green/10 rounded-2xl p-3 space-y-2">
             {msg.thinking ? (
-              <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                {[0,1,2].map(i=>(
-                  <div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",
-                    animation:`dot 1.2s ease-in-out ${i*.2}s infinite`}}/>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1">
+                  {[0, 1, 2].map(i => (
+                    <div 
+                      key={i} 
+                      className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-brand-green/40">Séquençage neural…</span>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {msg.steps.map((s, i) => (
+                  <div key={s.id} className="flex items-center gap-2 opacity-0 animate-in fade-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'forwards' }}>
+                    <CheckCircle2 size={10} className="text-brand-green" />
+                    <span className="text-[9px] font-bold text-brand-green/60 uppercase tracking-tight">{s.label}</span>
+                  </div>
                 ))}
-                <span style={{fontSize:10,color:"rgba(34,197,94,.5)",marginLeft:4}}>Agent thinking…</span>
               </div>
-            ) : msg.steps.map((s,i)=>(
-              <div key={s.id} style={{
-                display:"flex",alignItems:"center",gap:6,
-                fontSize:9,color:"rgba(34,197,94,.6)",
-                animation:`stepIn .22s ease ${i*70}ms both`,
-              }}>
-                <span style={{color:"#22c55e"}}>✓</span>{s.label}
-              </div>
-            ))}
+            )}
           </div>
         )}
 
+        {/* Commands */}
         {isAgent && msg.commands && msg.commands.length > 0 && (
-          <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
-            {msg.commands.map((c,i)=>(
-              <span key={i} style={{
-                padding:"2px 7px",borderRadius:5,
-                background:"rgba(34,197,94,.09)",border:"1px solid rgba(34,197,94,.18)",
-                color:"rgba(34,197,94,.65)",fontSize:8,fontWeight:600,letterSpacing:".05em",
-              }}>⚡ {c.type.replace(/_/g," ").toUpperCase()}</span>
+          <div className="flex flex-wrap gap-2">
+            {msg.commands.map((c, i) => (
+              <div 
+                key={i} 
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-brand-green/10 border border-brand-green/20 text-[8px] font-black text-brand-green uppercase tracking-widest"
+              >
+                <Zap size={8} fill="currentColor" />
+                {c.type.replace(/_/g, " ")}
+              </div>
             ))}
           </div>
         )}
 
-        {!!msg.text && (
+        {/* Text Body */}
+        {msg.text && (
           <div
-            className="ac-msg"
-            style={{
-              padding:"9px 11px",
-              borderRadius:isAgent?"4px 13px 13px 13px":"13px 4px 13px 13px",
-              background:isAgent?"rgba(255,255,255,.055)":"rgba(34,197,94,.13)",
-              border:isAgent?"1px solid rgba(255,255,255,.07)":"1px solid rgba(34,197,94,.22)",
-              color:"rgba(255,255,255,.83)",fontSize:12,lineHeight:1.6,whiteSpace:"pre-wrap",
-            }}
-            dangerouslySetInnerHTML={{__html:
-              msg.text
-                .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g,"<em>$1</em>")
+            className={`px-4 py-3 text-sm leading-relaxed font-medium break-words
+              ${isAgent 
+                ? "bg-slate-900/40 border border-white/5 text-slate-200 rounded-2xl rounded-tl-none" 
+                : "bg-brand-green text-slate-950 border border-brand-green/20 rounded-2xl rounded-tr-none shadow-lg shadow-brand-green/10"
+              }`}
+            dangerouslySetInnerHTML={{
+              __html: msg.text
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-brand-green font-black">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="opacity-70 italic">$1</em>')
             }}
           />
         )}
 
-        <span style={{
-          fontSize:8,color:"rgba(255,255,255,.18)",
-          textAlign:isAgent?"left":"right",letterSpacing:".04em",
-        }}>
-          {msg.ts.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
-        </span>
+        {/* Meta */}
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">
+            {msg.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          {isAgent && <div className="w-1 h-1 rounded-full bg-brand-green animate-pulse" />}
+        </div>
       </div>
     </div>
   );
 };
+
