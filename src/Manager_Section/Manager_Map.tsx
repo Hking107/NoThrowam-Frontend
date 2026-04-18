@@ -25,7 +25,7 @@ export function toPoint(d: ApiDeposit): GarbagePoint {
   };
 }
 
-const CLR: Record<Status, string> = { collected: "#22c55e", pending: "#ef4444" };
+const CLR: Record<Status, string> = { collected: "#007a5e", pending: "#ce1126" };
 
 
 const AgentRing = ({ x, y, color }: { x: number; y: number; color: string }) => (
@@ -193,7 +193,7 @@ export const ManagerMap = () => {
         ? { ...prev, point: { ...prev.point, status: "collected" } }
         : prev
       );
-      flashRing(id, "#22c55e");
+      flashRing(id, "#007a5e");
 
       try {
         await collectDeposit(id);
@@ -251,24 +251,24 @@ export const ManagerMap = () => {
         case "collect":
           setPoints(prev => prev.map(p => p.id === cmd.pointId ? { ...p, status: "collected" } : p));
           setPopup(prev => prev?.point.id === cmd.pointId ? { ...prev, point: { ...prev.point, status: "collected" } } : prev);
-          flashRing(cmd.pointId, "#22c55e");
+          flashRing(cmd.pointId, "#007a5e");
           break;
         case "uncollect":
           setPoints(prev => prev.map(p => p.id === cmd.pointId ? { ...p, status: "pending" } : p));
-          flashRing(cmd.pointId, "#ef4444");
+          flashRing(cmd.pointId, "#ce1126");
           break;
         case "highlight":
           flashRing(cmd.pointId, "#facc15");
           break;
         case "highlight_all_pending":
           pointsRef.current.filter(p => p.status === "pending").forEach((p, i) => {
-            setTimeout(() => flashRing(p.id, "#ef4444"), i * 200);
+            setTimeout(() => flashRing(p.id, "#ce1126"), i * 200);
           });
           showToast("🔴 Highlighting all pending points");
           break;
         case "highlight_all_collected":
           pointsRef.current.filter(p => p.status === "collected").forEach((p, i) => {
-            setTimeout(() => flashRing(p.id, "#22c55e"), i * 200);
+            setTimeout(() => flashRing(p.id, "#007a5e"), i * 200);
           });
           showToast("🟢 Highlighting all collected points");
           break;
