@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, ChevronLeft, ChevronRight, ShoppingCart, Package, Info } from 'lucide-react';
 import { CATEGORY_COLORS, CATEGORY_EMOJI } from '../../contexts/constants/constants';
 import type { MarketPoint } from '../../types/MarketPoint';
-
-
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface MarketPopupProps {
   point: MarketPoint;
@@ -13,180 +13,166 @@ interface MarketPopupProps {
 }
 
 const MarketPopup: React.FC<MarketPopupProps> = ({ point, origin, onClose, onBuy }) => {
-  const [idx, setIdx]         = useState(0);
-  const [visible, setVisible] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const [animating, setAnim]  = useState(false);
-  const [dir, setDir]         = useState<"left" | "right" | null>(null);
+  const [idx, setIdx] = useState(0);
+  const [animating, setAnim] = useState(false);
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgs = point.images ?? [];
+  const color = CATEGORY_COLORS[point.category] || "#22c55e";
+  const emoji = CATEGORY_EMOJI[point.category] || "📦";
 
-  const imgs  = point.images ?? [];
-  const color =  CATEGORY_COLORS[point.category] ||  "#22c55e";
-  const emoji =  CATEGORY_EMOJI[point.category] || "📦";
-
-  useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+  useGSAP(() => {
+    gsap.fromTo(containerRef.current,
+      { opacity: 0, scale: 0.6, y: 20 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" }
+    );
   }, []);
 
-  const close = () => { 
-    setClosing(true); 
-    setTimeout(onClose, 320); 
+  const handleClose = () => {
+    gsap.to(containerRef.current, {
+      opacity: 0, scale: 0.8, y: 10, duration: 0.25, ease: "power2.in", onComplete: onClose
+    });
   };
 
   const go = (d: "left" | "right") => {
     if (animating) return;
-    setDir(d); 
+    setDirection(d);
     setAnim(true);
     setTimeout(() => {
       setIdx(i => d === "right" ? (i + 1) % imgs.length : (i - 1 + imgs.length) % imgs.length);
-      setDir(null); 
+      setDirection(null);
       setAnim(false);
     }, 260);
   };
 
-  const arSt = (direction: "left" | "right"): React.CSSProperties => ({
-    position: "absolute", top: "50%", transform: "translateY(-50%)",
-    [direction]: 8, width: 28, height: 28, borderRadius: "50%",
-    background: "rgba(0,0,0,.42)", backdropFilter: "blur(6px)",
-    border: "none", color: "white", cursor: "pointer",
-    display: "flex", alignItems: "center", justifyContent: "center",
-  });
-
-  const W = 300;
+  const W = 320;
   const vw = window.innerWidth, vh = window.innerHeight;
-  let left = origin.x + 32, top = origin.y - 200;
+  let left = origin.x + 32, top = origin.y - 180;
   
   if (left + W > vw - 16) left = origin.x - W - 32;
   if (top < 16)           top  = 16;
-  if (top + 420 > vh - 16) top = vh - 436;
+  if (top + 440 > vh - 16) top = vh - 456;
+
+  const originSide = origin.x < left + W / 2 ? "left" : "right";
 
   return (
     <div
+      ref={containerRef}
       onClick={e => e.stopPropagation()}
-      style={{
-        position: "fixed", left, top, width: W, zIndex: 3000,
-        borderRadius: 20, overflow: "hidden",
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
-        boxShadow: "0 24px 60px rgba(0,0,0,.18), 0 0 0 1.5px rgba(255,255,255,.9)",
-        transform:  visible && !closing ? "scale(1)" : "scale(0.6)",
-        opacity:    visible && !closing ? 1 : 0,
-        transition: "transform .35s cubic-bezier(.34,1.56,.64,1), opacity .28s",
-        transformOrigin: `${origin.x < left + W / 2 ? "left" : "right"} center`,
-      }}
+      className="fixed z-[3000] rounded-[2rem] bg-white shadow-2xl overflow-hidden border border-white/90"
+      style={{ left, top, width: W, transformOrigin: `${originSide} center` }}
     >
       {/* Image Section */}
-      <div style={{ position: "relative", height: 185, background: "#f1f5f9", overflow: "hidden" }}>
+      <div className="relative h-48 bg-slate-100 overflow-hidden group">
         {imgs.length > 0 ? (
-          <img src={imgs[idx].url} alt="" style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            transition: "transform .26s ease, opacity .26s ease",
-            transform: animating ? (dir === "right" ? "translateX(-6%) scale(.97)" : "translateX(6%) scale(.97)") : "none",
-            opacity: animating ? 0 : 1,
-          }} />
+          <img 
+            src={imgs[idx].url} 
+            alt={point.label}
+            className={`w-full h-full object-cover transition-all duration-300 ${
+              animating ? (direction === "right" ? "-translate-x-4 opacity-0" : "translate-x-4 opacity-0") : "translate-x-0 opacity-100"
+            }`}
+          />
         ) : (
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 40,
-          }}>
+          <div className="w-full h-full flex items-center justify-center text-5xl">
             {emoji}
           </div>
         )}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom,rgba(0,0,0,.14) 0%,transparent 38%,rgba(0,0,0,.4) 100%)",
-          pointerEvents: "none",
-        }} />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
 
-        {/* Category badge */}
-        <div style={{
-          position: "absolute", top: 12, left: 12,
-          padding: "4px 10px", borderRadius: 8,
-          background: `${color}ee`, color: "white",
-          fontSize: 11, fontWeight: 700, letterSpacing: ".04em",
-        }}>
-          {emoji} {point.category}
+        {/* Top Controls */}
+        <div className="absolute top-4 inset-x-4 flex justify-between items-start">
+          <div 
+            className="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase text-white backdrop-blur-md shadow-lg"
+            style={{ background: `${color}cc` }}
+          >
+            {emoji} {point.category}
+          </div>
+          <button 
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/60 transition-colors border border-white/10"
+          >
+            <X size={14} />
+          </button>
         </div>
 
-        {/* Close */}
-        <button onClick={close} style={{
-          position: "absolute", top: 10, right: 10,
-          width: 28, height: 28, borderRadius: "50%",
-          background: "rgba(0,0,0,.42)", backdropFilter: "blur(6px)",
-          border: "none", color: "white", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}><X size={12} /></button>
-
-        {/* Dots */}
+        {/* Navigation Arrows */}
         {imgs.length > 1 && (
-          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 4 }}>
-            {imgs.map((_, i) => (
-              <div key={i} onClick={() => setIdx(i)} style={{
-                width: i === idx ? 16 : 6, height: 6, borderRadius: 3,
-                background: i === idx ? "white" : "rgba(255,255,255,.5)",
-                cursor: "pointer", transition: "width .22s",
-              }} />
-            ))}
+          <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={() => go("left")}
+              className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white/40 active:scale-90 transition-all"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button 
+              onClick={() => go("right")}
+              className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white/40 active:scale-90 transition-all"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
         )}
 
-        {/* Arrows */}
+        {/* Carousel Indicators */}
         {imgs.length > 1 && (
-          <>
-            <button onClick={() => go("left")}  style={arSt("left")}><ChevronLeft size={15} /></button>
-            <button onClick={() => go("right")} style={arSt("right")}><ChevronRight size={15} /></button>
-          </>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {imgs.map((_, i) => (
+              <div 
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${i === idx ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+              />
+            ))}
+          </div>
         )}
       </div>
 
       {/* Content Section */}
-      <div style={{ background: "white", padding: "14px 15px", display: "flex", flexDirection: "column", gap: 10 }}>
-        <div>
-          <p style={{ margin: "0 0 3px", fontWeight: 800, fontSize: 13, color: "#111827", lineHeight: 1.3 }}>
-            {point.label}
-          </p>
-          <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.45 }}>
-            {point.description || "Aucune description"}
+      <div className="p-6 space-y-5">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Package size={14} className="text-brand-green" />
+            <h3 className="text-base font-black text-slate-900 leading-tight truncate">{point.label}</h3>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+            {point.description || "Un lot de matériaux recyclables prêt pour la collecte. Qualité vérifiée."}
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{
-            flex: 1, padding: "10px 11px", borderRadius: 11,
-            background: "#f8fafc", border: "1px solid #e2e8f0", textAlign: "center",
-          }}>
-            <p style={{ margin: 0, fontSize: 9, color: "#94a3b8", fontWeight: 700, letterSpacing: ".05em" }}>QUANTITÉ</p>
-            <p style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#374151" }}>
-              {point.fixedWeight}
-              <span style={{ fontSize: 11, fontWeight: 500, color: "#94a3b8" }}> {point.weightUnit}</span>
-            </p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-center">
+            <p className="text-[9px] font-black text-slate-400 tracking-widest uppercase mb-1">Quantité</p>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-xl font-black text-slate-700">{point.fixedWeight}</span>
+              <span className="text-[10px] font-bold text-slate-400">{point.weightUnit}</span>
+            </div>
           </div>
-          <div style={{
-            flex: 1, padding: "10px 11px", borderRadius: 11,
-            background: "#f0fdf4", border: "1px solid #bbf7d0", textAlign: "center",
-          }}>
-            <p style={{ margin: 0, fontSize: 9, color: "#4ade80", fontWeight: 700, letterSpacing: ".05em" }}>PRIX</p>
-            <p style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#15803d" }}>
-              {point.fixedPrice?.toLocaleString()}
-              <span style={{ fontSize: 10, fontWeight: 500, color: "#4ade80" }}> {point.currency}</span>
-            </p>
+          <div className="bg-brand-green/5 rounded-2xl p-3 border border-brand-green/10 text-center">
+            <p className="text-[9px] font-black text-brand-green tracking-widest uppercase mb-1">Estimation</p>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-xl font-black text-brand-green">{point.fixedPrice?.toLocaleString()}</span>
+              <span className="text-[10px] font-bold text-brand-green/60">{point.currency}</span>
+            </div>
           </div>
         </div>
 
-        <button onClick={onBuy} style={{
-          width: "100%", padding: "13px", borderRadius: 13, border: "none",
-          background: "linear-gradient(135deg,#22c55e,#16a34a)",
-          color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          boxShadow: "0 4px 16px rgba(34,197,94,.38)",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-          transition: "transform .15s",
-        }}
-          onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.03)")}
-          onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+        {/* CTA Button */}
+        <button 
+          onClick={onBuy}
+          className="w-full h-14 bg-gradient-to-br from-brand-green to-emerald-600 rounded-2xl
+                     flex items-center justify-center gap-3 text-white font-black text-sm
+                     shadow-xl shadow-brand-green/20 hover:shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all"
         >
-          <ShoppingCart size={15} />
-          Proposer — {point.fixedPrice?.toLocaleString()} {point.currency}
+          <ShoppingCart size={18} />
+          Faire une offre — {point.fixedPrice?.toLocaleString()} {point.currency}
         </button>
+        
+        <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+          <Info size={12} />
+          Paiement sécurisé via EcoMarché
+        </div>
       </div>
     </div>
   );

@@ -1,34 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
-  X, Send, Mic, MicOff, ImagePlus, Bot, User,
+  X, Send, Mic, MicOff, ImagePlus, Bot,
   Zap, MapPin, CheckCircle, Loader, Map,
 } from "lucide-react";
 import type { AgentApiResponse, AgentResult, AgentStep, MapCommand, MapStateSnapshot, Msg } from "../types/ManagerAgentChat";
 import { MsgBubble } from "../components/Manager/MessageBubble";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
-const BUS = {
-  _cmdListeners: [] as Array<(cmd: MapCommand) => void>,
-  sendCommand(cmd: MapCommand) { this._cmdListeners.forEach(fn => fn(cmd)); },
-  onCommand(fn: (cmd: MapCommand) => void) {
-    this._cmdListeners.push(fn);
-    return () => { this._cmdListeners = this._cmdListeners.filter(f => f !== fn); };
-  },
-  registerStateProvider(fn: () => MapStateSnapshot) { (window as any).__mapStateProvider = fn; },
-  getState(): MapStateSnapshot {
-    const p = (window as any).__mapStateProvider;
-    return p ? p() : { points: [] };
-  },
-};
-export const MapEventBus = BUS;
-
-/* ─────────────────────────────────────────────────────
-   REAL API CALL  →  POST /api/v0/agents/agentic-message/
-───────────────────────────────────────────────────── */
-
-
-function mkStep(label: string): AgentStep {
-  return { id: Math.random().toString(36).slice(2), label, done: true };
-}
+import { ManagerMapBus as MapEventBus } from "../services/eventBus";
 
 async function callAgent(
   message: string,
@@ -57,13 +37,10 @@ async function callAgent(
   }
 
   const data: AgentApiResponse = await res.json();
-
-  /* ── Derive map commands from action results ── */
   const commands: MapCommand[] = [];
 
   if (data.mode === "action" && data.results?.length) {
     for (const r of data.results) {
-      // Deposit collected → mark on map
       if (r?.deposit_id != null || r?.id != null) {
         const depositId = r.deposit_id ?? r.id;
         const pt = state.points.find(p => p.id === depositId);
@@ -76,7 +53,6 @@ async function callAgent(
     }
   }
 
-  /* ── Fallback commands from natural language ── */
   if (commands.length === 0) {
     const lower = data.response.toLowerCase() + " " + message.toLowerCase();
     if (/pending/i.test(lower))   commands.push({ type: "highlight_all_pending" });
@@ -86,18 +62,14 @@ async function callAgent(
   }
 
   const steps: AgentStep[] = [
-    mkStep(`Mode: ${data.mode}`),
-    mkStep(`Role: ${data.role}`),
-    ...(data.results?.length ? [mkStep(`${data.results.length} action(s) executed`)] : []),
+    { id: "m", label: `Mode: ${data.mode}`, done: true },
+    { id: "r", label: `Role: ${data.role}`, done: true },
+    ...(data.results?.length ? [{ id: "a", label: `${data.results.length} action(s) executed`, done: true }] : []),
   ];
 
   return { reply: data.response, commands, steps };
 }
 
-
-/* ─────────────────────────────────────────────────────
-   MAIN COMPONENT
-───────────────────────────────────────────────────── */
 export const AgentChat = ({ onClose }: { onClose: () => void }) => {
   const [msgs, setMsgs] = useState<Msg[]>([{
     id: "init", role: "agent", ts: new Date(),
@@ -107,17 +79,27 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
   const [image, setImage]         = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [busy, setBusy]           = useState(false);
-  const [mounted, setMounted]     = useState(false);
-  const [closing, setClosing]     = useState(false);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const fileRef   = useRef<HTMLInputElement>(null);
-  const mediaRef  = useRef<MediaRecorder | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef   = useRef<HTMLDivElement>(null);
+  const bottomRef    = useRef<HTMLDivElement>(null);
+  const fileRef      = useRef<HTMLInputElement>(null);
+  const mediaRef     = useRef<MediaRecorder | null>(null);
 
-  useEffect(() => { requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true))); }, []);
+  useGSAP(() => {
+    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+    gsap.fromTo(containerRef.current, 
+      { x: 50, opacity: 0, scale: 0.95, filter: "blur(12px)" }, 
+      { x: 0, opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.5, ease: "back.out(1.2)" }
+    );
+  }, []);
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
 
-  const handleClose = () => { setClosing(true); setTimeout(onClose, 360); };
+  const handleClose = () => {
+    gsap.to(containerRef.current, { x: 50, opacity: 0, scale: 0.9, filter: "blur(12px)", duration: 0.3, ease: "power2.in" });
+    gsap.to(overlayRef.current, { opacity: 0, duration: 0.3, onComplete: onClose });
+  };
 
   const send = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
@@ -127,10 +109,9 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
     setMsgs(p => [...p, userMsg]);
     setInput(""); setImage(null); setBusy(true);
 
-    const thinkId = "think_" + Date.now();
     setMsgs(p => [...p, {
       id: thinkId, role: "agent", ts: new Date(), text: "",
-      steps: [{ id: "t", label: "Thinking…", done: false }], thinking: true,
+      steps: [{ id: "t", label: "Consulting data sources…", done: false }], thinking: true,
     }]);
 
     try {
@@ -142,7 +123,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
         : m));
     } catch (e: any) {
       setMsgs(p => p.map(m => m.id === thinkId
-        ? { ...m, text: `⚠️ ${e?.message ?? "Agent error — please try again."}`, thinking: false,
+        ? { ...m, text: `⚠️ Agent error: ${e?.message ?? "Execution failed"}`, thinking: false,
             steps: [{ id: "e", label: "Request failed", done: true }] }
         : m));
     } finally {
@@ -161,191 +142,140 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
   const toggleMic = async () => {
     if (recording) {
       mediaRef.current?.stop(); setRecording(false);
-      setTimeout(() => send("Show me all pending collection points"), 350);
+      setTimeout(() => send("Analyze all pending points on map"), 350);
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const rec = new MediaRecorder(stream);
         rec.start(); mediaRef.current = rec; setRecording(true);
-        setTimeout(() => { if (mediaRef.current?.state === "recording") toggleMic(); }, 8000);
-      } catch { setInput("🎤 Microphone unavailable — type your request."); }
+        setTimeout(() => { if (mediaRef.current?.state === "recording") toggleMic(); }, 5000);
+      } catch { setInput("Mic unavailable"); }
     }
   };
 
-  const QUICK = ["Show pending", "Collect all", "Stats report", "Clear map"];
+  const QUICK = ["Pending", "Col. Today", "Stats", "Refresh"];
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap');
-        .ac-root *{box-sizing:border-box;}
-        .ac-root ::-webkit-scrollbar{width:3px;}
-        .ac-root ::-webkit-scrollbar-thumb{background:rgba(34,197,94,.25);border-radius:3px;}
-        .ac-msg b,.ac-msg strong{color:#86efac;font-weight:700;}
-        .ac-msg em{color:rgba(255,255,255,.6);font-style:italic;}
-        @keyframes acIn{from{opacity:0;transform:translateX(48px) scale(.94);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
-        @keyframes acOut{from{opacity:1;transform:none;filter:none}to{opacity:0;transform:translateX(48px) scale(.94);filter:blur(6px)}}
-        @keyframes msgPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
-        @keyframes stepIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-        @keyframes dot{0%,80%,100%{transform:scale(0);opacity:0}40%{transform:scale(1);opacity:1}}
-        @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(500%)}}
-        @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(34,197,94,.3)}50%{box-shadow:0 0 28px rgba(34,197,94,.65)}}
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        .ac-qbtn:hover{background:rgba(34,197,94,.2)!important;}
-        .ac-ibtn:hover{background:rgba(255,255,255,.1)!important;}
-        .ac-send:hover:not(:disabled){transform:scale(1.07);}
-        .ac-send:active:not(:disabled){transform:scale(.95);}
-      `}</style>
+    <div className="fixed inset-0 z-[2000] flex items-center justify-end p-4 font-sans">
+      <div 
+        ref={overlayRef}
+        onClick={handleClose} 
+        className="absolute inset-0 bg-black/10 backdrop-blur-[4px]" 
+      />
 
-      <div onClick={handleClose} style={{
-        position:"fixed",inset:0,zIndex:2000,
-        background:"rgba(0,0,0,.32)",backdropFilter:"blur(2px)",
-        transition:"opacity .36s",opacity:mounted&&!closing?1:0,
-      }}/>
+      <div 
+        ref={containerRef}
+        onClick={e => e.stopPropagation()} 
+        className="relative w-full max-w-[380px] h-full max-h-[800px] bg-white/95 backdrop-blur-3xl 
+                   border border-brand-green/10 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
+      >
+        {/* Soft Aura instead of Scanline */}
+        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-brand-green/10 to-transparent pointer-events-none" />
 
-      <div className="ac-root" onClick={e=>e.stopPropagation()} style={{
-        position:"fixed",top:14,right:14,bottom:14,width:370,zIndex:2100,
-        display:"flex",flexDirection:"column",
-        background:"rgba(5,10,22,.97)",
-        backdropFilter:"blur(32px)",WebkitBackdropFilter:"blur(32px)",
-        border:"1px solid rgba(34,197,94,.18)",borderRadius:24,overflow:"hidden",
-        boxShadow:"0 32px 80px rgba(0,0,0,.85), 0 0 0 .5px rgba(34,197,94,.1) inset",
-        fontFamily:"'JetBrains Mono',monospace",
-        animation:closing?"acOut .36s cubic-bezier(.4,0,1,1) forwards":"acIn .42s cubic-bezier(.34,1.56,.64,1) both",
-      }}>
-        {/* scanline */}
-        <div style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden",borderRadius:24}}>
-          <div style={{position:"absolute",left:0,right:0,height:"20%",
-            background:"linear-gradient(transparent,rgba(34,197,94,.025),transparent)",
-            animation:"scan 5s linear infinite"}}/>
-        </div>
-
-        {/* HEADER */}
-        <div style={{
-          position:"relative",zIndex:2,
-          display:"flex",alignItems:"center",gap:12,padding:"15px 16px 13px",
-          borderBottom:"1px solid rgba(34,197,94,.1)",
-          background:"rgba(34,197,94,.04)",
-        }}>
-          <div style={{
-            width:40,height:40,borderRadius:14,flexShrink:0,
-            background:"linear-gradient(135deg,rgba(34,197,94,.25),rgba(34,197,94,.08))",
-            border:"1px solid rgba(34,197,94,.35)",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            animation:"glow 3s ease-in-out infinite",
-          }}>
-            <Bot size={20} color="#22c55e"/>
-          </div>
-          <div style={{flex:1}}>
-            <p style={{margin:0,color:"#6ee7a0",fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:13,letterSpacing:".05em"}}>
-              MAP INTELLIGENCE
-            </p>
-            <div style={{display:"flex",alignItems:"center",gap:5,marginTop:2}}>
-              <div style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",boxShadow:"0 0 8px #22c55e"}}/>
-              <span style={{fontSize:9,color:"rgba(34,197,94,.65)",letterSpacing:".07em"}}>AGENT ONLINE · AGENTIC MODE</span>
+        {/* Header */}
+        <div className="relative z-10 px-6 pt-6 pb-4 bg-white/50 backdrop-blur-xl border-b border-slate-50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-lg shadow-brand-green/10 animate-pulse">
+              <Bot size={24} className="text-brand-green" />
             </div>
+            <div className="flex-1">
+              <h2 className="text-[15px] font-black text-slate-800 tracking-tight">AI Waste Assistant</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="w-2 h-2 rounded-full bg-brand-green animate-pulse" />
+                <span className="text-[10px] text-brand-green font-black tracking-widest uppercase">Agent Online</span>
+              </div>
+            </div>
+            <button 
+              onClick={handleClose}
+              className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button onClick={handleClose} className="ac-ibtn" style={{
-            width:30,height:30,borderRadius:9,
-            background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",
-            color:"rgba(255,255,255,.45)",cursor:"pointer",
-            display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s",
-          }}><X size={13}/></button>
         </div>
 
-        <LiveContextStrip/>
+        <LiveContextStrip />
 
-        {/* MESSAGES */}
-        <div style={{
-          flex:1,overflowY:"auto",padding:"12px 12px 6px",
-          display:"flex",flexDirection:"column",gap:10,
-          position:"relative",zIndex:2,
-        }}>
-          {msgs.map((m,i) => <MsgBubble key={m.id} msg={m} delay={i*30}/>)}
-          {busy && !msgs.find(m=>m.thinking) && (
-            <div style={{display:"flex",gap:5,paddingLeft:4}}>
-              {[0,1,2].map(i=>(
-                <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#22c55e",
-                  animation:`dot 1.2s ease-in-out ${i*.2}s infinite`}}/>
+        {/* Message Area */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar scrollbar-manager">
+          {msgs.map((m, i) => (
+            <MsgBubble key={m.id} msg={m} delay={i * 50} />
+          ))}
+          {busy && !msgs.find(m => m.thinking) && (
+            <div className="flex gap-2 p-1">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-brand-green/40 animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />
               ))}
             </div>
           )}
-          <div ref={bottomRef}/>
+          <div ref={bottomRef} className="h-4" />
         </div>
 
-        {/* Image preview */}
+        {/* Preview Image */}
         {image && (
-          <div style={{position:"relative",zIndex:2,margin:"0 12px 6px",borderRadius:10,overflow:"hidden",
-            border:"1px solid rgba(34,197,94,.2)",height:72}}>
-            <img src={image} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-            <button onClick={()=>setImage(null)} style={{
-              position:"absolute",top:5,right:5,width:20,height:20,borderRadius:"50%",
-              background:"rgba(0,0,0,.7)",border:"none",color:"white",cursor:"pointer",
-              display:"flex",alignItems:"center",justifyContent:"center",
-            }}><X size={10}/></button>
+          <div className="px-6 mb-2">
+            <div className="relative h-20 w-32 rounded-xl overflow-hidden border border-brand-green/30 group">
+              <img src={image} className="w-full h-full object-cover" alt="context" />
+              <button 
+                onClick={() => setImage(null)}
+                className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={10} />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* INPUT BAR */}
-        <div style={{position:"relative",zIndex:2,padding:"8px 12px 13px",
-          borderTop:"1px solid rgba(34,197,94,.08)",background:"rgba(34,197,94,.02)"}}>
-          <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto",paddingBottom:2}}>
-            {QUICK.map(q=>(
-              <button key={q} onClick={()=>send(q)} className="ac-qbtn" style={{
-                padding:"4px 10px",borderRadius:7,flexShrink:0,
-                border:"1px solid rgba(34,197,94,.22)",
-                background:"rgba(34,197,94,.07)",color:"rgba(34,197,94,.8)",
-                fontSize:10,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace",
-                transition:"background .15s",whiteSpace:"nowrap",
-              }}>{q}</button>
+        {/* Input Dock */}
+        <div className="relative z-10 px-6 pt-2 pb-8 bg-white border-t border-slate-100">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+            {QUICK.map(q => (
+              <button 
+                key={q} 
+                onClick={() => send(q)}
+                className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-100 text-slate-500 rounded-lg hover:bg-brand-green/5 hover:text-brand-green transition-all whitespace-nowrap shadow-sm"
+              >
+                {q}
+              </button>
             ))}
           </div>
 
-          <div style={{display:"flex",gap:7,alignItems:"flex-end",
-            background:"rgba(255,255,255,.04)",
-            border:"1px solid rgba(34,197,94,.18)",borderRadius:13,
-            padding:"7px 7px 7px 11px"}}>
+          <div className="flex items-end gap-3 bg-slate-50 border border-slate-100 p-2 pl-5 rounded-[1.5rem] focus-within:bg-white focus-within:border-brand-green/30 focus-within:shadow-xl focus-within:shadow-brand-green/5 transition-all">
             <textarea
               value={input}
-              onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-              placeholder="Ask the agent anything…"
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder="Query the system…"
               rows={1}
-              style={{
-                flex:1,background:"none",border:"none",outline:"none",
-                color:"rgba(255,255,255,.82)",fontSize:12,
-                fontFamily:"'JetBrains Mono',monospace",
-                resize:"none",maxHeight:90,overflowY:"auto",lineHeight:1.5,
-              }}
+              className="flex-1 bg-transparent border-none outline-none py-3 text-sm text-slate-700 placeholder:text-slate-400 resize-none max-h-32 font-medium"
             />
-            <input ref={fileRef} type="file" accept="image/*" onChange={onImage} style={{display:"none"}}/>
-            <button onClick={()=>fileRef.current?.click()} className="ac-ibtn" style={iconBtnSt}>
-              <ImagePlus size={14} color="rgba(255,255,255,.45)"/>
-            </button>
-            <button onClick={toggleMic} className={recording?"":"ac-ibtn"} style={{
-              ...iconBtnSt,
-              background:recording?"rgba(34,197,94,.18)":"rgba(255,255,255,.04)",
-              border:recording?"1px solid rgba(34,197,94,.45)":"1px solid transparent",
-              animation:recording?"glow 1.2s ease-in-out infinite":"none",
-            }}>
-              {recording?<MicOff size={14} color="#22c55e"/>:<Mic size={14} color="rgba(255,255,255,.45)"/>}
-            </button>
-            <button onClick={()=>send()} disabled={busy} className="ac-send" style={{
-              width:32,height:32,borderRadius:9,flexShrink:0,border:"none",
-              background:busy?"rgba(34,197,94,.2)":"rgba(34,197,94,.88)",
-              cursor:busy?"not-allowed":"pointer",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              transition:"transform .15s,background .15s",
-              boxShadow:"0 4px 14px rgba(34,197,94,.38)",
-            }}>
-              {busy
-                ?<Loader size={14} color="white" style={{animation:"spin 1s linear infinite"}}/>
-                :<Send size={14} color="white"/>}
-            </button>
+            
+            <input ref={fileRef} type="file" accept="image/*" onChange={onImage} className="hidden" />
+            
+            <div className="flex gap-1.5 p-1">
+              <button onClick={() => fileRef.current?.click()} className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition-all">
+                <ImagePlus size={18} />
+              </button>
+              
+              <button 
+                onClick={toggleMic}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${recording ? 'bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10' : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm'}`}
+              >
+                {recording ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+
+              <button 
+                onClick={() => send()}
+                disabled={busy || (!input.trim() && !image)}
+                className="w-12 h-10 rounded-2xl bg-brand-green flex items-center justify-center text-white disabled:opacity-30 transition-all shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95"
+              >
+                {busy ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -354,47 +284,31 @@ const LiveContextStrip = () => {
   useEffect(() => {
     const tick = () => setSnap(MapEventBus.getState());
     tick();
-    const id = setInterval(tick, 1500);
+    const id = setInterval(tick, 2000);
     return () => clearInterval(id);
   }, []);
-  const collected = snap.points.filter(p=>p.status==="collected").length;
-  const pending   = snap.points.filter(p=>p.status==="pending").length;
+  
+  const collected = snap.points.filter(p => p.status === "collected").length;
+  const pending   = snap.points.filter(p => p.status === "pending").length;
 
   return (
-    <div style={{
-      position:"relative",zIndex:2,
-      display:"flex",gap:7,padding:"7px 12px",
-      borderBottom:"1px solid rgba(255,255,255,.04)",overflowX:"auto",
-    }}>
-      {[
-        {label:`${collected} collected`,color:"#22c55e",Icon:CheckCircle},
-        {label:`${pending} pending`,    color:"#ef4444",Icon:MapPin},
-        {label:`${snap.points.length} total`,color:"rgba(255,255,255,.3)",Icon:Map},
-      ].map(({label,color,Icon})=>(
-        <div key={label} style={{
-          display:"flex",alignItems:"center",gap:5,
-          padding:"3px 9px",borderRadius:7,whiteSpace:"nowrap",
-          background:`${color}12`,border:`1px solid ${color}28`,
-          color,fontSize:9,fontWeight:600,
-        }}>
-          <Icon size={10}/>{label}
-        </div>
-      ))}
-      <div style={{
-        display:"flex",alignItems:"center",gap:5,
-        padding:"3px 9px",borderRadius:7,
-        background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.07)",
-        color:"rgba(255,255,255,.3)",fontSize:9,whiteSpace:"nowrap",
-      }}>
-        <Zap size={10}/> LIVE
+    <div className="relative z-10 px-6 py-3 border-b border-slate-50 flex gap-3 overflow-x-auto scrollbar-hide bg-slate-50/30">
+      <Stat badge={`${collected} items`} label="Collected" color="text-brand-green" bg="bg-emerald-50" Icon={CheckCircle} />
+      <Stat badge={`${pending} items`} label="Pending" color="text-red-400" bg="bg-red-50" Icon={MapPin} />
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-100 shadow-sm shrink-0">
+        <Zap size={10} className="text-yellow-400 fill-yellow-400" />
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Map Connected</span>
       </div>
     </div>
   );
 };
 
-const iconBtnSt: React.CSSProperties = {
-  width:30,height:30,borderRadius:8,flexShrink:0,
-  background:"rgba(255,255,255,.04)",border:"1px solid transparent",
-  cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-  transition:"background .15s",
-};
+const Stat = ({ badge, label, color, bg, Icon }: any) => (
+  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${bg} border border-black/[0.03] shrink-0 transition-all hover:scale-105 shadow-sm`}>
+    <Icon size={12} className={color} />
+    <div className="flex flex-col">
+       <span className={`text-[9px] font-black uppercase tracking-widest ${color}`}>{label}</span>
+       <span className="text-[10px] font-bold text-slate-600 leading-none">{badge}</span>
+    </div>
+  </div>
+);
