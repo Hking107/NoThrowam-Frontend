@@ -51,7 +51,7 @@ const CustMsgBubble: React.FC<CustMsgBubbleProps> = ({ msg, delay: d }) => {
                     />
                   ))}
                 </div>
-                <span className="text-[10px] font-bold text-brand-green tracking-tight uppercase">Récupération des lots…</span>
+                <span className="text-[10px] font-bold text-brand-green tracking-tight uppercase">Searching market…</span>
               </div>
             ) : (
               <div className="space-y-1.5">

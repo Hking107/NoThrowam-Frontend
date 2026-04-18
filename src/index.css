@@ -197,13 +197,45 @@
     @apply w-4 bg-brand-green;
   }
 
-  /* Glassmorphism Utility */
   .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-2xl;
   }
 
   .glass-dark {
-    @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-2xl;
+    @apply bg-slate-950/80 backdrop-blur-2xl border border-white/5 shadow-2xl;
+  }
+
+  /* Custom Scrollbar Utilities */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+  }
+
+  .scrollbar-manager::-webkit-scrollbar-thumb {
+    @apply bg-brand-green/40 hover:bg-brand-green/60;
+  }
+
+  .scrollbar-customer::-webkit-scrollbar-thumb {
+    @apply bg-brand-green/10 hover:bg-brand-green/25;
+  }
+
+  /* Firefox Support */
+  .scrollbar-manager {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 122, 94, 0.2) transparent;
+  }
+
+  .scrollbar-customer {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 122, 94, 0.1) transparent;
   }
 }
 

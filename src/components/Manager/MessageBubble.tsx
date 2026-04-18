@@ -21,10 +21,10 @@ export const MsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
       className={`flex gap-3 items-start ${isAgent ? "flex-row" : "flex-row-reverse"}`}
     >
       {/* Avatar */}
-      <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border transition-all duration-500
+      <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-all duration-500 shadow-sm
         ${isAgent 
-          ? "bg-brand-green/10 border-brand-green/20 text-brand-green shadow-[0_0_15px_rgba(34,197,94,0.1)]" 
-          : "bg-white/5 border-white/10 text-slate-400"
+          ? "bg-gradient-to-br from-brand-green to-emerald-600 border-none text-white shadow-brand-green/20" 
+          : "bg-slate-100 border border-slate-200 text-slate-400"
         }`}
       >
         {isAgent ? <Bot size={16} /> : <User size={16} />}
@@ -45,7 +45,7 @@ export const MsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
 
         {/* Steps / Thinking */}
         {isAgent && msg.steps && msg.steps.length > 0 && (
-          <div className="w-full bg-brand-green/5 border border-brand-green/10 rounded-2xl p-3 space-y-2">
+          <div className="w-full bg-emerald-50/50 backdrop-blur-sm border border-emerald-100 rounded-2xl p-3 space-y-2">
             {msg.thinking ? (
               <div className="flex items-center gap-3">
                 <div className="flex gap-1">
@@ -57,14 +57,14 @@ export const MsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
                     />
                   ))}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-brand-green/40">Séquençage neural…</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-brand-green">Analyzing map context…</span>
               </div>
             ) : (
               <div className="space-y-1.5">
                 {msg.steps.map((s, i) => (
                   <div key={s.id} className="flex items-center gap-2 opacity-0 animate-in fade-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'forwards' }}>
                     <CheckCircle2 size={10} className="text-brand-green" />
-                    <span className="text-[9px] font-bold text-brand-green/60 uppercase tracking-tight">{s.label}</span>
+                    <span className="text-[9px] font-bold text-emerald-800/60 uppercase tracking-tight">{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -87,25 +87,23 @@ export const MsgBubble = ({ msg, delay: d }: { msg: Msg; delay: number }) => {
           </div>
         )}
 
-        {/* Text Body */}
         {msg.text && (
           <div
-            className={`px-4 py-3 text-sm leading-relaxed font-medium break-words
+            className={`px-4 py-3 text-sm leading-relaxed font-medium break-words shadow-sm
               ${isAgent 
-                ? "bg-slate-900/40 border border-white/5 text-slate-200 rounded-2xl rounded-tl-none" 
-                : "bg-brand-green text-slate-950 border border-brand-green/20 rounded-2xl rounded-tr-none shadow-lg shadow-brand-green/10"
+                ? "bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none" 
+                : "bg-brand-green text-white border border-brand-green/20 rounded-2xl rounded-tr-none shadow-brand-green/10"
               }`}
             dangerouslySetInnerHTML={{
               __html: msg.text
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-brand-green font-black">$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em class="opacity-70 italic">$1</em>')
+                .replace(/\*\*(.*?)\*\*/g, `<strong class="${isAgent ? 'text-brand-green' : 'text-white'} font-black">$1</strong>`)
+                .replace(/\*(.*?)\*/g, '<em class="opacity-80 italic">$1</em>')
             }}
           />
         )}
 
-        {/* Meta */}
         <div className="flex items-center gap-2 px-1">
-          <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
             {msg.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
           {isAgent && <div className="w-1 h-1 rounded-full bg-brand-green animate-pulse" />}

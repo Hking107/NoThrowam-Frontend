@@ -204,7 +204,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
         <CustomerContextStrip purchase={purchase} />
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar scrollbar-customer">
           {msgs.map((m, i) => (
             <CustMsgBubble key={m.id} msg={m} delay={i * 40} />
           ))}

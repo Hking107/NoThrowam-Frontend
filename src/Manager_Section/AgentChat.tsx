@@ -109,10 +109,9 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
     setMsgs(p => [...p, userMsg]);
     setInput(""); setImage(null); setBusy(true);
 
-    const thinkId = "think_" + Date.now();
     setMsgs(p => [...p, {
       id: thinkId, role: "agent", ts: new Date(), text: "",
-      steps: [{ id: "t", label: "Neural processing…", done: false }], thinking: true,
+      steps: [{ id: "t", label: "Consulting data sources…", done: false }], thinking: true,
     }]);
 
     try {
@@ -157,41 +156,38 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
   const QUICK = ["Pending", "Col. Today", "Stats", "Refresh"];
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-end p-4 font-mono">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-end p-4 font-sans">
       <div 
         ref={overlayRef}
         onClick={handleClose} 
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" 
+        className="absolute inset-0 bg-black/10 backdrop-blur-[4px]" 
       />
 
       <div 
         ref={containerRef}
         onClick={e => e.stopPropagation()} 
-        className="relative w-full max-w-[380px] h-full max-h-[800px] bg-slate-950/90 backdrop-blur-3xl 
-                   border border-brand-green/20 rounded-[2.5rem] shadow-2xl shadow-black overflow-hidden flex flex-col"
+        className="relative w-full max-w-[380px] h-full max-h-[800px] bg-white/95 backdrop-blur-3xl 
+                   border border-brand-green/10 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
       >
-        {/* Scanline Effect */}
-        <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
-          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-brand-green/10 to-transparent animate-[scan_8s_linear_infinite]" />
-        </div>
+        {/* Soft Aura instead of Scanline */}
+        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-brand-green/10 to-transparent pointer-events-none" />
 
         {/* Header */}
-        <div className="relative z-10 px-6 pt-6 pb-4 bg-brand-green/5 border-bottom border-brand-green/10">
+        <div className="relative z-10 px-6 pt-6 pb-4 bg-white/50 backdrop-blur-xl border-b border-slate-50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-brand-green/10 border border-brand-green/30 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)] animate-pulse">
+            <div className="w-12 h-12 rounded-2xl bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-lg shadow-brand-green/10 animate-pulse">
               <Bot size={24} className="text-brand-green" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xs font-black text-brand-green tracking-[0.2em] uppercase">Intelligence Map</h2>
+              <h2 className="text-[15px] font-black text-slate-800 tracking-tight">AI Waste Assistant</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 rounded-full bg-brand-green shadow-[0_0_8px_#22c55e]" />
-                <span className="text-[10px] text-brand-green/60 font-black tracking-widest uppercase">Agent Online</span>
+                <span className="w-2 h-2 rounded-full bg-brand-green animate-pulse" />
+                <span className="text-[10px] text-brand-green font-black tracking-widest uppercase">Agent Online</span>
               </div>
             </div>
             <button 
               onClick={handleClose}
-              className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all"
+              className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
             >
               <X size={18} />
             </button>
@@ -201,7 +197,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
         <LiveContextStrip />
 
         {/* Message Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar scrollbar-manager">
           {msgs.map((m, i) => (
             <MsgBubble key={m.id} msg={m} delay={i * 50} />
           ))}
@@ -231,39 +227,39 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
         )}
 
         {/* Input Dock */}
-        <div className="relative z-10 px-6 pt-2 pb-8 bg-slate-950/80 border-t border-white/5 backdrop-blur-md">
+        <div className="relative z-10 px-6 pt-2 pb-8 bg-white border-t border-slate-100">
           <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
             {QUICK.map(q => (
               <button 
                 key={q} 
                 onClick={() => send(q)}
-                className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest bg-brand-green/5 border border-brand-green/10 text-brand-green/60 rounded-lg hover:bg-brand-green/10 hover:text-brand-green transition-all whitespace-nowrap"
+                className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-100 text-slate-500 rounded-lg hover:bg-brand-green/5 hover:text-brand-green transition-all whitespace-nowrap shadow-sm"
               >
                 {q}
               </button>
             ))}
           </div>
 
-          <div className="flex items-end gap-3 bg-white/5 border border-white/10 p-2 pl-5 rounded-[1.5rem] focus-within:border-brand-green/30 transition-all">
+          <div className="flex items-end gap-3 bg-slate-50 border border-slate-100 p-2 pl-5 rounded-[1.5rem] focus-within:bg-white focus-within:border-brand-green/30 focus-within:shadow-xl focus-within:shadow-brand-green/5 transition-all">
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder="Query the system…"
               rows={1}
-              className="flex-1 bg-transparent border-none outline-none py-3 text-sm text-slate-200 placeholder:text-slate-600 resize-none max-h-32"
+              className="flex-1 bg-transparent border-none outline-none py-3 text-sm text-slate-700 placeholder:text-slate-400 resize-none max-h-32 font-medium"
             />
             
             <input ref={fileRef} type="file" accept="image/*" onChange={onImage} className="hidden" />
             
             <div className="flex gap-1.5 p-1">
-              <button onClick={() => fileRef.current?.click()} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all">
+              <button onClick={() => fileRef.current?.click()} className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition-all">
                 <ImagePlus size={18} />
               </button>
               
               <button 
                 onClick={toggleMic}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${recording ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-white/5 text-slate-500 hover:text-white'}`}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${recording ? 'bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10' : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm'}`}
               >
                 {recording ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
@@ -271,7 +267,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
               <button 
                 onClick={() => send()}
                 disabled={busy || (!input.trim() && !image)}
-                className="w-12 h-10 rounded-xl bg-brand-green flex items-center justify-center text-slate-950 disabled:opacity-20 disabled:grayscale transition-all shadow-lg shadow-brand-green/20"
+                className="w-12 h-10 rounded-2xl bg-brand-green flex items-center justify-center text-white disabled:opacity-30 transition-all shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95"
               >
                 {busy ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
               </button>
@@ -296,23 +292,23 @@ const LiveContextStrip = () => {
   const pending   = snap.points.filter(p => p.status === "pending").length;
 
   return (
-    <div className="relative z-10 px-6 py-3 border-b border-white/5 flex gap-3 overflow-x-auto scrollbar-hide bg-slate-950/20">
-      <Stat badge={`${collected} items`} label="Collected" color="text-brand-green" bg="bg-brand-green/10" Icon={CheckCircle} />
-      <Stat badge={`${pending} items`} label="Pending" color="text-red-400" bg="bg-red-400/10" Icon={MapPin} />
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 shrink-0">
+    <div className="relative z-10 px-6 py-3 border-b border-slate-50 flex gap-3 overflow-x-auto scrollbar-hide bg-slate-50/30">
+      <Stat badge={`${collected} items`} label="Collected" color="text-brand-green" bg="bg-emerald-50" Icon={CheckCircle} />
+      <Stat badge={`${pending} items`} label="Pending" color="text-red-400" bg="bg-red-50" Icon={MapPin} />
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-100 shadow-sm shrink-0">
         <Zap size={10} className="text-yellow-400 fill-yellow-400" />
-        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Live Sync</span>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Map Connected</span>
       </div>
     </div>
   );
 };
 
 const Stat = ({ badge, label, color, bg, Icon }: any) => (
-  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${bg} border border-white/5 shrink-0 transition-all hover:scale-105`}>
+  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${bg} border border-black/[0.03] shrink-0 transition-all hover:scale-105 shadow-sm`}>
     <Icon size={12} className={color} />
     <div className="flex flex-col">
        <span className={`text-[9px] font-black uppercase tracking-widest ${color}`}>{label}</span>
-       <span className="text-[10px] font-bold text-white/60 leading-none">{badge}</span>
+       <span className="text-[10px] font-bold text-slate-600 leading-none">{badge}</span>
     </div>
   </div>
 );

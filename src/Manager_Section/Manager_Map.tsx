@@ -42,8 +42,8 @@ const AgentRing = ({ x, y, color }: { x: number; y: number; color: string }) => 
 
 const AgentToast = ({ msg }: { msg: string }) => (
   <div className="fixed bottom-18 left-1/2 -translate-x-1/2 z-[1300] px-4 py-2
-                  bg-slate-950/90 backdrop-blur-xl border border-brand-green/30 rounded-xl
-                  shadow-2xl shadow-black/50 text-white font-mono text-[11px] font-semibold
+                  bg-white/90 backdrop-blur-xl border border-brand-green/20 rounded-xl
+                  shadow-2xl shadow-brand-green/10 text-brand-green font-mono text-[11px] font-semibold
                   flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
     <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
     {msg}
@@ -121,7 +121,7 @@ export const ManagerMap = () => {
     const L = window.L;
     const map = L.map(mapRef.current, { center: [3.848, 11.502], zoom: 14, zoomControl: false });
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
     }).addTo(map);
     leafletRef.current = map;
@@ -294,7 +294,7 @@ export const ManagerMap = () => {
   const pending   = points.filter(p => p.status === "pending").length;
 
   return (
-    <div className="relative w-full h-full bg-slate-950" onClick={() => setPopup(null)}>
+    <div className="relative w-full h-full bg-slate-50" onClick={() => setPopup(null)}>
       <div ref={mapRef} className="w-full h-full grayscale opacity-80 contrast-[1.1]" />
 
       {rings.map(r => <AgentRing key={r.id} x={r.x} y={r.y} color={r.color} />)}
@@ -302,22 +302,22 @@ export const ManagerMap = () => {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-[1500] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-0 z-[1500] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
           <Loader size={32} className="text-brand-green animate-spin" />
-          <p className="text-slate-400 font-bold tracking-tight">Analyse des flux…</p>
+          <p className="text-slate-600 font-bold tracking-tight">Analyse des flux…</p>
         </div>
       )}
 
       {/* Error banner */}
       {fetchError && !loading && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
-                        bg-slate-900/95 backdrop-blur-xl p-8 rounded-3xl border border-red-500/30 
+                        bg-white/95 backdrop-blur-xl p-8 rounded-3xl border border-red-200 
                         shadow-2xl shadow-red-500/10 text-center max-w-xs animate-in zoom-in duration-300">
           <p className="text-3xl mb-4">🚨</p>
-          <p className="text-lg font-black text-white mb-2">Erreur système</p>
-          <p className="text-slate-400 text-sm mb-6 leading-relaxed font-mono">{fetchError}</p>
-          <button onClick={loadPoints} className="w-full py-3 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95">
-             Réinitialiser la connexion
+          <p className="text-lg font-black text-slate-800 mb-2">Erreur système</p>
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed font-mono">{fetchError}</p>
+          <button onClick={loadPoints} className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95">
+             Réinitialiser
           </button>
         </div>
       )}
@@ -325,10 +325,10 @@ export const ManagerMap = () => {
       {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
-                        bg-slate-900/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/20 
-                        shadow-2xl shadow-black/50 text-center animate-in fade-in zoom-in duration-500">
+                        bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
+                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500">
           <div className="text-4xl mb-4">🛰️</div>
-          <p className="text-xl font-black text-white mb-1 leading-tight">Secteur Nettoyé</p>
+          <p className="text-xl font-black text-slate-800 mb-1 leading-tight">Secteur Nettoyé</p>
           <p className="text-slate-500 text-sm leading-relaxed">Aucun dépôt en attente de collecte.</p>
         </div>
       )}
@@ -337,26 +337,26 @@ export const ManagerMap = () => {
       {!loading && !fetchError && (
         <div 
           ref={uiRefs.stats}
-          className="absolute top-6 left-6 z-[1000] bg-slate-900/80 backdrop-blur-xl border border-white/10 
-                     rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/40 opacity-0 -translate-y-2"
+          className="absolute top-6 left-6 z-[1000] bg-white/90 backdrop-blur-xl border border-brand-green/15 
+                     rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 -translate-y-2"
         >
           <div>
-            <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">Collectés</p>
+            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">Collectés</p>
             <p className="text-2xl font-black text-brand-green leading-none">
-              {collected}<span className="text-[10px] text-white/20 font-bold ml-1 uppercase">pts</span>
+              {collected}<span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">pts</span>
             </p>
           </div>
-          <div className="w-px h-10 bg-white/5" />
+          <div className="w-px h-10 bg-slate-200/50" />
           <div>
-            <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">En attente</p>
+            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">En attente</p>
             <p className="text-2xl font-black text-red-500 leading-none">
-              {pending}<span className="text-[10px] text-white/20 font-bold ml-1 uppercase">pts</span>
+              {pending}<span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">pts</span>
             </p>
           </div>
           <button 
             onClick={loadPoints} 
-            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center
-                       text-white/40 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+            className="w-10 h-10 rounded-2xl bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
+                       text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
           </button>
@@ -367,17 +367,17 @@ export const ManagerMap = () => {
       {!loading && !fetchError && (
         <div 
           ref={uiRefs.legend}
-          className="absolute top-6 right-6 z-[1000] bg-slate-900/80 backdrop-blur-xl border border-white/10 
-                     rounded-2xl p-4 flex flex-col gap-3 shadow-2xl shadow-black/40 opacity-0 -translate-y-2"
+          className="absolute top-6 right-6 z-[1000] bg-white/90 backdrop-blur-xl border border-slate-200/50 
+                     rounded-3xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 -translate-y-2"
         >
-          <p className="text-[9px] text-white/30 font-black tracking-widest uppercase mb-1">Légende</p>
+          <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">Légende</p>
           {(Object.entries(CLR) as [Status, string][]).map(([s, c]) => (
             <div key={s} className="flex items-center gap-4 group">
               <div 
-                className="w-2.5 h-2.5 rounded-full transition-shadow duration-300"
-                style={{ background: c, boxShadow: `0 0 10px ${c}` }} 
+                className="w-3 h-3 rounded-full transition-transform duration-300 shadow-sm"
+                style={{ background: c, boxShadow: `0 0 8px ${c}88` }} 
               />
-              <span className="text-xs text-white/60 font-medium capitalize tracking-wide group-hover:text-white transition-colors">
+              <span className="text-sm text-slate-600 font-semibold capitalize tracking-tight group-hover:text-slate-900 transition-colors">
                 {s}
               </span>
             </div>
