@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { 
   LayoutDashboard, List, Wallet, Backpack,
   Settings, Bell, Plus, DollarSign, Scale, FileText, Recycle, Filter,
-  LogOut, Search, ChevronRight, TrendingUp, Menu, X, Leaf
+  LogOut, Search, ChevronRight, ChevronsLeft, TrendingUp, Menu, X, Leaf
 } from 'lucide-react';
 import { gsap } from 'gsap';
 
@@ -32,6 +32,7 @@ const SellerDashboard: React.FC = () => {
   const mainRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -370,8 +371,19 @@ useEffect(() => {
       {/* --- SIDEBAR --- */}
       <aside 
         ref={sidebarRef}
-        className={`w-72 glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-transform duration-500 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out ${
+          isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'
+        } ${isSidebarCollapsed ? 'md:w-20' : 'md:w-72'}`}
       >
+        {/* Collapse toggle button — desktop only */}
+        <button
+          onClick={() => setIsSidebarCollapsed(prev => !prev)}
+          className="hidden md:flex absolute -right-3 top-8 z-[60] w-6 h-6 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-emerald-600 hover:border-emerald-300 transition-all duration-300"
+          title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <ChevronsLeft size={14} className={`transition-transform duration-500 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+        </button>
+
         <button 
           onClick={() => setIsMobileMenuOpen(false)}
           className="md:hidden absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 transition-colors"
@@ -379,74 +391,80 @@ useEffect(() => {
           <X size={24} />
         </button>
 
-        <div>
-          <div className="p-8 flex items-center gap-4">
-            <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50">
+        <div className="overflow-hidden">
+          <div className={`flex items-center gap-4 transition-all duration-500 ${isSidebarCollapsed ? 'p-4 justify-center' : 'p-8'}`}>
+            <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50 shrink-0">
               <Recycle size={26} strokeWidth={2.5} />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">NoThrowam</h1>
+            <div className={`transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap">NoThrowam</h1>
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full w-fit">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Premium Seller</p>
+                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider whitespace-nowrap">Premium Seller</p>
               </div>
             </div>
           </div>
 
-          <nav className="px-6 py-6 space-y-2">
-            <a href="#" className="group flex items-center justify-between px-4 py-3.5 bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1">
-              <div className="flex items-center gap-3">
-                <LayoutDashboard size={20} className="text-emerald-600" />
-                Dashboard
+          <nav className={`py-6 space-y-2 transition-all duration-500 ${isSidebarCollapsed ? 'px-2' : 'px-6'}`}>
+            <a href="#" className={`group flex items-center bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`} title="Dashboard">
+              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+                <LayoutDashboard size={20} className="text-emerald-600 shrink-0" />
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Dashboard</span>
               </div>
-              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight size={14} className={`opacity-0 group-hover:opacity-100 transition-opacity ${isSidebarCollapsed ? 'hidden' : ''}`} />
             </a>
             
             <button 
               onClick={() => setIsMyListingsOpen(true)}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              title="My Listings"
             >
-              <div className="flex items-center gap-3">
-                <List size={20} />
-                My Listings
+              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+                <List size={20} className="shrink-0" />
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>My Listings</span>
               </div>
-              <ChevronRight size={14} className="opacity-0 hover:opacity-100" />
+              <ChevronRight size={14} className={`opacity-0 hover:opacity-100 ${isSidebarCollapsed ? 'hidden' : ''}`} />
             </button>
             
-           <button 
-            onClick={() => setIsProductModalOpen(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
-          >
-            <div className="flex items-center gap-3">
-              <Backpack size={20} />
-              Products
-            </div>
-          </button>
+            <button 
+              onClick={() => setIsProductModalOpen(true)}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              title="Products"
+            >
+              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+                <Backpack size={20} className="shrink-0" />
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Products</span>
+              </div>
+            </button>
 
-          <button 
-            onClick={() => setIsOpenWallet(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
-          >
-            <div className="flex items-center gap-3">
-              <Wallet size={20} />
-              Wallet
-            </div>
-          </button>
+            <button 
+              onClick={() => setIsOpenWallet(true)}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              title="Wallet"
+            >
+              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+                <Wallet size={20} className="shrink-0" />
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Wallet</span>
+              </div>
+            </button>
           </nav>
         </div>
 
-        <div className="p-6 border-t border-gray-100/50">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4">
-            <Settings size={20} />
-            Settings
+        <div className={`border-t border-gray-100/50 transition-all duration-500 ${isSidebarCollapsed ? 'p-2' : 'p-6'}`}>
+          <button 
+            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}`}
+            title="Settings"
+          >
+            <Settings size={20} className="shrink-0" />
+            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Settings</span>
           </button>
 
-          <div className="bg-gray-50/50 p-4 rounded-3xl mb-4 border border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden">
+          <div className={`bg-gray-50/50 rounded-3xl mb-4 border border-gray-100 transition-all duration-500 ${isSidebarCollapsed ? 'p-2' : 'p-4'}`}>
+            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden shrink-0">
                 {userEmail.charAt(0).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className={`flex-1 min-w-0 transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
                 <p className="text-sm font-bold text-gray-900 truncate">{userEmail}</p>
                 <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                   <div className="w-1 h-1 rounded-full bg-green-400"></div>
@@ -456,9 +474,13 @@ useEffect(() => {
             </div>
           </div>
           
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all">
-            <LogOut size={20} />
-            Log out
+          <button 
+            onClick={handleLogout} 
+            className={`w-full flex items-center text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}`}
+            title="Log out"
+          >
+            <LogOut size={20} className="shrink-0" />
+            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Log out</span>
           </button>
         </div>
       </aside>
