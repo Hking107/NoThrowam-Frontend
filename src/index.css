@@ -6,6 +6,12 @@
   --color-brand-red: #ce1126;
   --color-brand-surface: #f9f9f7;
   --color-brand-text: #1a1a1a;
+  
+  /* Eco-Premium Palette */
+  --color-eco-emerald: #059669;
+  --color-eco-sage: #64748b;
+  --color-eco-glass: rgba(255, 255, 255, 0.7);
+  --color-eco-border: rgba(0, 0, 0, 0.05);
 }
 
 @layer base {
@@ -31,11 +37,35 @@
   }
 
   body {
-    @apply bg-brand-surface text-brand-text font-sans antialiased;
+    @apply bg-[#fcfdfb] text-brand-text font-sans antialiased;
   }
 }
 
 @layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
+  }
+  
+  .glass-sidebar {
+    @apply bg-white/60 backdrop-blur-2xl border-r border-gray-200/50;
+  }
+
+  .premium-shadow {
+    @apply shadow-[0_20px_50px_rgba(0,0,0,0.05)];
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:border-green-500/30;
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-gray-200/50 rounded-md;
+  }
+
+  .skeleton-emerald {
+    @apply animate-pulse bg-emerald-100/50 rounded-md;
+  }
+
   /* Reusable Button Variants */
   .btn {
     @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold transition-all duration-300 transform active:scale-95 touch-manipulation;

@@ -8,9 +8,14 @@ interface WalletModalProps {
 
 const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4">
-      
-      <main className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out] flex flex-col max-h-[90vh]">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
+      onClick={onClose}
+    >
+      <main 
+        className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out] flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-10">
@@ -36,7 +41,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
             <div className="bg-linear-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
               <div className="relative z-10">
                 <p className="text-green-100 text-sm font-medium uppercase tracking-wider">Solde disponible</p>
-                <h3 className="text-4xl font-black mt-2">{balance.toLocaleString()} FCFA</h3>
+                <h3 className="text-5xl font-black mt-2 text-white drop-shadow-md">{balance.toLocaleString()} FCFA</h3>
               </div>
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             </div>
