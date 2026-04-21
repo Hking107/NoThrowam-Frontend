@@ -41,7 +41,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
             <div className="bg-linear-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
               <div className="relative z-10">
                 <p className="text-green-100 text-sm font-medium uppercase tracking-wider">Solde disponible</p>
-                <h3 className="text-4xl font-black mt-2">{balance.toLocaleString()} FCFA</h3>
+                <h3 className="text-5xl font-black mt-2 text-white drop-shadow-md">{balance.toLocaleString()} FCFA</h3>
               </div>
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             </div>

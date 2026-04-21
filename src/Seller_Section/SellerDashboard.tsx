@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'; 
 import { 
   LayoutDashboard, List, Wallet, Backpack,
-  Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter,
-  LogOut, Search, ChevronRight, TrendingUp, Menu, X
+  Settings, Bell, Plus, DollarSign, Scale, FileText, Recycle, Filter,
+  LogOut, Search, ChevronRight, TrendingUp, Menu, X, Leaf
 } from 'lucide-react';
 import { gsap } from 'gsap';
 
@@ -36,32 +36,30 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Sidebar Entrance
-      gsap.from(sidebarRef.current, {
-        x: -100,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out"
-      });
+      gsap.fromTo(sidebarRef.current, 
+        { x: -100, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+      );
 
       // Main Content Entrance
-      gsap.from(mainRef.current, {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: "power3.out"
-      });
+      gsap.fromTo(mainRef.current, 
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" }
+      );
 
       // Staggered Stat Cards
       if (cardsRef.current) {
-        gsap.from(cardsRef.current.children, {
-          y: 30,
-          opacity: 0,
-          stagger: 0.1,
-          duration: 0.6,
-          delay: 0.4,
-          ease: "power2.out"
-        });
+        gsap.fromTo(cardsRef.current.children, 
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            stagger: 0.1,
+            duration: 0.6,
+            delay: 0.4,
+            ease: "power2.out"
+          }
+        );
       }
     });
 
@@ -367,7 +365,7 @@ useEffect(() => {
       )}
       {isProductModalOpen && <ProductModal onClose={() => setIsProductModalOpen(false)} />}
 
-      {isOpenWallet && <WalletModal onClose={() => setIsOpenWallet(false)} />}  
+      {isOpenWallet && <WalletModal onClose={() => setIsOpenWallet(false)} balance={dashboardStats.totalEarnings} />}  
 
       {/* --- SIDEBAR --- */}
       <aside 
@@ -384,7 +382,7 @@ useEffect(() => {
         <div>
           <div className="p-8 flex items-center gap-4">
             <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50">
-              <Leaf size={26} />
+              <Recycle size={26} strokeWidth={2.5} />
             </div>
             <div>
               <h1 className="text-2xl font-black text-gray-900 tracking-tight">NoThrowam</h1>
@@ -479,7 +477,7 @@ useEffect(() => {
         <header className="md:hidden flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
           <div className="flex items-center gap-2">
             <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
-              <Leaf size={18} />
+              <Recycle size={18} strokeWidth={2.5} />
             </div>
             <span className="font-black tracking-tight">NoThrowam</span>
           </div>
@@ -491,7 +489,7 @@ useEffect(() => {
           </button>
         </header>
 
-        <div className="px-8 py-6 max-w-7xl mx-auto space-y-4">
+        <div className="px-8 py-4 max-w-7xl mx-auto space-y-8">
           
           <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>

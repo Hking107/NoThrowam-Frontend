@@ -34,9 +34,9 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, tren
     </div>
     
     <div className="mt-6 z-10 relative">
-      <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{title}</p>
+      <p className="text-gray-500 text-xs font-black uppercase tracking-widest">{title}</p>
       <div className="flex items-baseline gap-2 mt-1">
-        <h3 className="text-2xl font-black text-gray-900 tracking-tight">{value}</h3>
+        <h3 className="text-3xl font-black text-gray-900 tracking-tight leading-none">{value}</h3>
       </div>
     </div>
   </div>
