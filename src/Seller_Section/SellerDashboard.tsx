@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { 
   LayoutDashboard, List, Wallet, Backpack,
   Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter,
-  LogOut, Search, ChevronRight, TrendingUp
+  LogOut, Search, ChevronRight, TrendingUp, Menu, X
 } from 'lucide-react';
 import { gsap } from 'gsap';
 
@@ -31,6 +31,7 @@ const SellerDashboard: React.FC = () => {
   const sidebarRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -357,7 +358,7 @@ useEffect(() => {
 
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="flex min-h-screen bg-[#fcfdfb] font-sans text-gray-800 selection:bg-emerald-100 selection:text-emerald-900">
       
       {isModalOpen && (
         <WasteScannerModal onClose={() => setIsModalOpen(false)} />
@@ -371,8 +372,15 @@ useEffect(() => {
       {/* --- SIDEBAR --- */}
       <aside 
         ref={sidebarRef}
-        className="w-72 glass-sidebar flex flex-col justify-between hidden md:flex z-20"
+        className={`w-72 glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-transform duration-500 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
+        <button 
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="md:hidden absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 transition-colors"
+        >
+          <X size={24} />
+        </button>
+
         <div>
           <div className="p-8 flex items-center gap-4">
             <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50">
@@ -457,8 +465,32 @@ useEffect(() => {
         </div>
       </aside>
 
+      {/* Overlay for mobile menu */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* --- MAIN CONTENT --- */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto">
+      <main ref={mainRef} className="flex-1 w-full">
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
+          <div className="flex items-center gap-2">
+            <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
+              <Leaf size={18} />
+            </div>
+            <span className="font-black tracking-tight">NoThrowam</span>
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+          >
+            <Menu size={24} />
+          </button>
+        </header>
+
         <div className="px-8 py-6 max-w-7xl mx-auto space-y-4">
           
           <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
