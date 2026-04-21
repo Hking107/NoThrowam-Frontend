@@ -1,22 +1,29 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import {  Loader, RefreshCw } from "lucide-react";
+import { Loader, RefreshCw } from "lucide-react";
 import { ManagerMapBus as MapEventBus } from "../services/eventBus";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import type { ApiDeposit, GarbagePoint, Status } from "../types/ManagerMap";
 import { GarbagePopup } from "../components/Manager/GarbagePopup";
-import { fetchUncollected, fetchDepositDetail, collectDeposit } from "../services/ManagerService";
+import {
+  fetchUncollected,
+  fetchDepositDetail,
+  collectDeposit,
+} from "../services/ManagerService";
 
-
-declare global { interface Window { L: any } }
+declare global {
+  interface Window {
+    L: any;
+  }
+}
 
 export function toPoint(d: ApiDeposit): GarbagePoint {
   return {
-    id:     d.id,
-    lat:    parseFloat(d.latitude)  || 0,
-    lng:    parseFloat(d.longitude) || 0,
-    label:  d.description?.trim() || `Dépôt #${d.id}`,
-    status: "pending", 
+    id: d.id,
+    lat: parseFloat(d.latitude) || 0,
+    lng: parseFloat(d.longitude) || 0,
+    label: d.description?.trim() || `Dépôt #${d.id}`,
+    status: "pending",
     images: d.image_url
       ? [{ id: 1, url: d.image_url }]
       : d.image
@@ -25,58 +32,87 @@ export function toPoint(d: ApiDeposit): GarbagePoint {
   };
 }
 
-const CLR: Record<Status, string> = { collected: "#007a5e", pending: "#ce1126" };
+const CLR: Record<Status, string> = {
+  collected: "#007a5e",
+  pending: "#ce1126",
+};
 
-
-const AgentRing = ({ x, y, color }: { x: number; y: number; color: string }) => (
-  <div 
+const AgentRing = ({
+  x,
+  y,
+  color,
+}: {
+  x: number;
+  y: number;
+  color: string;
+}) => (
+  <div
     className="fixed pointer-events-none z-[1800] rounded-full border-2"
-    style={{ 
-      left: x - 22, top: y - 22, width: 44, height: 44, 
+    style={{
+      left: x - 22,
+      top: y - 22,
+      width: 44,
+      height: 44,
       borderColor: color,
       boxShadow: `0 0 0 3px ${color}44, 0 0 20px ${color}88`,
-      animation: "agentRing 1.4s ease-out forwards"
-    }} 
+      animation: "agentRing 1.4s ease-out forwards",
+    }}
   />
 );
 
 const AgentToast = ({ msg }: { msg: string }) => (
-  <div className="fixed bottom-18 left-1/2 -translate-x-1/2 z-[1300] px-4 py-2
+  <div
+    className="fixed bottom-18 left-1/2 -translate-x-1/2 z-1300 px-4 py-2
                   bg-white/90 backdrop-blur-xl border border-brand-green/20 rounded-xl
                   shadow-2xl shadow-brand-green/10 text-brand-green font-mono text-[11px] font-semibold
-                  flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
+  >
     <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
     {msg}
   </div>
 );
 
 export const ManagerMap = () => {
-  const mapRef      = useRef<HTMLDivElement>(null);
-  const leafletRef  = useRef<any>(null);
-  const markersRef  = useRef<Record<number, any>>({});
-  
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletRef = useRef<any>(null);
+  const markersRef = useRef<Record<number, any>>({});
+
   const uiRefs = {
     stats: useRef<HTMLDivElement>(null),
     legend: useRef<HTMLDivElement>(null),
   };
 
-  const [points, setPoints]       = useState<GarbagePoint[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [points, setPoints] = useState<GarbagePoint[]>([]);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchErr] = useState<string | null>(null);
 
-  const [popup, setPopup]         = useState<{ point: GarbagePoint; origin: { x: number; y: number } } | null>(null);
-  const [leafletReady, setReady]  = useState(!!window.L);
+  const [popup, setPopup] = useState<{
+    point: GarbagePoint;
+    origin: { x: number; y: number };
+  } | null>(null);
+  const [leafletReady, setReady] = useState(!!window.L);
 
-  const [rings, setRings]   = useState<{ id: string; x: number; y: number; color: string }[]>([]);
-  const [toast, setToast]   = useState<string | null>(null);
-  const pointsRef           = useRef<GarbagePoint[]>(points);
-  pointsRef.current         = points;
+  const [rings, setRings] = useState<
+    { id: string; x: number; y: number; color: string }[]
+  >([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const pointsRef = useRef<GarbagePoint[]>(points);
+  pointsRef.current = points;
 
   useGSAP(() => {
     if (!loading && !fetchError) {
-      gsap.fromTo([uiRefs.stats.current, uiRefs.legend.current],
+      gsap.fromTo(
+        [uiRefs.stats.current, uiRefs.legend.current],
         { opacity: 0, scale: 0.95, y: -10 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.6, stagger: 0.15, ease: "expo.out", delay: 0.3 }
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "expo.out",
+          delay: 0.3,
+        },
       );
     }
   }, [loading, fetchError]);
@@ -89,9 +125,11 @@ export const ManagerMap = () => {
       setPoints(pts);
       const map = leafletRef.current;
       if (map && window.L && pts.length > 0) {
-        const valid = pts.filter(p => p.lat !== 0 && p.lng !== 0);
+        const valid = pts.filter((p) => p.lat !== 0 && p.lng !== 0);
         if (valid.length > 0) {
-          const bounds = window.L.latLngBounds(valid.map(p => [p.lat, p.lng]));
+          const bounds = window.L.latLngBounds(
+            valid.map((p) => [p.lat, p.lng]),
+          );
           map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16 });
         }
       }
@@ -102,16 +140,23 @@ export const ManagerMap = () => {
     }
   }, []);
 
-  useEffect(() => { loadPoints(); }, [loadPoints]);
+  useEffect(() => {
+    loadPoints();
+  }, [loadPoints]);
 
   useEffect(() => {
-    if (window.L) { setReady(true); return; }
+    if (window.L) {
+      setReady(true);
+      return;
+    }
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+    link.href =
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
     document.head.appendChild(link);
     const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    s.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
     s.onload = () => setReady(true);
     document.head.appendChild(s);
   }, []);
@@ -119,11 +164,19 @@ export const ManagerMap = () => {
   useEffect(() => {
     if (!leafletReady || !mapRef.current || leafletRef.current) return;
     const L = window.L;
-    const map = L.map(mapRef.current, { center: [3.848, 11.502], zoom: 14, zoomControl: false });
+    const map = L.map(mapRef.current, {
+      center: [3.848, 11.502],
+      zoom: 14,
+      zoomControl: false,
+    });
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution: "© OpenStreetMap © CARTO",
+        maxZoom: 19,
+      },
+    ).addTo(map);
     leafletRef.current = map;
 
     const style = document.createElement("style");
@@ -133,7 +186,10 @@ export const ManagerMap = () => {
     `;
     document.head.appendChild(style);
 
-    return () => { map.remove(); leafletRef.current = null; };
+    return () => {
+      map.remove();
+      leafletRef.current = null;
+    };
   }, [leafletReady]);
 
   useEffect(() => {
@@ -144,7 +200,7 @@ export const ManagerMap = () => {
     Object.values(markersRef.current).forEach((m: any) => m.remove());
     markersRef.current = {};
 
-    points.forEach(pt => {
+    points.forEach((pt) => {
       const color = CLR[pt.status];
       const icon = L.divIcon({
         className: "",
@@ -153,45 +209,47 @@ export const ManagerMap = () => {
             <div style="position:absolute;width:32px;height:32px;border-radius:50%;background:${color}22;animation:ripple 2.2s ease-out infinite;"></div>
             <div style="width:17px;height:17px;border-radius:50%;background:${color};border:2.5px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px ${color}44;position:relative;z-index:2;transition:transform .2s;"></div>
           </div>`,
-        iconSize: [44, 44], iconAnchor: [22, 22],
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
       });
 
       const marker = L.marker([pt.lat, pt.lng], { icon }).addTo(map);
       marker.on("click", async (e: any) => {
         e.originalEvent.stopPropagation();
-        const cp   = map.latLngToContainerPoint([pt.lat, pt.lng]);
+        const cp = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const rect = mapRef.current!.getBoundingClientRect();
         const origin = { x: rect.left + cp.x, y: rect.top + cp.y };
 
-        setPoints(prev => {
-          const cached = prev.find(p => p.id === pt.id)!;
+        setPoints((prev) => {
+          const cached = prev.find((p) => p.id === pt.id)!;
           setPopup({ point: cached, origin });
           return prev;
         });
 
         try {
           const fresh = await fetchDepositDetail(pt.id);
-          setPopup(prev => prev?.point.id === pt.id
-            ? { ...prev, point: fresh }
-            : prev
+          setPopup((prev) =>
+            prev?.point.id === pt.id ? { ...prev, point: fresh } : prev,
           );
-          setPoints(prev => prev.map(p => p.id === pt.id ? fresh : p));
-        } catch {
-        }
+          setPoints((prev) => prev.map((p) => (p.id === pt.id ? fresh : p)));
+        } catch {}
       });
       markersRef.current[pt.id] = marker;
     });
   }, [points, leafletReady]);
 
   const handleToggle = async (id: number) => {
-    const pt = pointsRef.current.find(p => p.id === id);
+    const pt = pointsRef.current.find((p) => p.id === id);
     if (!pt) return;
 
     if (pt.status === "pending") {
-      setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "collected" } : p));
-      setPopup(prev => prev?.point.id === id
-        ? { ...prev, point: { ...prev.point, status: "collected" } }
-        : prev
+      setPoints((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: "collected" } : p)),
+      );
+      setPopup((prev) =>
+        prev?.point.id === id
+          ? { ...prev, point: { ...prev.point, status: "collected" } }
+          : prev,
       );
       flashRing(id, "#007a5e");
 
@@ -199,22 +257,28 @@ export const ManagerMap = () => {
         await collectDeposit(id);
         showToast(`✅ Dépôt #${id} marqué collecté`);
         setTimeout(() => {
-          setPoints(prev => prev.filter(p => p.id !== id));
-          setPopup(prev => prev?.point.id === id ? null : prev);
+          setPoints((prev) => prev.filter((p) => p.id !== id));
+          setPopup((prev) => (prev?.point.id === id ? null : prev));
         }, 1200);
       } catch (err: any) {
-        setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "pending" } : p));
-        setPopup(prev => prev?.point.id === id
-          ? { ...prev, point: { ...prev.point, status: "pending" } }
-          : prev
+        setPoints((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, status: "pending" } : p)),
+        );
+        setPopup((prev) =>
+          prev?.point.id === id
+            ? { ...prev, point: { ...prev.point, status: "pending" } }
+            : prev,
         );
         showToast(`⚠️ ${err.message ?? "Erreur lors de la collecte"}`);
       }
     } else {
-      setPoints(prev => prev.map(p => p.id === id ? { ...p, status: "pending" } : p));
-      setPopup(prev => prev?.point.id === id
-        ? { ...prev, point: { ...prev.point, status: "pending" } }
-        : prev
+      setPoints((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: "pending" } : p)),
+      );
+      setPopup((prev) =>
+        prev?.point.id === id
+          ? { ...prev, point: { ...prev.point, status: "pending" } }
+          : prev,
       );
     }
   };
@@ -222,13 +286,16 @@ export const ManagerMap = () => {
   const flashRing = useCallback((ptId: number, color: string) => {
     const map = leafletRef.current;
     if (!map || !mapRef.current) return;
-    const pt = pointsRef.current.find(p => p.id === ptId);
+    const pt = pointsRef.current.find((p) => p.id === ptId);
     if (!pt) return;
-    const cp   = map.latLngToContainerPoint([pt.lat, pt.lng]);
+    const cp = map.latLngToContainerPoint([pt.lat, pt.lng]);
     const rect = mapRef.current.getBoundingClientRect();
-    const rid  = Date.now().toString() + ptId;
-    setRings(r => [...r, { id: rid, x: rect.left + cp.x, y: rect.top + cp.y, color }]);
-    setTimeout(() => setRings(r => r.filter(x => x.id !== rid)), 1500);
+    const rid = Date.now().toString() + ptId;
+    setRings((r) => [
+      ...r,
+      { id: rid, x: rect.left + cp.x, y: rect.top + cp.y, color },
+    ]);
+    setTimeout(() => setRings((r) => r.filter((x) => x.id !== rid)), 1500);
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -238,8 +305,12 @@ export const ManagerMap = () => {
 
   useEffect(() => {
     MapEventBus.registerStateProvider(() => ({
-      points: pointsRef.current.map(p => ({
-        id: p.id, label: p.label, status: p.status, lat: p.lat, lng: p.lng,
+      points: pointsRef.current.map((p) => ({
+        id: p.id,
+        label: p.label,
+        status: p.status,
+        lat: p.lat,
+        lng: p.lng,
       })),
     }));
   }, []);
@@ -249,27 +320,43 @@ export const ManagerMap = () => {
       const map = leafletRef.current;
       switch (cmd.type) {
         case "collect":
-          setPoints(prev => prev.map(p => p.id === cmd.pointId ? { ...p, status: "collected" } : p));
-          setPopup(prev => prev?.point.id === cmd.pointId ? { ...prev, point: { ...prev.point, status: "collected" } } : prev);
+          setPoints((prev) =>
+            prev.map((p) =>
+              p.id === cmd.pointId ? { ...p, status: "collected" } : p,
+            ),
+          );
+          setPopup((prev) =>
+            prev?.point.id === cmd.pointId
+              ? { ...prev, point: { ...prev.point, status: "collected" } }
+              : prev,
+          );
           flashRing(cmd.pointId, "#007a5e");
           break;
         case "uncollect":
-          setPoints(prev => prev.map(p => p.id === cmd.pointId ? { ...p, status: "pending" } : p));
+          setPoints((prev) =>
+            prev.map((p) =>
+              p.id === cmd.pointId ? { ...p, status: "pending" } : p,
+            ),
+          );
           flashRing(cmd.pointId, "#ce1126");
           break;
         case "highlight":
           flashRing(cmd.pointId, "#facc15");
           break;
         case "highlight_all_pending":
-          pointsRef.current.filter(p => p.status === "pending").forEach((p, i) => {
-            setTimeout(() => flashRing(p.id, "#ce1126"), i * 200);
-          });
+          pointsRef.current
+            .filter((p) => p.status === "pending")
+            .forEach((p, i) => {
+              setTimeout(() => flashRing(p.id, "#ce1126"), i * 200);
+            });
           showToast("🔴 Highlighting all pending points");
           break;
         case "highlight_all_collected":
-          pointsRef.current.filter(p => p.status === "collected").forEach((p, i) => {
-            setTimeout(() => flashRing(p.id, "#007a5e"), i * 200);
-          });
+          pointsRef.current
+            .filter((p) => p.status === "collected")
+            .forEach((p, i) => {
+              setTimeout(() => flashRing(p.id, "#007a5e"), i * 200);
+            });
           showToast("🟢 Highlighting all collected points");
           break;
         case "fly_to":
@@ -290,71 +377,106 @@ export const ManagerMap = () => {
     return unsub;
   }, [flashRing, showToast]);
 
-  const collected = points.filter(p => p.status === "collected").length;
-  const pending   = points.filter(p => p.status === "pending").length;
+  const collected = points.filter((p) => p.status === "collected").length;
+  const pending = points.filter((p) => p.status === "pending").length;
 
   return (
-    <div className="relative w-full h-full bg-slate-50" onClick={() => setPopup(null)}>
-      <div ref={mapRef} className="w-full h-full grayscale opacity-80 contrast-[1.1]" />
+    <div
+      className="relative w-full h-full bg-slate-50"
+      onClick={() => setPopup(null)}
+    >
+      <div
+        ref={mapRef}
+        className="w-full h-full grayscale opacity-80 contrast-[1.1]"
+      />
 
-      {rings.map(r => <AgentRing key={r.id} x={r.x} y={r.y} color={r.color} />)}
+      {rings.map((r) => (
+        <AgentRing key={r.id} x={r.x} y={r.y} color={r.color} />
+      ))}
       {toast && <AgentToast msg={toast} />}
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-[1500] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-0 z-1500 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
           <Loader size={32} className="text-brand-green animate-spin" />
-          <p className="text-slate-600 font-bold tracking-tight">Analyse des flux…</p>
+          <p className="text-slate-600 font-bold tracking-tight">
+            Analyse des flux…
+          </p>
         </div>
       )}
 
       {/* Error banner */}
       {fetchError && !loading && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
                         bg-white/95 backdrop-blur-xl p-8 rounded-3xl border border-red-200 
-                        shadow-2xl shadow-red-500/10 text-center max-w-xs animate-in zoom-in duration-300">
+                        shadow-2xl shadow-red-500/10 text-center max-w-xs animate-in zoom-in duration-300"
+        >
           <p className="text-3xl mb-4">🚨</p>
-          <p className="text-lg font-black text-slate-800 mb-2">Erreur système</p>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed font-mono">{fetchError}</p>
-          <button onClick={loadPoints} className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95">
-             Réinitialiser
+          <p className="text-lg font-black text-slate-800 mb-2">
+            Erreur système
+          </p>
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed font-mono">
+            {fetchError}
+          </p>
+          <button
+            onClick={loadPoints}
+            className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
+          >
+            Réinitialiser
           </button>
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
                         bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
-                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500">
+                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
+        >
           <div className="text-4xl mb-4">🛰️</div>
-          <p className="text-xl font-black text-slate-800 mb-1 leading-tight">Secteur Nettoyé</p>
-          <p className="text-slate-500 text-sm leading-relaxed">Aucun dépôt en attente de collecte.</p>
+          <p className="text-xl font-black text-slate-800 mb-1 leading-tight">
+            Secteur Nettoyé
+          </p>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            Aucun dépôt en attente de collecte.
+          </p>
         </div>
       )}
 
       {/* Stats overlay */}
       {!loading && !fetchError && (
-        <div 
+        <div
           ref={uiRefs.stats}
-          className="absolute top-6 left-6 z-[1000] bg-white/90 backdrop-blur-xl border border-brand-green/15 
+          className="absolute top-6 left-6 z-1000 bg-white/90 backdrop-blur-xl border border-brand-green/15 
                      rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 -translate-y-2"
         >
           <div>
-            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">Collectés</p>
+            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">
+              Collectés
+            </p>
             <p className="text-2xl font-black text-brand-green leading-none">
-              {collected}<span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">pts</span>
+              {collected}
+              <span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">
+                pts
+              </span>
             </p>
           </div>
           <div className="w-px h-10 bg-slate-200/50" />
           <div>
-            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">En attente</p>
+            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">
+              En attente
+            </p>
             <p className="text-2xl font-black text-red-500 leading-none">
-              {pending}<span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">pts</span>
+              {pending}
+              <span className="text-[10px] text-slate-300 font-bold ml-1 uppercase">
+                pts
+              </span>
             </p>
           </div>
-          <button 
-            onClick={loadPoints} 
+          <button
+            onClick={loadPoints}
             className="w-10 h-10 rounded-2xl bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
                        text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
           >
@@ -365,17 +487,19 @@ export const ManagerMap = () => {
 
       {/* Legend overlay */}
       {!loading && !fetchError && (
-        <div 
+        <div
           ref={uiRefs.legend}
-          className="absolute top-6 right-6 z-[1000] bg-white/90 backdrop-blur-xl border border-slate-200/50 
+          className="absolute top-6 right-6 z-1000 bg-white/90 backdrop-blur-xl border border-slate-200/50 
                      rounded-3xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 -translate-y-2"
         >
-          <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">Légende</p>
+          <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mb-1">
+            Légende
+          </p>
           {(Object.entries(CLR) as [Status, string][]).map(([s, c]) => (
             <div key={s} className="flex items-center gap-4 group">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full transition-transform duration-300 shadow-sm"
-                style={{ background: c, boxShadow: `0 0 8px ${c}88` }} 
+                style={{ background: c, boxShadow: `0 0 8px ${c}88` }}
               />
               <span className="text-sm text-slate-600 font-semibold capitalize tracking-tight group-hover:text-slate-900 transition-colors">
                 {s}

@@ -114,12 +114,17 @@ function InsightsPanel({ insights }: { insights: DepositInsights }) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <AlertTriangle size={16} className={severityColor(insights.severity)} />
+            <AlertTriangle
+              size={16}
+              className={severityColor(insights.severity)}
+            />
             <span className="text-xs font-bold text-brand-text/40 uppercase tracking-widest">
               Severity
             </span>
           </div>
-          <span className={`text-sm font-black ${severityColor(insights.severity)}`}>
+          <span
+            className={`text-sm font-black ${severityColor(insights.severity)}`}
+          >
             {severityLabel(insights.severity)} ({insights.severity}/100)
           </span>
         </div>
@@ -552,7 +557,7 @@ export function ReportWaste() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-8 flex flex-col relative z-10 mb-10">
-        <div className="step-content flex-1 card-tactile !p-8 flex flex-col">
+        <div className="step-content flex-1 card-tactile p-8! flex flex-col">
           {/* STEP 1: PHOTO */}
           {currentStep === 1 && (
             <div className="flex flex-col h-full">
@@ -570,7 +575,7 @@ export function ReportWaste() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                       onClick={startCamera}
-                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-[2rem] bg-brand-surface hover:bg-brand-green/5 hover:border-brand-green/40 transition-all cursor-pointer aspect-square"
+                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-4xl bg-brand-surface hover:bg-brand-green/5 hover:border-brand-green/40 transition-all cursor-pointer aspect-square"
                     >
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
                         <Camera className="w-8 h-8 text-brand-green" />
@@ -581,7 +586,7 @@ export function ReportWaste() {
                     </button>
                     <button
                       onClick={capturePhoto}
-                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-[2rem] bg-brand-surface hover:bg-brand-yellow/5 hover:border-brand-yellow/40 transition-all cursor-pointer aspect-square"
+                      className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-black/10 rounded-4xl bg-brand-surface hover:bg-brand-yellow/5 hover:border-brand-yellow/40 transition-all cursor-pointer aspect-square"
                     >
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
                         <UploadCloud className="w-8 h-8 text-brand-yellow" />
@@ -592,14 +597,14 @@ export function ReportWaste() {
                     </button>
                   </div>
                 ) : isCameraActive ? (
-                  <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3] bg-black shadow-xl ring-1 ring-black/5">
+                  <div className="relative rounded-4xl overflow-hidden aspect-4/3 bg-black shadow-xl ring-1 ring-black/5">
                     <video
                       ref={videoRef}
                       className="w-full h-full object-cover"
                       playsInline
                       muted
                     />
-                    <div className="absolute inset-0 border-4 border-white/20 rounded-[2rem] pointer-events-none" />
+                    <div className="absolute inset-0 border-4 border-white/20 rounded-4xl pointer-events-none" />
                     <div className="absolute inset-x-0 bottom-6 flex justify-center items-center gap-8">
                       <button
                         onClick={stopCamera}
@@ -616,7 +621,7 @@ export function ReportWaste() {
                     </div>
                   </div>
                 ) : (
-                  <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3] shadow-lg ring-1 ring-black/5 group">
+                  <div className="relative rounded-4xl overflow-hidden aspect-4/3 shadow-lg ring-1 ring-black/5 group">
                     <img
                       src={photoPreview!}
                       alt="Waste preview"
@@ -682,7 +687,7 @@ export function ReportWaste() {
                 </p>
               </div>
 
-              <div className="step-item flex-1 relative rounded-[2rem] overflow-hidden border-4 border-brand-surface shadow-xl bg-gray-100 min-h-[400px]">
+              <div className="step-item flex-1 relative rounded-4xl overflow-hidden border-4 border-brand-surface shadow-xl bg-gray-100 min-h-[400px]">
                 {!location ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10 bg-white/50 backdrop-blur-sm">
                     <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6 text-blue-500 shadow-inner">
@@ -732,7 +737,7 @@ export function ReportWaste() {
                 )}
 
                 {location && (
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl border border-black/5 flex items-center gap-3 whitespace-nowrap">
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-400 bg-white/90 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl border border-black/5 flex items-center gap-3 whitespace-nowrap">
                     <div className="w-8 h-8 rounded-full bg-brand-green/20 flex items-center justify-center text-brand-green">
                       <MapPin className="w-4 h-4" />
                     </div>
@@ -773,7 +778,7 @@ export function ReportWaste() {
                 </p>
               </div>
 
-              <div className="step-item flex-1 bg-brand-surface border border-black/5 rounded-[2rem] p-6 sm:p-8 space-y-8">
+              <div className="step-item flex-1 bg-brand-surface border border-black/5 rounded-4xl p-6 sm:p-8 space-y-8">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-brand-yellow/20 rounded-lg flex items-center justify-center text-brand-yellow">

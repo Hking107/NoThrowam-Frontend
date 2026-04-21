@@ -341,7 +341,7 @@ export const CustomerMap = () => {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-[1500] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-0 z-1500 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
           <Loader size={32} className="text-brand-green animate-spin" />
           <p className="text-slate-600 font-bold tracking-tight">
             Chargement des lots…
@@ -352,7 +352,7 @@ export const CustomerMap = () => {
       {/* Error banner */}
       {fetchError && !loading && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1400 
                         bg-white p-8 rounded-3xl border border-red-100 shadow-2xl shadow-red-500/10 
                         text-center max-w-xs animate-in zoom-in duration-300"
         >
@@ -377,7 +377,7 @@ export const CustomerMap = () => {
       {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-500 
                         bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
                         shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
         >
@@ -395,7 +395,7 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.stats}
-          className="absolute top-6 left-6 z-[1000] bg-white/90 backdrop-blur-xl border border-brand-green/15 
+          className="absolute top-6 left-6 z-1000 bg-white/90 backdrop-blur-xl border border-brand-green/15 
                      rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
         >
           <div>
@@ -435,7 +435,7 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.legend}
-          className="absolute top-6 right-6 z-[1000] bg-white/90 backdrop-blur-xl border border-slate-200/50 
+          className="absolute top-6 right-6 z-1000 bg-white/90 backdrop-blur-xl border border-slate-200/50 
                      rounded-3xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
         >
           <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
