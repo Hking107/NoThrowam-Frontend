@@ -18,7 +18,7 @@ import { usePosts } from '../hooks/usePosts';
 
 const SellerDashboard: React.FC = () => {
  
-  const [userEmail, setUserEmail] = useState<string>("Chargement...");
+  const [userEmail, setUserEmail] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false); 
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
@@ -39,7 +39,7 @@ const SellerDashboard: React.FC = () => {
       // Sidebar Entrance
       gsap.fromTo(sidebarRef.current, 
         { x: -100, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+        { x: 0, opacity: 1, duration: 0.8, ease: "power3.out", clearProps: "transform" }
       );
 
       // Main Content Entrance
@@ -371,11 +371,11 @@ useEffect(() => {
       {/* --- SIDEBAR --- */}
       <aside 
         ref={sidebarRef}
-        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out ${
-          isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'
+        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${isSidebarCollapsed ? 'md:w-20' : 'md:w-72'}`}
       >
-        {/* Collapse toggle button — desktop only */}
+        {/* Collapse pill — desktop only */}
         <button
           onClick={() => setIsSidebarCollapsed(prev => !prev)}
           className="hidden md:flex absolute -right-3 top-8 z-[60] w-6 h-6 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-emerald-600 hover:border-emerald-300 transition-all duration-300"
@@ -384,19 +384,20 @@ useEffect(() => {
           <ChevronsLeft size={14} className={`transition-transform duration-500 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
         </button>
 
+        {/* Close drawer X — mobile only */}
         <button 
           onClick={() => setIsMobileMenuOpen(false)}
-          className="md:hidden absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 transition-colors"
+          className="md:hidden absolute top-6 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors z-[60]"
         >
-          <X size={24} />
+          <X size={22} />
         </button>
 
         <div className="overflow-hidden">
-          <div className={`flex items-center gap-4 transition-all duration-500 ${isSidebarCollapsed ? 'p-4 justify-center' : 'p-8'}`}>
+          <div className={`flex items-center gap-4 transition-all duration-500 p-8 ${isSidebarCollapsed ? 'md:p-4 md:justify-center' : ''}`}>
             <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50 shrink-0">
               <Recycle size={26} strokeWidth={2.5} />
             </div>
-            <div className={`transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+            <div className={`transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : 'w-auto opacity-100'}`}>
               <h1 className="text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap">NoThrowam</h1>
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full w-fit">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -405,110 +406,132 @@ useEffect(() => {
             </div>
           </div>
 
-          <nav className={`py-6 space-y-2 transition-all duration-500 ${isSidebarCollapsed ? 'px-2' : 'px-6'}`}>
-            <a href="#" className={`group flex items-center bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`} title="Dashboard">
-              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+          <nav className={`py-6 space-y-2 transition-all duration-500 px-6 ${isSidebarCollapsed ? 'md:px-2' : ''}`}>
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className={`group flex items-center bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`} title="Dashboard">
+              <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
                 <LayoutDashboard size={20} className="text-emerald-600 shrink-0" />
-                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Dashboard</span>
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Dashboard</span>
               </div>
-              <ChevronRight size={14} className={`opacity-0 group-hover:opacity-100 transition-opacity ${isSidebarCollapsed ? 'hidden' : ''}`} />
+              <ChevronRight size={14} className={`opacity-0 group-hover:opacity-100 transition-opacity ${isSidebarCollapsed ? 'md:hidden' : ''}`} />
             </a>
             
             <button 
-              onClick={() => setIsMyListingsOpen(true)}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              onClick={() => { setIsMyListingsOpen(true); setIsMobileMenuOpen(false); }}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="My Listings"
             >
-              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+              <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
                 <List size={20} className="shrink-0" />
-                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>My Listings</span>
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>My Listings</span>
               </div>
-              <ChevronRight size={14} className={`opacity-0 hover:opacity-100 ${isSidebarCollapsed ? 'hidden' : ''}`} />
+              <ChevronRight size={14} className={`opacity-0 hover:opacity-100 ${isSidebarCollapsed ? 'md:hidden' : ''}`} />
             </button>
             
             <button 
-              onClick={() => setIsProductModalOpen(true)}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              onClick={() => { setIsProductModalOpen(true); setIsMobileMenuOpen(false); }}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="Products"
             >
-              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+              <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
                 <Backpack size={20} className="shrink-0" />
-                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Products</span>
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Products</span>
               </div>
             </button>
 
             <button 
-              onClick={() => setIsOpenWallet(true)}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-4 py-3.5'}`}
+              onClick={() => { setIsOpenWallet(true); setIsMobileMenuOpen(false); }}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="Wallet"
             >
-              <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+              <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
                 <Wallet size={20} className="shrink-0" />
-                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Wallet</span>
+                <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Wallet</span>
               </div>
             </button>
           </nav>
         </div>
 
-        <div className={`border-t border-gray-100/50 transition-all duration-500 ${isSidebarCollapsed ? 'p-2' : 'p-6'}`}>
+        <div className={`border-t border-gray-100/50 transition-all duration-500 p-6 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
           <button 
-            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4 ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}`}
+            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
             title="Settings"
           >
             <Settings size={20} className="shrink-0" />
-            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Settings</span>
+            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Settings</span>
           </button>
 
-          <div className={`bg-gray-50/50 rounded-3xl mb-4 border border-gray-100 transition-all duration-500 ${isSidebarCollapsed ? 'p-2' : 'p-4'}`}>
-            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className={`bg-gray-50/50 rounded-3xl mb-4 border border-gray-100 transition-all duration-500 p-4 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
+            <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:justify-center' : ''}`}>
               <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden shrink-0">
-                {userEmail.charAt(0).toUpperCase()}
+                {userEmail ? userEmail.charAt(0).toUpperCase() : <div className="w-4 h-4 bg-emerald-200 animate-pulse rounded"></div>}
               </div>
-              <div className={`flex-1 min-w-0 transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                <p className="text-sm font-bold text-gray-900 truncate">{userEmail}</p>
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
-                  <div className="w-1 h-1 rounded-full bg-green-400"></div>
-                  Online
-                </div>
+              <div className={`flex-1 min-w-0 transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : 'w-auto opacity-100'}`}>
+                {userEmail ? (
+                  <>
+                    <p className="text-sm font-bold text-gray-900 truncate">{userEmail}</p>
+                    <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+                      <div className="w-1 h-1 rounded-full bg-green-400"></div>
+                      Online
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="w-24 h-3 skeleton opacity-60"></div>
+                    <div className="w-16 h-2 skeleton opacity-30"></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
           
           <button 
-            onClick={handleLogout} 
-            className={`w-full flex items-center text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}`}
+            onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
             title="Log out"
           >
             <LogOut size={20} className="shrink-0" />
-            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>Log out</span>
+            <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Log out</span>
           </button>
         </div>
       </aside>
 
       {/* Overlay for mobile menu */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      <div 
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-500 ${
+          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
 
       {/* --- MAIN CONTENT --- */}
       <main ref={mainRef} className="flex-1 w-full">
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
           <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+            >
+              <Menu size={22} />
+            </button>
             <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
               <Recycle size={18} strokeWidth={2.5} />
             </div>
             <span className="font-black tracking-tight">NoThrowam</span>
           </div>
-          <button 
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 text-gray-600 hover:text-emerald-600 transition-colors"
-          >
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="p-2 text-gray-500 hover:text-emerald-600 transition-colors relative">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <button 
+              onClick={() => setIsModalOpen(true)} 
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-200/50"
+            >
+              <Plus size={16} />
+              New
+            </button>
+          </div>
         </header>
 
         <div className="px-8 py-4 max-w-7xl mx-auto space-y-8">
@@ -518,7 +541,9 @@ useEffect(() => {
               <h2 className="text-3xl font-black text-gray-900 tracking-tight">Dashboard Overview</h2>
               <div className="flex items-center gap-2 mt-1 text-gray-500">
                 <span className="text-sm">Welcome back,</span>
-                <span className="text-sm font-bold text-emerald-600">{userEmail.split('@')[0]}</span>
+                <span className="text-sm lowercase font-bold text-emerald-600">
+                  {userEmail ? userEmail.split('@')[0] : <span className="inline-block w-20 h-3 skeleton-emerald align-middle mx-1"></span>}
+                </span>
                 <span className="text-sm">— ready to make an impact?</span>
               </div>
             </div>
@@ -554,25 +579,28 @@ useEffect(() => {
             icon={<DollarSign size={20} className="text-green-600"/>} 
             bg="bg-green-100" 
             title="Total Earnings" 
-            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`} 
+            value={`${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`} 
             trend="+12%" 
             positive={true} 
+            isLoading={dashboardStats.isLoading}
           />
           <StatCard 
             icon={<Scale size={20} className="text-blue-600"/>} 
             bg="bg-blue-100" 
             title="Weight Recycled" 
-            value={dashboardStats.isLoading ? "..." : `${(dashboardStats.totalWeight || 0).toFixed(1)} kg`} 
+            value={`${(dashboardStats.totalWeight || 0).toFixed(1)} kg`} 
             trend="+5%" 
             positive={true} 
+            isLoading={dashboardStats.isLoading}
           />
           <StatCard 
             icon={<FileText size={20} className="text-orange-600"/>} 
             bg="bg-orange-100" 
             title="Active Listings" 
-            value={dashboardStats.isLoading ? "..." : `${dashboardStats.activeListings || 0}`} 
+            value={`${dashboardStats.activeListings || 0}`} 
             trend="0%" 
             positive={null} 
+            isLoading={dashboardStats.isLoading}
           />
         </div>
 
@@ -718,7 +746,20 @@ useEffect(() => {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {/* 🆕 6. On map sur myPosts au lieu de recentPosts */}
-                  {myPosts.length > 0 ? (
+                  {dashboardStats.isLoading ? (
+                    // Transaction Skeletons
+                    [1, 2, 3, 4, 5].map((i) => (
+                      <tr key={i} className="border-b border-gray-50 last:border-0 opacity-50">
+                        <td className="px-6 py-5"><div className="w-20 h-4 skeleton"></div></td>
+                        <td className="px-6 py-5"><div className="w-32 h-6 skeleton rounded-xl"></div></td>
+                        <td className="px-6 py-5"><div className="w-12 h-3 skeleton"></div></td>
+                        <td className="px-6 py-5"><div className="w-16 h-4 skeleton"></div></td>
+                        <td className="px-6 py-5"><div className="w-20 h-5 skeleton"></div></td>
+                        <td className="px-6 py-5"><div className="w-24 h-8 skeleton rounded-xl"></div></td>
+                        <td className="px-6 py-5"></td>
+                      </tr>
+                    ))
+                  ) : myPosts.length > 0 ? (
                     myPosts.map((post) => (
                       <TableRow 
                         key={post.id}

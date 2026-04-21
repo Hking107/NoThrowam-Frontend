@@ -57,6 +57,15 @@
   .hover-glow {
     @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:border-green-500/30;
   }
+
+  .skeleton {
+    @apply animate-pulse bg-gray-200/50 rounded-md;
+  }
+
+  .skeleton-emerald {
+    @apply animate-pulse bg-emerald-100/50 rounded-md;
+  }
+
   /* Reusable Button Variants */
   .btn {
     @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold transition-all duration-300 transform active:scale-95 touch-manipulation;

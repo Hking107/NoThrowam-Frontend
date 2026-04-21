@@ -94,13 +94,25 @@ const MaterialMixChart: React.FC<MaterialMixChartProps> = ({ posts, isLoading, t
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-sm text-gray-400">Total</span>
             <span className="text-2xl font-bold text-gray-900">
-              {isLoading ? "..." : `${(totalWeight || 0).toFixed(1)}kg`}
+              {isLoading ? (
+                <div className="w-16 h-8 skeleton mt-1"></div>
+              ) : (
+                `${(totalWeight || 0).toFixed(1)}kg`
+              )}
             </span>
           </div>
         </div>
 
         <div className="flex justify-center flex-wrap gap-4 w-full mt-6 text-sm">
-          {!isLoading && materialMix.length > 0 ? (
+          {isLoading ? (
+            // Loading Skeletons for Legend
+            [1, 2, 3].map(i => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="w-16 h-4 skeleton mb-1"></div>
+                <div className="w-10 h-3 skeleton opacity-60"></div>
+              </div>
+            ))
+          ) : materialMix.length > 0 ? (
             materialMix.map((item, index) => (
               <div key={index} className="flex flex-col items-center">
                 <span className="flex items-center gap-1 font-semibold text-gray-700">
