@@ -95,8 +95,14 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-md font-sans p-4 animate-[fadeIn_0.2s_ease-out]">
-      <main className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-md font-sans p-4 animate-[fadeIn_0.2s_ease-out]"
+      onClick={onClose}
+    >
+      <main 
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         <div className="px-8 py-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50 shrink-0">
           <div>
