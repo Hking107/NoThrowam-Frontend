@@ -1,3 +1,6 @@
+import React from 'react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
+
 interface StatCardProps {
   icon: React.ReactNode;
   bg: string;
@@ -7,22 +10,34 @@ interface StatCardProps {
   positive: boolean | null;
 }
 
-
 export const StatCard: React.FC<StatCardProps> = ({ icon, bg, title, value, trend, positive }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+  <div className="glass-card p-6 rounded-[2rem] relative overflow-hidden group hover-glow transition-all duration-500">
+    {/* Decorative Background Gradient */}
+    <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 blur-2xl group-hover:opacity-20 transition-opacity ${bg.replace('bg-', 'bg-')}`}></div>
+    
     <div className="flex justify-between items-start z-10 relative">
-      <div className={`p-3 rounded-xl ${bg}`}>
+      <div className={`p-4 rounded-2xl ${bg} shadow-inner flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500`}>
         {icon}
       </div>
-      {/* <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${positive === true ? 'bg-green-100 text-green-700' : positive === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-        {positive === true && <TrendingUp size={12} />}
-        {positive === false && <TrendingDown size={12} />}
-        {trend}
-      </div> */}
+      
+      {trend && (
+        <div className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full border shadow-sm ${
+          positive === true ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+          positive === false ? 'bg-red-50 text-red-600 border-red-100' : 
+          'bg-gray-50 text-gray-400 border-gray-100'
+        }`}>
+          {positive === true && <TrendingUp size={12} />}
+          {positive === false && <TrendingDown size={12} />}
+          {trend}
+        </div>
+      )}
     </div>
-    <div className="mt-4 z-10 relative">
-      <p className="text-gray-500 text-sm font-medium">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+    
+    <div className="mt-6 z-10 relative">
+      <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{title}</p>
+      <div className="flex items-baseline gap-2 mt-1">
+        <h3 className="text-2xl font-black text-gray-900 tracking-tight">{value}</h3>
+      </div>
     </div>
   </div>
 );

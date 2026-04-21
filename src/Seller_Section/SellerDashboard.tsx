@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState, useRef } from 'react'; 
 import { 
-  LayoutDashboard, List,  Wallet, Backpack,
+  LayoutDashboard, List, Wallet, Backpack,
   Settings, Bell, Plus, DollarSign, Scale, FileText, Leaf, Filter,
-  LogOut
+  LogOut, Search, ChevronRight, TrendingUp
 } from 'lucide-react';
+import { gsap } from 'gsap';
 
 import WasteScannerModal from './WasteScannerModal';
 import MyListingsModal from './MyListing';
@@ -26,6 +27,45 @@ const SellerDashboard: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const {posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
+  
+  const sidebarRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Sidebar Entrance
+      gsap.from(sidebarRef.current, {
+        x: -100,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+      });
+
+      // Main Content Entrance
+      gsap.from(mainRef.current, {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.2,
+        ease: "power3.out"
+      });
+
+      // Staggered Stat Cards
+      if (cardsRef.current) {
+        gsap.from(cardsRef.current.children, {
+          y: 30,
+          opacity: 0,
+          stagger: 0.1,
+          duration: 0.6,
+          delay: 0.4,
+          ease: "power2.out"
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -326,70 +366,91 @@ useEffect(() => {
       )}
       {isProductModalOpen && <ProductModal onClose={() => setIsProductModalOpen(false)} />}
 
-      {isOpenWallet && <WalletModal onClose= {() => setIsOpenWallet(false)}/>}  
+      {isOpenWallet && <WalletModal onClose={() => setIsOpenWallet(false)} />}  
 
       {/* --- SIDEBAR --- */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between md:flex">
+      <aside 
+        ref={sidebarRef}
+        className="w-72 glass-sidebar flex flex-col justify-between hidden md:flex z-20"
+      >
         <div>
-          <div className="p-6 flex items-center gap-3">
-            <div className="bg-green-500 text-white p-2 rounded-lg">
-              <Leaf size={24} />
+          <div className="p-8 flex items-center gap-4">
+            <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50">
+              <Leaf size={26} />
             </div>
-            <div className="py-3">
-              <h1 className="text-xl font-bold text-gray-900">NoThrowam</h1>
-              <p className="text-xs text-gray-500 ">Seller Dashboard</p>
+            <div>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">NoThrowam</h1>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Premium Seller</p>
+              </div>
             </div>
           </div>
 
-          <nav className="px-4 py-5 mt-4 space-y-1">
-            <a href="#" className="flex items-center gap-3 px-4 py-3 bg-green-50 text-green-700 rounded-xl font-medium">
-              <LayoutDashboard size={20} />
-              Dashboard
+          <nav className="px-6 py-6 space-y-2">
+            <a href="#" className="group flex items-center justify-between px-4 py-3.5 bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1">
+              <div className="flex items-center gap-3">
+                <LayoutDashboard size={20} className="text-emerald-600" />
+                Dashboard
+              </div>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
+            
             <button 
               onClick={() => setIsMyListingsOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
             >
-              <List size={20} />
-              My Listings
+              <div className="flex items-center gap-3">
+                <List size={20} />
+                My Listings
+              </div>
+              <ChevronRight size={14} className="opacity-0 hover:opacity-100" />
             </button>
             
            <button 
             onClick={() => setIsProductModalOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
           >
-            <Backpack size={20} />
-            Products
+            <div className="flex items-center gap-3">
+              <Backpack size={20} />
+              Products
+            </div>
           </button>
 
           <button 
             onClick={() => setIsOpenWallet(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1"
           >
-            <Wallet size={20} />
-            Wallet
+            <div className="flex items-center gap-3">
+              <Wallet size={20} />
+              Wallet
+            </div>
           </button>
-          
-
           </nav>
         </div>
 
-        <div className="p-4 border-t border-gray-100">
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium mb-4">
+        <div className="p-6 border-t border-gray-100/50">
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4">
             <Settings size={20} />
             Settings
-          </a>
+          </button>
 
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-              <img src="" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">{userEmail}</p>
-              <p className="text-xs text-gray-500">Premium Seller</p>
+          <div className="bg-gray-50/50 p-4 rounded-3xl mb-4 border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden">
+                {userEmail.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-900 truncate">{userEmail}</p>
+                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+                  <div className="w-1 h-1 rounded-full bg-green-400"></div>
+                  Online
+                </div>
+              </div>
             </div>
           </div>
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+          
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all">
             <LogOut size={20} />
             Log out
           </button>
@@ -397,32 +458,46 @@ useEffect(() => {
       </aside>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <main ref={mainRef} className="flex-1 overflow-y-auto">
+        <div className="px-8 py-6 max-w-7xl mx-auto space-y-4">
           
-          <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
-              <p className="text-sm text-gray-500 mt-1">Welcome back, ready to make an impact today?</p>
+              <h2 className="text-3xl font-black text-gray-900 tracking-tight">Dashboard Overview</h2>
+              <div className="flex items-center gap-2 mt-1 text-gray-500">
+                <span className="text-sm">Welcome back,</span>
+                <span className="text-sm font-bold text-emerald-600">{userEmail.split('@')[0]}</span>
+                <span className="text-sm">— ready to make an impact?</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 bg-white rounded-full shadow-sm">
+            
+            <div className="flex items-center gap-3 w-full lg:w-auto">
+              <div className="relative flex-1 lg:max-w-xs group">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search transactions..." 
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all shadow-sm"
+                />
+              </div>
+              
+              <button className="p-3 text-gray-500 hover:text-emerald-600 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all relative">
                 <Bell size={20} />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
               
               <button 
                 onClick={() => setIsModalOpen(true)} 
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-green-200"
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus size={20} />
-                Create Listing
+                <span className="hidden sm:inline">Create Listing</span>
               </button>
-              
             </div>
           </header>
 
           {/* Stats Cards */}
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+         <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard 
             icon={<DollarSign size={20} className="text-green-600"/>} 
             bg="bg-green-100" 
@@ -449,34 +524,108 @@ useEffect(() => {
           />
         </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-              <div className="flex justify-between items-start mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="glass-card p-8 rounded-[2.5rem] lg:col-span-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -z-10"></div>
+              
+              <div className="flex justify-between items-start mb-8">
                 <div>
-                  <h3 className="font-bold text-gray-900">Sales Performance</h3>
-                  <p className="text-sm text-gray-500">Total revenue over time</p>
+                  <h3 className="text-xl font-black text-gray-900 tracking-tight">Sales Performance</h3>
+                  <p className="text-sm text-gray-400 font-medium">Revenue insights for the last 6 months</p>
                 </div>
-                <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 outline-none">
-                  <option>Last 6 Months</option>
-                </select>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold">
+                    <TrendingUp size={14} />
+                    +24% vs last period
+                  </div>
+                  <select className="bg-gray-50/50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all">
+                    <option>Last 6 Months</option>
+                    <option>Last Year</option>
+                  </select>
+                </div>
               </div>
-              <div className="h-64 w-full relative">
-                <svg viewBox="0 0 100 40" className="w-full h-full" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="greenGradient" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,30 C10,30 15,25 25,25 C35,25 40,15 50,15 C60,15 65,35 75,35 C85,35 90,5 100,0 L100,40 L0,40 Z" fill="url(#greenGradient)" />
-                  <path d="M0,30 C10,30 15,25 25,25 C35,25 40,15 50,15 C60,15 65,35 75,35 C85,35 90,5 100,0" fill="none" stroke="#22c55e" strokeWidth="1" />
-                  <circle cx="85" cy="18" r="1.5" fill="#22c55e" className="ring-4 ring-white" />
-                </svg>
-                <div className="absolute right-[12%] top-[35%] bg-gray-900 text-white text-xs font-bold py-1 px-2 rounded">
-                  $840
+              
+              <div className="h-72 w-full relative group/chart">
+                {/* Y-Axis Labels */}
+                <div className="absolute left-0 h-full flex flex-col justify-between text-[10px] font-bold text-gray-300 py-2 z-10">
+                  <span>1M</span><span>750k</span><span>500k</span><span>250k</span><span>0</span>
                 </div>
-                <div className="absolute bottom-0 w-full flex justify-between text-xs text-gray-400 px-2">
-                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                
+                <svg viewBox="0 0 100 40" className="w-full h-full drop-shadow-[0_10px_20px_rgba(16,185,129,0.1)]" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="1" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  
+                  {/* Grid Lines */}
+                  {[0, 10, 20, 30, 40].map(y => (
+                    <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.5" />
+                  ))}
+                  
+                  {/* Area Fill */}
+                  <path 
+                    d={chartData.fillPath || "M0,40 L100,40 Z"} 
+                    fill="url(#chartGradient)"
+                    className="transition-all duration-1000 ease-in-out"
+                  />
+                  
+                  {/* Line Path */}
+                  <path 
+                    d={chartData.path || "M0,40 L100,40"} 
+                    fill="none" 
+                    stroke="#10b981" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className="transition-all duration-1000 ease-in-out"
+                    style={{ filter: 'url(#glow)' }}
+                  />
+                  
+                  {/* Data Points */}
+                  {chartData.months && [0, 20, 40, 60, 80, 100].map((x, i) => (
+                    <circle 
+                      key={x} 
+                      cx={x} 
+                      cy={35 - (Math.random() * 20)} // Placeholder cy, ideally from logic
+                      r="1" 
+                      fill="white" 
+                      stroke="#10b981" 
+                      strokeWidth="0.5"
+                      className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-300"
+                    />
+                  ))}
+
+                  {/* Highlight Point */}
+                  {chartData.highlight && (
+                    <g>
+                      <circle 
+                        cx={chartData.highlight.x} 
+                        cy={chartData.highlight.y} 
+                        r="2.5" 
+                        fill="#10b981" 
+                        className="animate-pulse"
+                      />
+                      <circle 
+                        cx={chartData.highlight.x} 
+                        cy={chartData.highlight.y} 
+                        r="5" 
+                        fill="#10b981" 
+                        fillOpacity="0.1" 
+                      />
+                    </g>
+                  )}
+                </svg>
+                
+                {/* X-Axis Labels */}
+                <div className="absolute -bottom-6 w-full flex justify-between text-[10px] font-black text-gray-400 px-2 uppercase tracking-tighter">
+                  {chartData.months?.map((m: string) => <span key={m}>{m}</span>) || 
+                    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map(m => <span key={m}>{m}</span>)}
                 </div>
               </div>
             </div>
