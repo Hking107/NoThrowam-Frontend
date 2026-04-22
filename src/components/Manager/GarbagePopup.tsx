@@ -89,7 +89,7 @@ export const GarbagePopup = ({
     <div
       ref={containerRef}
       onClick={(e) => e.stopPropagation()}
-      className="fixed z-3000 rounded-[2.5rem] bg-slate-950 shadow-2xl overflow-hidden border border-white/5"
+      className="fixed z-3000 rounded-xl bg-[#79AE6F] shadow-2xl overflow-hidden border border-white/5"
       style={{
         left,
         top,
@@ -121,7 +121,7 @@ export const GarbagePopup = ({
           </div>
         )}
 
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-transparent to-black/40 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-black/20 pointer-events-none" />
 
         {/* HUD Elements */}
         <div className="absolute top-5 inset-x-5 flex justify-between items-center">
@@ -146,7 +146,7 @@ export const GarbagePopup = ({
           <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => go("left")}
-              className="w-10 h-10 rounded-full bg-slate-950/40 backdrop-blur-md border border-white/5 flex items-center justify-center text-white hover:bg-brand-green/20 hover:border-brand-green/30 transition-all font-bold"
+              className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md border border-white/5 flex items-center justify-center text-white hover:bg-brand-green/20 hover:border-brand-green/30 transition-all font-bold"
             >
               <ChevronLeft size={20} />
             </button>
@@ -190,7 +190,7 @@ export const GarbagePopup = ({
 
           <div className="h-px bg-white/5 w-full" />
 
-          <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+          <p className="text-[11px] text-white/90 leading-relaxed line-clamp-2">
             Analyse de l'image suggère un volume de type{" "}
             {point.label.split(" ")[0] || "ménager"}. Prêt pour traitement
             logistique immédiat.
@@ -220,9 +220,9 @@ export const GarbagePopup = ({
             <>
               <CheckCircle
                 size={16}
-                className="group-hover:scale-125 transition-transform"
+                className="group-hover:scale-125 transition-transform text-white"
               />{" "}
-              Valider Collecte
+              <span className="text-white">Valider Collecte</span>
             </>
           )}
         </button>

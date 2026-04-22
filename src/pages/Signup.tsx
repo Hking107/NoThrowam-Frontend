@@ -95,9 +95,9 @@ export function Signup() {
           <button
             key={role.id}
             onClick={() => navigate(role.path)}
-            className={`role-card flex flex-col p-8 bg-white rounded-4xl border border-black/5 shadow-sm transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border-b-4 ${role.colorClass} ${role.hoverBg} text-left group cursor-pointer`}
+            className={`role-card flex flex-col p-8 bg-white rounded-xl border border-black/5 shadow-sm transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border-b-4 ${role.colorClass} ${role.hoverBg} text-left group cursor-pointer`}
           >
-            <div className="mb-6 p-4 bg-brand-surface rounded-2xl w-fit group-hover:scale-110 transition-transform duration-300">
+            <div className="mb-6 p-4 bg-brand-surface rounded-lg w-fit group-hover:scale-110 transition-transform duration-300">
               {role.icon}
             </div>
             <h3 className="text-xl font-bold text-brand-text mb-3">

@@ -89,20 +89,20 @@
 
   /* Structural Cards */
   .card-tactile {
-    @apply bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1;
+    @apply bg-white rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1;
   }
 
   /* Specific Themed Cards */
   .card-yellow {
-    @apply bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-yellow;
+    @apply bg-white rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-yellow;
   }
 
   .card-red {
-    @apply bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-red;
+    @apply bg-white rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-red;
   }
 
   .card-green {
-    @apply bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-green;
+    @apply bg-white rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-black/5 transform hover:-translate-y-1 border-b-4 border-b-brand-green;
   }
 
   /* Typography Utilities */
@@ -177,7 +177,7 @@
   }
 
   .step-text-block {
-    @apply max-w-sm md:max-w-md p-6 md:p-8 rounded-2xl
+    @apply max-w-sm md:max-w-md p-6 md:p-8 rounded-xl
            bg-white/80 backdrop-blur-md shadow-xl
            border border-brand-green/10;
   }
@@ -211,7 +211,7 @@
   }
 
   .phone-screen-glow {
-    @apply absolute inset-[12%] bg-brand-green/5 blur-xl rounded-2xl opacity-0;
+    @apply absolute inset-[12%] bg-brand-green/5 blur-xl rounded-xl opacity-0;
   }
 
   /* Phone Dots Indicator */
@@ -266,6 +266,39 @@
   .scrollbar-customer {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 122, 94, 0.1) transparent;
+  }
+
+  .scrollbar-autohide::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-autohide::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-autohide::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  .scrollbar-autohide:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 122, 94, 0.3);
+  }
+
+  .scrollbar-autohide:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 122, 94, 0.5);
+  }
+
+  /* Firefox Support */
+  .scrollbar-autohide {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-autohide:hover {
+    scrollbar-color: rgba(0, 122, 94, 0.2) transparent;
   }
 }
 

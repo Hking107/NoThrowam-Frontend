@@ -19,7 +19,7 @@ export type ApiDeposit = {
   updated_at: string;
 };
 
-/* Internal shape used by the map (same as before) */
+/* Internal shape used by the map */
 export type GarbagePoint = {
   id: number;
   lat: number;
@@ -27,4 +27,7 @@ export type GarbagePoint = {
   label: string;
   status: Status;
   images: { id: number; url: string }[];
+  created_at: string;
+  collected_at: string | null;
+  isValid: boolean; // 24-hour validity
 };

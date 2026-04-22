@@ -3,6 +3,7 @@ import {
   ChevronLeft, 
   ChevronRight, 
   LogOut,
+  Recycle,
   User
 } from "lucide-react";
 import gsap from "gsap";
@@ -75,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       ref={sidebarRef}
-      className="fixed left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-stretch
+      className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-stretch
                  bg-white/80 backdrop-blur-xl border border-brand-green/15 rounded-[2rem]
                  py-6 px-3 shadow-2xl overflow-hidden group"
       style={{ width: isCollapsed ? 80 : 240 }}
@@ -84,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={`flex items-center gap-3 mb-8 px-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
         <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                         flex items-center justify-center shadow-lg shadow-brand-green/20">
-          <Logo color="white" size={20} className="scale-75" />
+          <Recycle color="white" size={24} className="scale-100" />
         </div>
         {!isCollapsed && (
           <div className="overflow-hidden whitespace-nowrap">
@@ -99,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex flex-col gap-1.5 flex-1">
+      <nav className="xl:flex xl:flex-col xl:gap-2 xl:flex-1">
         {items.map((item, index) => {
           const isActive = activeId === item.id;
           return (
@@ -108,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ref={el => itemsRef.current[index] = el}
               onClick={() => onItemClick(item.id)}
               className={`
-                group relative flex items-center gap-3 w-full p-3 rounded-2xl transition-all duration-300
+                group relative flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300
                 ${isCollapsed ? 'justify-center' : 'justify-start'}
                 ${isActive 
                   ? 'bg-brand-green/10 text-brand-green' 
@@ -152,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="h-px bg-slate-200/50 mx-2" />
         
         {!isCollapsed ? (
-          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-brand-green/5 border border-brand-green/10">
+          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-brand-green/5 border border-brand-green/10">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                             flex items-center justify-center shrink-0 border border-white/20 shadow-sm">
               <User size={18} className="text-white" />
@@ -182,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           onClick={onLogout}
-          className={`flex items-center gap-3 w-full p-3 rounded-2xl text-red-500 hover:bg-red-50 transition-colors
+          className={`flex items-center gap-3 w-full p-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors
                      ${isCollapsed ? 'justify-center' : 'justify-start'}`}
         >
           <LogOut size={20} />
