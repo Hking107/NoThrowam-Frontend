@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Bot,
 } from "lucide-react";
-import { ManagerMap } from "./Manager_Map";
+import { ManagerMap } from "./ManagerMap";
 import { AgentChat } from "./AgentChat";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";

@@ -64,7 +64,7 @@ async function fetchWastePosts(): Promise<MarketPoint[]> {
 const CustToast = ({ msg }: { msg: string }) => (
   <div
     className="fixed bottom-24 left-1/2 -translate-x-1/2 z-2000 px-5 py-2.5
-                  bg-white/90 backdrop-blur-xl border border-brand-green/20 rounded-2xl
+                  bg-white/90 backdrop-blur-xl border border-brand-green/20 rounded-lg
                   shadow-2xl shadow-brand-green/10 text-brand-green font-bold text-sm
                   flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
   >
@@ -353,10 +353,10 @@ export const CustomerMap = () => {
       {fetchError && !loading && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1400 
-                        bg-white p-8 rounded-3xl border border-red-100 shadow-2xl shadow-red-500/10 
+                        bg-white p-8 rounded-xl border border-red-100 shadow-2xl shadow-red-500/10 
                         text-center max-w-xs animate-in zoom-in duration-300"
         >
-          <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100">
+          <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center mx-auto mb-4 border border-red-100">
             <p className="text-xl">⚠️</p>
           </div>
           <p className="text-lg font-black text-slate-800 mb-2">
@@ -396,7 +396,7 @@ export const CustomerMap = () => {
         <div
           ref={uiRefs.stats}
           className="absolute top-6 left-6 z-1000 bg-white/90 backdrop-blur-xl border border-brand-green/15 
-                     rounded-3xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
+                     rounded-xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
         >
           <div>
             <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
@@ -423,7 +423,7 @@ export const CustomerMap = () => {
           </div>
           <button
             onClick={loadPoints}
-            className="w-10 h-10 rounded-2xl bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
+            className="w-10 h-10 rounded-lg bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
                        text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -436,7 +436,7 @@ export const CustomerMap = () => {
         <div
           ref={uiRefs.legend}
           className="absolute top-6 right-6 z-1000 bg-white/90 backdrop-blur-xl border border-slate-200/50 
-                     rounded-3xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
+                     rounded-xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
         >
           <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
             Catégories

@@ -394,7 +394,7 @@ useEffect(() => {
 
         <div className="overflow-hidden">
           <div className={`flex items-center gap-4 transition-all duration-500 p-8 ${isSidebarCollapsed ? 'md:p-4 md:justify-center' : ''}`}>
-            <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50 shrink-0">
+            <div className="bg-emerald-600 text-white p-2.5 rounded-lg shadow-lg shadow-emerald-200/50 shrink-0">
               <Recycle size={26} strokeWidth={2.5} />
             </div>
             <div className={`transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : 'w-auto opacity-100'}`}>
@@ -407,7 +407,7 @@ useEffect(() => {
           </div>
 
           <nav className={`py-6 space-y-2 transition-all duration-500 px-6 ${isSidebarCollapsed ? 'md:px-2' : ''}`}>
-            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className={`group flex items-center bg-emerald-50/50 text-emerald-700 rounded-2xl font-semibold transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`} title="Dashboard">
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className={`group flex items-center bg-emerald-50/50 text-emerald-700 rounded-lg font-semibold transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`} title="Dashboard">
               <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
                 <LayoutDashboard size={20} className="text-emerald-600 shrink-0" />
                 <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Dashboard</span>
@@ -417,7 +417,7 @@ useEffect(() => {
             
             <button 
               onClick={() => { setIsMyListingsOpen(true); setIsMobileMenuOpen(false); }}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-lg font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="My Listings"
             >
               <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
@@ -429,7 +429,7 @@ useEffect(() => {
             
             <button 
               onClick={() => { setIsProductModalOpen(true); setIsMobileMenuOpen(false); }}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-lg font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="Products"
             >
               <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
@@ -440,7 +440,7 @@ useEffect(() => {
 
             <button 
               onClick={() => { setIsOpenWallet(true); setIsMobileMenuOpen(false); }}
-              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-2xl font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
+              className={`w-full flex items-center text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-lg font-medium transition-all hover:translate-x-1 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''} justify-between px-4 py-3.5`}
               title="Wallet"
             >
               <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:gap-0' : ''}`}>
@@ -453,16 +453,16 @@ useEffect(() => {
 
         <div className={`border-t border-gray-100/50 transition-all duration-500 p-6 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
           <button 
-            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
+            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-lg font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
             title="Settings"
           >
             <Settings size={20} className="shrink-0" />
             <span className={`transition-all duration-500 overflow-hidden whitespace-nowrap ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : ''}`}>Settings</span>
           </button>
 
-          <div className={`bg-gray-50/50 rounded-3xl mb-4 border border-gray-100 transition-all duration-500 p-4 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
+          <div className={`bg-gray-50/50 rounded-xl mb-4 border border-gray-100 transition-all duration-500 p-4 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
             <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'md:justify-center' : ''}`}>
-              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden shrink-0">
+              <div className="w-11 h-11 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border-2 border-white shadow-sm overflow-hidden shrink-0">
                 {userEmail ? userEmail.charAt(0).toUpperCase() : <div className="w-4 h-4 bg-emerald-200 animate-pulse rounded"></div>}
               </div>
               <div className={`flex-1 min-w-0 transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? 'md:w-0 md:opacity-0' : 'w-auto opacity-100'}`}>
@@ -486,7 +486,7 @@ useEffect(() => {
           
           <button 
             onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-            className={`w-full flex items-center text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
+            className={`w-full flex items-center text-red-500 hover:bg-red-50 rounded-lg font-bold transition-all gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
             title="Log out"
           >
             <LogOut size={20} className="shrink-0" />
@@ -554,18 +554,18 @@ useEffect(() => {
                 <input 
                   type="text" 
                   placeholder="Search transactions..." 
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all shadow-sm"
                 />
               </div>
               
-              <button className="p-3 text-gray-500 hover:text-emerald-600 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all relative">
+              <button className="p-3 text-gray-500 hover:text-emerald-600 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all relative">
                 <Bell size={20} />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
               
               <button 
                 onClick={() => setIsModalOpen(true)} 
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus size={20} />
                 <span className="hidden sm:inline">Create Listing</span>
@@ -605,7 +605,7 @@ useEffect(() => {
         </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="glass-card p-8 rounded-[2.5rem] lg:col-span-2 relative overflow-hidden group">
+            <div className="glass-card p-8 rounded-xl lg:col-span-2 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -z-10"></div>
               
               <div className="flex justify-between items-start mb-8">
@@ -717,7 +717,7 @@ useEffect(() => {
             />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-gray-900">Recent Transactions</h3>

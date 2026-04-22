@@ -87,15 +87,15 @@ export const SignIn = () => {
       className="min-h-screen flex items-center justify-center bg-brand-surface p-6 relative overflow-hidden"
     >
       {/* Decorative Ornaments */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-brand-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-brand-green/5 rounded-xl blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/5 rounded-xl blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="auth-card w-full max-w-lg relative z-10">
         <div className="card-tactile p-8! md:p-12!">
           {/* Back Button */}
           <button
             onClick={() => navigate("/")}
-            className="auth-item absolute top-8 left-8 p-2 rounded-full hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors"
+            className="auth-item absolute top-8 left-8 p-2 rounded-xl hover:bg-black/5 text-brand-text/40 hover:text-brand-text transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
@@ -113,8 +113,8 @@ export const SignIn = () => {
           </div>
 
           {error && (
-            <div className="auth-item mb-6 p-4 bg-brand-red/5 border border-brand-red/20 text-brand-red rounded-2xl text-sm font-medium flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0" />
+            <div className="auth-item mb-6 p-4 bg-brand-red/5 border border-brand-red/20 text-brand-red rounded-lg text-sm font-medium flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-xl bg-brand-red shrink-0" />
               {error}
             </div>
           )}
@@ -131,7 +131,7 @@ export const SignIn = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full h-14 px-5 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                className="w-full h-14 px-5 rounded-xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
               />
             </div>
 
@@ -156,7 +156,7 @@ export const SignIn = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full h-14 px-5 pr-14 rounded-full border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
+                  className="w-full h-14 px-5 pr-14 rounded-xl border border-black/5 bg-brand-surface focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green/30 outline-none transition-all font-medium"
                 />
                 <button
                   type="button"
@@ -175,7 +175,7 @@ export const SignIn = () => {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-xl animate-spin" />
                   Signing in...
                 </span>
               ) : (

@@ -105,6 +105,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
     const text = (overrideText ?? input).trim();
     if (!text && !image) return;
 
+    const thinkId = Date.now().toString();
     const userMsg: Msg = { id: Date.now().toString(), role: "user", ts: new Date(), text, image: image ?? undefined };
     setMsgs(p => [...p, userMsg]);
     setInput(""); setImage(null); setBusy(true);
@@ -175,7 +176,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
         {/* Header */}
         <div className="relative z-10 px-6 pt-6 pb-4 bg-white/50 backdrop-blur-xl border-b border-slate-50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-lg shadow-brand-green/10 animate-pulse">
+            <div className="w-12 h-12 rounded-lg bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-lg shadow-brand-green/10 animate-pulse">
               <Bot size={24} className="text-brand-green" />
             </div>
             <div className="flex-1">
@@ -187,7 +188,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
             </div>
             <button 
               onClick={handleClose}
-              className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+              className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
             >
               <X size={18} />
             </button>
@@ -197,7 +198,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
         <LiveContextStrip />
 
         {/* Message Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar scrollbar-manager">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-autohide scroll-smooth">
           {msgs.map((m, i) => (
             <MsgBubble key={m.id} msg={m} delay={i * 50} />
           ))}
@@ -228,7 +229,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
 
         {/* Input Dock */}
         <div className="relative z-10 px-6 pt-2 pb-8 bg-white border-t border-slate-100">
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-autohide scroll-smooth">
             {QUICK.map(q => (
               <button 
                 key={q} 
@@ -253,13 +254,13 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
             <input ref={fileRef} type="file" accept="image/*" onChange={onImage} className="hidden" />
             
             <div className="flex gap-1.5 p-1">
-              <button onClick={() => fileRef.current?.click()} className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition-all">
+              <button onClick={() => fileRef.current?.click()} className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition-all">
                 <ImagePlus size={18} />
               </button>
               
               <button 
                 onClick={toggleMic}
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${recording ? 'bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10' : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm'}`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${recording ? 'bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10' : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm'}`}
               >
                 {recording ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
@@ -267,7 +268,7 @@ export const AgentChat = ({ onClose }: { onClose: () => void }) => {
               <button 
                 onClick={() => send()}
                 disabled={busy || (!input.trim() && !image)}
-                className="w-12 h-10 rounded-2xl bg-brand-green flex items-center justify-center text-white disabled:opacity-30 transition-all shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95"
+                className="w-12 h-10 rounded-lg bg-brand-green flex items-center justify-center text-white disabled:opacity-30 transition-all shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95"
               >
                 {busy ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
               </button>
@@ -292,7 +293,7 @@ const LiveContextStrip = () => {
   const pending   = snap.points.filter(p => p.status === "pending").length;
 
   return (
-    <div className="relative z-10 px-6 py-3 border-b border-slate-50 flex gap-3 overflow-x-auto scrollbar-hide bg-slate-50/30">
+    <div className="relative z-10 px-6 py-3 border-b border-slate-50 flex gap-3 overflow-x-auto scrollbar-autohide scroll-smooth bg-slate-50/30">
       <Stat badge={`${collected} items`} label="Collected" color="text-brand-green" bg="bg-emerald-50" Icon={CheckCircle} />
       <Stat badge={`${pending} items`} label="Pending" color="text-red-400" bg="bg-red-50" Icon={MapPin} />
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-100 shadow-sm shrink-0">
