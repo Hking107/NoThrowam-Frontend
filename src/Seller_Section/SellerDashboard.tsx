@@ -37,13 +37,10 @@ const SellerDashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [isOpenWallet, setIsOpenWallet] = useState(false);
-  const [isOpenWallet, setIsOpenWallet] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
-  const { posts } = usePosts();
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
 
@@ -135,11 +132,8 @@ const SellerDashboard: React.FC = () => {
   // }, []);
 
   useEffect(() => {
-
-  useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const token = localStorage.getItem("access_token");
         if (!token) {
           setUserEmail("Non connecté");
@@ -295,13 +289,9 @@ const SellerDashboard: React.FC = () => {
 
         if (monthDiff >= 0 && monthDiff < 6) {
           monthlyTotals[5 - monthDiff] += Number(post.price);
-          monthlyTotals[5 - monthDiff] += Number(post.price);
         }
       }
     });
-
-    const maxTotal = Math.max(...monthlyTotals, 100);
-    const xPoints = [0, 20, 40, 60, 80, 100];
 
     const maxTotal = Math.max(...monthlyTotals, 100);
     const xPoints = [0, 20, 40, 60, 80, 100];
@@ -487,19 +477,9 @@ const SellerDashboard: React.FC = () => {
       const prev = points[i - 1];
       const curr = points[i];
       const cpX = (prev.x + curr.x) / 2;
-
-      curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
-    }
-    let curvePath = `M ${points[0].x},${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const cpX = (prev.x + curr.x) / 2;
-
       curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
     }
 
-    const highlightPoint = points[4];
     const highlightPoint = points[4];
 
     // 4. Update the state
@@ -532,7 +512,6 @@ const SellerDashboard: React.FC = () => {
 
       {/* --- SIDEBAR --- */}
       <aside
-      <aside
         ref={sidebarRef}
         className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${
           isMobileMenuOpen
@@ -553,7 +532,6 @@ const SellerDashboard: React.FC = () => {
         </button>
 
         {/* Close drawer X — mobile only */}
-        <button
         <button
           onClick={() => setIsMobileMenuOpen(false)}
           className="md:hidden absolute top-6 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors z-[60]"
@@ -762,7 +740,6 @@ const SellerDashboard: React.FC = () => {
         <header className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
           <div className="flex items-center gap-2">
             <button
-            <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-gray-600 hover:text-emerald-600 transition-colors"
             >
@@ -964,20 +941,12 @@ const SellerDashboard: React.FC = () => {
                   {/* Area Fill */}
                   <path
                     d={chartData.fillPath || "M0,40 L100,40 Z"}
-                  <path
-                    d={chartData.fillPath || "M0,40 L100,40 Z"}
                     fill="url(#chartGradient)"
                     className="transition-all duration-1000 ease-in-out"
                   />
 
 
                   {/* Line Path */}
-                  <path
-                    d={chartData.path || "M0,40 L100,40"}
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
                   <path
                     d={chartData.path || "M0,40 L100,40"}
                     fill="none"
@@ -1011,19 +980,8 @@ const SellerDashboard: React.FC = () => {
                         cy={chartData.highlight.y}
                         r="2.5"
                         fill="#10b981"
-                      <circle
-                        cx={chartData.highlight.x}
-                        cy={chartData.highlight.y}
-                        r="2.5"
-                        fill="#10b981"
                         className="animate-pulse"
                       />
-                      <circle
-                        cx={chartData.highlight.x}
-                        cy={chartData.highlight.y}
-                        r="5"
-                        fill="#10b981"
-                        fillOpacity="0.1"
                       <circle
                         cx={chartData.highlight.x}
                         cy={chartData.highlight.y}
@@ -1048,10 +1006,6 @@ const SellerDashboard: React.FC = () => {
               </div>
             </div>
 
-            <MaterialMixChart
-              posts={recentPosts}
-              isLoading={dashboardStats.isLoading}
-              totalWeight={dashboardStats.totalWeight}
             <MaterialMixChart
               posts={recentPosts}
               isLoading={dashboardStats.isLoading}
@@ -1120,7 +1074,6 @@ const SellerDashboard: React.FC = () => {
                     ))
                   ) : myPosts.length > 0 ? (
                     myPosts.map((post) => (
-                      <TableRow
                       <TableRow
                         key={post.id}
                         date={new Date(post.created_at).toLocaleDateString()}
