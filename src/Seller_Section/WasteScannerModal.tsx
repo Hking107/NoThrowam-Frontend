@@ -1,9 +1,21 @@
-import React, { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
-import { Camera, Upload, RefreshCw, CheckCircle } from 'lucide-react';
+import React, { useState, useRef, type DragEvent, type ChangeEvent, useEffect } from "react";
+import {
+  Camera,
+  Upload,
+  RefreshCw,
+  CheckCircle2,
+  X,
+  ScanText,
+  AlertCircle,
+  ChevronRight,
+  Info,
+  DollarSign,
+  Recycle,
+} from "lucide-react";
 
 interface WasteScannerModalProps {
   onClose: () => void;
-  onPublish?: (data: any) => void; 
+  onPublish?: (data: any) => void;
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -21,16 +33,43 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
+  const [scanningLinePos, setScanningLinePos] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null); 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
-  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
-  
+  // Scanning animation effect
+  useEffect(() => {
+    let interval: any;
+    if (isAnalyzing) {
+      interval = setInterval(() => {
+        setScanningLinePos((prev) => (prev >= 100 ? 0 : prev + 2));
+      }, 30);
+    } else {
+      setScanningLinePos(0);
+    }
+    return () => clearInterval(interval);
+  }, [isAnalyzing]);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
@@ -42,21 +81,21 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   };
 
   const processFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Veuillez déposer une image valide (JPG, PNG...).');
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (JPG, PNG...).");
       return;
     }
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
-    setAiResult(null); 
+    setAiResult(null);
   };
 
   const handleReset = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setAiResult(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const handleAnalyze = async () => {
@@ -65,7 +104,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Session expirée. Veuillez vous reconnecter.");
+        alert("Session expired. Please log in again.");
         setIsAnalyzing(false);
         return;
       }
@@ -74,100 +113,165 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
       const createResponse = await fetch("/api/v0/waste-posts/create/", {
         method: "POST",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           image: base64Image,
-          quantity: Math.floor(Math.random() * 100) + 1, 
+          quantity: Math.floor(Math.random() * 100) + 1,
           unit: "kg",
-          latitude: 3.8500,
+          latitude: 3.85,
           longitude: 11.5083,
-        })
+        }),
       });
 
-      if (!createResponse.ok) throw new Error(`Erreur création: ${createResponse.status}`);
+      if (!createResponse.ok) throw new Error(`Creation Error: ${createResponse.status}`);
       const { id: postId } = await createResponse.json();
 
       const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
         method: "POST",
-        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
       });
 
-      if (!analyzeResponse.ok) throw new Error(`Erreur analyse: ${analyzeResponse.status}`);
+      if (!analyzeResponse.ok) throw new Error(`Analysis Error: ${analyzeResponse.status}`);
       const analyzeData = await analyzeResponse.json();
 
       setAiResult({
-        category: analyzeData.category || 'Inconnu',
+        category: analyzeData.category || "Unknown",
         price: analyzeData.price || 0,
         sorted: analyzeData.sorted ?? false,
-        action: analyzeData.sorted ? "Validé pour recyclage" : (analyzeData.rejection_reason || "Déchet non conforme"),
-        description: analyzeData.description || ""
+        action: analyzeData.sorted
+          ? "Approved for recycling"
+          : analyzeData.rejection_reason || "Non-compliant waste",
+        description: analyzeData.description || "",
       });
     } catch (error: any) {
-      alert(`Erreur: ${error.message}`);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
       onClick={onClose}
     >
-      <main 
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out]"
+      <main
+        className="w-full max-w-2xl bg-white/95 rounded-3xl md:rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-hidden relative animate-[scaleIn_0.3s_ease-out] flex flex-col border border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
-        
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10">
-          <XIcon />
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 bg-gray-100/50 hover:bg-gray-100 rounded-full p-2.5 transition-all duration-300 group z-20"
+        >
+          <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
         </button>
 
-        <header className="text-center pt-8 pb-4 px-4">
-          <h1 className="text-2xl font-extrabold text-green-700 tracking-tight">Analyseur de déchets</h1>
-          <p className="text-gray-500 mt-2 text-sm">Prenez une photo ou importez un fichier pour l'analyser.</p>
+        <header className="px-10 pt-10 pb-6 text-center shrink-0">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-black uppercase tracking-wider mb-4 border border-emerald-100">
+            <ScanText size={14} />
+            AI Waste Analyzer
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Smart Scanning</h1>
+          <p className="text-gray-500 mt-2 text-sm font-medium">
+            Take a photo or upload an image for instant AI analysis
+          </p>
         </header>
 
-        <div className="p-8 pt-4">
+        <div className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer">
           {!previewUrl ? (
-            <div className="space-y-4">
-              {/* Zone Drag & Drop (Parcourir) */}
+            <div className="space-y-6">
+              {/* Drag & Drop Zone */}
               <div
-                onDragOver={handleDragOver} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}
-                className={`flex flex-col items-center justify-center p-8 border-4 border-dashed rounded-xl cursor-pointer transition-all ${isDragging ? 'border-green-500 bg-green-50 scale-[1.02]' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-green-400'}`}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex flex-col items-center justify-center p-12 border-4 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500 overflow-hidden relative group ${
+                  isDragging
+                    ? "border-emerald-500 bg-emerald-50/50 scale-[0.98]"
+                    : "border-gray-100 bg-gray-50/50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5"
+                }`}
               >
-                <Upload className="text-gray-400 mb-2" size={40} />
-                <h3 className="text-lg font-bold text-gray-700">Glissez ou parcourez</h3>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <Upload size={32} />
+                </div>
+                <h3 className="text-xl font-black text-gray-800">Drag or Browse</h3>
+                <p className="text-gray-400 text-sm mt-1 font-medium italic">Support JPG, PNG, WEBP</p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
               </div>
 
-              {/* Bouton Caméra (Mobile Spécifique) */}
-              <button 
+              {/* Camera Button (Mobile Specific) */}
+              <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95"
+                className="w-full flex items-center justify-between gap-4 bg-gray-900 hover:bg-black text-white font-black py-5 px-8 rounded-2xl shadow-xl shadow-gray-200 transition-all active:scale-95 group"
               >
-                <Camera size={24} />
-                Prendre une photo
-                <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/10 p-2.5 rounded-xl text-emerald-400 group-hover:rotate-12 transition-transform">
+                    <Camera size={24} />
+                  </div>
+                  <span>Take a Photo</span>
+                </div>
+                <ChevronRight size={20} className="text-gray-500" />
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                />
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <div className="relative w-full max-w-md">
-                <img src={previewUrl} alt="Aperçu" className="w-full h-56 object-cover rounded-xl shadow-md border border-gray-200" />
-                <button onClick={handleReset} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-lg hover:bg-red-600 transition">&times;</button>
+              <div className="relative w-full max-w-md group">
+                <div className="overflow-hidden rounded-[2rem] shadow-2xl border-4 border-white">
+                  <img src={previewUrl} alt="Preview" className="w-full h-64 object-cover" />
+                  
+                  {/* Scanning Animation Line */}
+                  {isAnalyzing && (
+                    <div 
+                      className="absolute left-0 right-0 h-1 bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)] z-10 transition-all duration-300"
+                      style={{ top: `${scanningLinePos}%` }}
+                    ></div>
+                  )}
+
+                  {/* Scanning Overlay */}
+                  {isAnalyzing && (
+                    <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[1px] flex items-center justify-center animate-pulse">
+                      <div className="bg-black/60 text-white px-6 py-3 rounded-2xl font-black text-sm tracking-widest uppercase flex items-center gap-3 border border-white/20">
+                        <ScanText size={18} className="animate-spin" />
+                        Analyzing...
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleReset}
+                  className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-xl hover:bg-black transition-all hover:rotate-90 group active:scale-90"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              {!aiResult && (
+              {!aiResult && !isAnalyzing && (
                 <button
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing}
-                  className={`mt-6 w-full max-w-md py-4 rounded-xl text-white font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-3 ${isAnalyzing ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                  className="mt-8 w-full max-w-md py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
                 >
-                  {isAnalyzing ? "Analyse IA en cours..." : "Lancer l'analyse IA"}
+                  <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-700" />
+                  Start AI Analysis
                 </button>
               )}
             </div>
@@ -175,22 +279,65 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
         </div>
 
         {aiResult && (
-          <div className="bg-gray-50 border-t border-gray-100 p-8 pt-6 animate-[fadeIn_0.5s_ease-out]">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Rapport d'analyse</h2>
+          <div className="bg-gray-50/80 backdrop-blur-md border-t border-gray-100 p-8 animate-[slideUp_0.5s_ease-out]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl">
+                <Info size={20} />
+              </div>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">Analysis Report</h2>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <ResultCard label="Catégorie" value={aiResult.category} color={aiResult.category?.toLowerCase() === 'trash' ? 'text-red-600' : 'text-blue-600'} />
-              <ResultCard label="Prix estimé" value={`${aiResult.price} FCFA`} />
-              <div className="col-span-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                <p className="text-xs text-gray-500 font-semibold uppercase">Recommandation</p>
-                <p className={`text-sm font-bold mt-1 ${aiResult.sorted ? 'text-green-600' : 'text-red-600'}`}>{aiResult.action}</p>
+              <ResultCard 
+                label="Category" 
+                value={aiResult.category} 
+                icon={<Recycle size={16}/>}
+                color={aiResult.category?.toLowerCase() === "trash" ? "text-red-500" : "text-emerald-600"} 
+              />
+              <ResultCard 
+                label="Estimated Price" 
+                value={`${aiResult.price.toLocaleString()} FCFA`}
+                icon={<DollarSign size={16}/>}
+              />
+              
+              <div className="col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
+                <div className={`mt-1 p-2 rounded-xl shrink-0 ${aiResult.sorted ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+                  {aiResult.sorted ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">Recommendation</p>
+                  <p className={`text-base font-black ${aiResult.sorted ? "text-emerald-700" : "text-red-600"}`}>
+                    {aiResult.action}
+                  </p>
+                  {aiResult.description && (
+                    <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">
+                      {aiResult.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
-            <button 
-              onClick={() => { if (aiResult.sorted && onPublish) onPublish(aiResult); aiResult.sorted ? onClose() : handleReset(); }} 
-              className={`mt-6 w-full py-4 rounded-xl font-bold shadow-md transition flex justify-center items-center gap-2 ${aiResult.sorted ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-100 text-red-700 border border-red-300'}`}
+            <button
+              onClick={() => {
+                if (aiResult.sorted && onPublish) onPublish(aiResult);
+                aiResult.sorted ? onClose() : handleReset();
+              }}
+              className={`mt-8 w-full py-5 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-3 shadow-lg ${
+                aiResult.sorted
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 active:scale-95"
+                  : "bg-white text-red-600 border-2 border-red-100 hover:bg-red-50 active:scale-95"
+              }`}
             >
-              {aiResult.sorted ? <><CheckCircle size={20}/> Publier sur la Marketplace</> : <><RefreshCw size={20}/> Réessayer avec une autre photo</>}
+              {aiResult.sorted ? (
+                <>
+                  <CheckCircle2 size={24} /> Publish to Marketplace
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={24} /> Try Another Photo
+                </>
+              )}
             </button>
           </div>
         )}
@@ -199,13 +346,16 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   );
 };
 
-const ResultCard = ({ label, value, color = "text-gray-800" }: { label: string, value: string, color?: string }) => (
-  <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-    <p className="text-xs text-gray-500 font-semibold uppercase">{label}</p>
-    <p className={`text-lg font-bold ${color}`}>{value}</p>
+const ResultCard = ({ label, value, icon, color = "text-gray-900" }: { label: string; value: string; icon: React.ReactNode; color?: string }) => (
+  <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group hover:border-emerald-200 transition-colors">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="text-gray-400 group-hover:text-emerald-500 transition-colors">
+        {icon}
+      </div>
+      <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">{label}</p>
+    </div>
+    <p className={`text-xl font-black ${color}`}>{value}</p>
   </div>
 );
-
-const XIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>;
 
 export default WasteScannerModal;

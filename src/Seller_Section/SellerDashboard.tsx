@@ -182,17 +182,73 @@ const SellerDashboard: React.FC = () => {
     let sumWeight = 0;
     let activeCount = 0;
 
+    // Monthly buckets for trend calculation (current month vs previous month)
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let earningsThisMonth = 0;
+    let earningsLastMonth = 0;
+    let weightThisMonth = 0;
+    let weightLastMonth = 0;
+    let listingsThisMonth = 0;
+    let listingsLastMonth = 0;
+
     myPosts.forEach((post: any) => {
       if (post.price) sumEarnings += Number(post.price);
       if (post.quantity) sumWeight += parseFloat(post.quantity);
       if (post.status === "PUBLISHED") activeCount++;
+
+      // Bucket by month for trend calculation
+      if (post.created_at) {
+        const postDate = new Date(post.created_at);
+        const postMonth = postDate.getMonth();
+        const postYear = postDate.getFullYear();
+
+        const isThisMonth =
+          postMonth === currentMonth && postYear === currentYear;
+        const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+        const isLastMonth =
+          postMonth === prevMonthDate.getMonth() &&
+          postYear === prevMonthDate.getFullYear();
+
+        if (isThisMonth) {
+          earningsThisMonth += Number(post.price || 0);
+          weightThisMonth += parseFloat(post.quantity || 0);
+          listingsThisMonth++;
+        } else if (isLastMonth) {
+          earningsLastMonth += Number(post.price || 0);
+          weightLastMonth += parseFloat(post.quantity || 0);
+          listingsLastMonth++;
+        }
+      }
     });
+
+    // Calculate percentage change helper
+    const calcTrend = (
+      current: number,
+      previous: number,
+    ): { text: string; positive: boolean | null } => {
+      if (previous === 0 && current === 0)
+        return { text: "0%", positive: null };
+      if (previous === 0) return { text: "+100%", positive: true };
+      const pct = Math.round(((current - previous) / previous) * 100);
+      if (pct === 0) return { text: "0%", positive: null };
+      return { text: `${pct > 0 ? "+" : ""}${pct}%`, positive: pct > 0 };
+    };
+
+    const earningsTrend = calcTrend(earningsThisMonth, earningsLastMonth);
+    const weightTrend = calcTrend(weightThisMonth, weightLastMonth);
+    const listingsTrend = calcTrend(listingsThisMonth, listingsLastMonth);
 
     setDashboardStats({
       isLoading: false,
       totalEarnings: sumEarnings,
       totalWeight: sumWeight,
       activeListings: activeCount,
+      earningsTrend,
+      weightTrend,
+      listingsTrend,
     });
 
     // --- Calcul du Graphique ---
@@ -253,22 +309,42 @@ const SellerDashboard: React.FC = () => {
       curvePath += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
     }
 
+    // Calculate chart period trend (recent 3 months vs prior 3 months)
+    const recentHalf = monthlyTotals[3] + monthlyTotals[4] + monthlyTotals[5];
+    const priorHalf = monthlyTotals[0] + monthlyTotals[1] + monthlyTotals[2];
+    let chartTrend = { text: "0%", positive: null as boolean | null };
+    if (priorHalf === 0 && recentHalf === 0) {
+      chartTrend = { text: "0%", positive: null };
+    } else if (priorHalf === 0) {
+      chartTrend = { text: "+100%", positive: true };
+    } else {
+      const pct = Math.round(((recentHalf - priorHalf) / priorHalf) * 100);
+      chartTrend = {
+        text: `${pct > 0 ? "+" : ""}${pct}%`,
+        positive: pct === 0 ? null : pct > 0,
+      };
+    }
+
     setChartData({
       path: curvePath,
       fillPath: `${curvePath} L 100,40 L 0,40 Z`,
       highlight: points[5],
       months: last6Months,
       points: points,
+      trend: chartTrend,
     });
   }, [myPosts]);
 
   const [chartData, setChartData] = useState<any>({});
 
-  const [dashboardStats, setDashboardStats] = useState({
+  const [dashboardStats, setDashboardStats] = useState<any>({
     isLoading: true,
     totalEarnings: 0,
     totalWeight: 0,
     activeListings: 0,
+    earningsTrend: { text: "0%", positive: null },
+    weightTrend: { text: "0%", positive: null },
+    listingsTrend: { text: "0%", positive: null },
   });
 
   useEffect(() => {
@@ -305,19 +381,13 @@ const SellerDashboard: React.FC = () => {
             }
           });
 
-          setDashboardStats({
+          setDashboardStats((prev: any) => ({
+            ...prev,
             isLoading: false,
             totalEarnings: sumEarnings,
             totalWeight: sumWeight,
             activeListings: activeCount,
-          });
-
-          setDashboardStats({
-            isLoading: false,
-            totalEarnings: sumEarnings,
-            totalWeight: sumWeight,
-            activeListings: activeCount,
-          });
+          }));
 
           const monthNames = [
             "Jan",
@@ -452,7 +522,7 @@ const SellerDashboard: React.FC = () => {
         {/* Collapse pill — desktop only */}
         <button
           onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-          className="hidden md:flex absolute -right-3 top-8 z-[60] w-6 h-6 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-emerald-600 hover:border-emerald-300 transition-all duration-300"
+          className="hidden md:flex absolute -right-3 top-8 z-60 w-6 h-6 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-emerald-600 hover:border-emerald-300 transition-all duration-300"
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <ChevronsLeft
@@ -752,8 +822,8 @@ const SellerDashboard: React.FC = () => {
               bg="bg-green-100"
               title="Total Earnings"
               value={`${(dashboardStats.totalEarnings || 0).toLocaleString()} FCFA`}
-              trend="+12%"
-              positive={true}
+              trend={dashboardStats.earningsTrend.text}
+              positive={dashboardStats.earningsTrend.positive}
               isLoading={dashboardStats.isLoading}
             />
             <StatCard
@@ -761,8 +831,8 @@ const SellerDashboard: React.FC = () => {
               bg="bg-blue-100"
               title="Weight Recycled"
               value={`${(dashboardStats.totalWeight || 0).toFixed(1)} kg`}
-              trend="+5%"
-              positive={true}
+              trend={dashboardStats.weightTrend.text}
+              positive={dashboardStats.weightTrend.positive}
               isLoading={dashboardStats.isLoading}
             />
             <StatCard
@@ -770,8 +840,8 @@ const SellerDashboard: React.FC = () => {
               bg="bg-orange-100"
               title="Active Listings"
               value={`${dashboardStats.activeListings || 0}`}
-              trend="0%"
-              positive={null}
+              trend={dashboardStats.listingsTrend.text}
+              positive={dashboardStats.listingsTrend.positive}
               isLoading={dashboardStats.isLoading}
             />
           </div>
@@ -790,9 +860,22 @@ const SellerDashboard: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold">
-                    <TrendingUp size={14} />
-                    +24% vs last period
+                  <div
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
+                      chartData.trend?.positive === true
+                        ? "bg-emerald-50 text-emerald-600"
+                        : chartData.trend?.positive === false
+                          ? "bg-red-50 text-red-600"
+                          : "bg-gray-50 text-gray-400"
+                    }`}
+                  >
+                    {chartData.trend?.positive === true && (
+                      <TrendingUp size={14} />
+                    )}
+                    {chartData.trend?.positive === false && (
+                      <TrendingUp size={14} className="rotate-180" />
+                    )}
+                    {chartData.trend?.text || "0%"} vs last period
                   </div>
                   <select className="bg-gray-50/50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all">
                     <option>Last 6 Months</option>
