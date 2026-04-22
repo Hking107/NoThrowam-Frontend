@@ -12,6 +12,7 @@ import {
   DollarSign,
   Recycle,
 } from "lucide-react";
+import { wasteService } from '../services/wasteService';
 
 interface WasteScannerModalProps {
   onClose: () => void;
@@ -37,7 +38,6 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
   // Scanning animation effect
   useEffect(() => {
     let interval: any;
@@ -65,7 +65,6 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     e.stopPropagation();
     setIsDragging(false);
   };
-
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -102,40 +101,39 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     if (!selectedFile) return;
     setIsAnalyzing(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       if (!token) {
         alert("Session expired. Please log in again.");
         setIsAnalyzing(false);
         return;
       }
 
-      const base64Image = await fileToBase64(selectedFile);
-      const createResponse = await fetch("/api/v0/waste-posts/create/", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          image: base64Image,
-          quantity: Math.floor(Math.random() * 100) + 1,
-          unit: "kg",
-          latitude: 3.85,
-          longitude: 11.5083,
-        }),
+      const uploadResponse = await wasteService.uploadImage(selectedFile);
+
+      // Géolocalisation du navigateur
+      const coords = await new Promise<{ latitude: number; longitude: number }>((resolve) => {
+        if (!navigator.geolocation) {
+          resolve({ latitude: 3.8500, longitude: 11.5083 });
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          () => resolve({ latitude: 3.8500, longitude: 11.5083 }),
+          { timeout: 8000, enableHighAccuracy: true }
+        );
       });
 
-      if (!createResponse.ok) throw new Error(`Creation Error: ${createResponse.status}`);
-      const { id: postId } = await createResponse.json();
-
-      const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
-        method: "POST",
-        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      const post = await wasteService.hCreatePost({
+        image_url: uploadResponse.url,
+        quantity: Math.floor(Math.random() * 100) + 1,
+        unit: "kg",
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
 
-      if (!analyzeResponse.ok) throw new Error(`Analysis Error: ${analyzeResponse.status}`);
-      const analyzeData = await analyzeResponse.json();
+      const { id: postId } = post;
+
+      const analyzeData = await wasteService.analyzePost(postId);
 
       setAiResult({
         category: analyzeData.category || "Unknown",

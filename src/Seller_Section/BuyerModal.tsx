@@ -20,6 +20,7 @@ interface PotentialBuyersModalProps {
 
 const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) => {
   const [soldTo, setSoldTo] = useState<string | null>(null);
+
   const [offers, setOffers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
     fetchOffers();
   }, [listing]);
 
-  const handleSell = async (offerId: string | number, buyerName: string) => {
+  const handleSell = async (_offerId: string | number, buyerName: string) => {
     setSoldTo(buyerName);
     // Simulate successful transaction
     setTimeout(() => {
@@ -88,11 +89,11 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3">
               <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                 <Package size={16} className="text-gray-400" />
-                Quantity: <span className="text-gray-900 font-bold">{listing.quantity} {listing.unit || "kg"}</span>
+                Quantity: <span className="text-gray-900 font-bold">{listing.quantity || listing.weight || 0} {listing.unit || "kg"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                 <TrendingUp size={16} className="text-gray-400" />
-                Target Price: <span className="text-gray-900 font-bold">{listing.price?.toLocaleString()} FCFA</span>
+                Target Price: <span className="text-gray-900 font-bold">{(listing.price || listing.estimated_price || 0).toLocaleString()} FCFA</span>
               </div>
             </div>
           </div>

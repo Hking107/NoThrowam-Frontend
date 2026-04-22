@@ -299,7 +299,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
 
         {/* Header */}
         <div className="relative z-10 p-6 pb-4 flex items-center gap-4 bg-white/50 backdrop-blur-xl border-b border-slate-50">
-          <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-green to-emerald-600 flex items-center justify-center shadow-lg shadow-brand-green/20">
+          <div className="w-12 h-12 rounded-lg bg-linear-to-br from-brand-green to-emerald-600 flex items-center justify-center shadow-lg shadow-brand-green/20">
             <Bot size={24} className="text-white" />
           </div>
           <div className="flex-1">
@@ -320,7 +320,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
           </div>
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
           >
             <X size={18} />
           </button>
@@ -368,7 +368,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
             <div className="flex gap-1.5 p-1">
               <button
                 onClick={toggleMic}
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${recording ? "bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10" : "bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm"}`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${recording ? "bg-red-50 text-red-500 border border-red-100 shadow-lg shadow-red-500/10" : "bg-white border border-slate-100 text-slate-400 hover:text-slate-600 shadow-sm"}`}
               >
                 {recording ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
@@ -376,7 +376,7 @@ export const CustomerAgentChat = ({ onClose }: { onClose: () => void }) => {
               <button
                 onClick={() => send()}
                 disabled={busy || !input.trim()}
-                className="w-12 h-10 rounded-2xl bg-linear-to-br from-brand-green to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95 disabled:opacity-30 transition-all"
+                className="w-12 h-10 rounded-lg bg-linear-to-br from-brand-green to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-brand-green/20 hover:scale-[1.05] active:scale-95 disabled:opacity-30 transition-all"
               >
                 {busy ? (
                   <Loader size={18} className="animate-spin" />

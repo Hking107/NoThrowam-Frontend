@@ -1,5 +1,5 @@
 import type { ApiDeposit, GarbagePoint } from "../types/ManagerMap";
-import { toPoint } from "../Manager_Section/Manager_Map";
+import { toPoint } from "../Manager_Section/utils";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
 
@@ -51,4 +51,30 @@ export async function fetchUncollected(): Promise<GarbagePoint[]> {
     .filter(d => d.latitude != null && d.longitude != null)
     .filter(d => !isNaN(parseFloat(d.latitude)) && !isNaN(parseFloat(d.longitude)))
     .map(toPoint);
+}
+
+// Fetch all deposits (both collected and pending) within 24-hour validity
+export async function fetchAllDeposits(): Promise<GarbagePoint[]> {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+
+  const data: ApiDeposit[] = await res.json();
+  console.log(`API returned ${data.length} deposits:`, data.map(d => ({ 
+    id: d.id, 
+    collected: d.collected, 
+    created_at: d.created_at, 
+    collected_at: d.collected_at 
+  })));
+  
+  const processed = data
+    .filter(d => d.latitude != null && d.longitude != null)
+    .filter(d => !isNaN(parseFloat(d.latitude)) && !isNaN(parseFloat(d.longitude)))
+    .map(toPoint);
+    
+  console.log(`Processed ${processed.length} valid points`);
+  return processed;
 }
