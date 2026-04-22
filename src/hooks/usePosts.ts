@@ -28,8 +28,6 @@ export const usePosts = () => {
       }
     };
 
-    // On attache l'écouteur d'événement à la vraie connexion WebSocket
-    // Note: Remplace "socket" par la bonne propriété si ton service l'appelle autrement (ex: ws)
     const socketInstance = (webSocketService as any).socket; 
     
     if (socketInstance) {
