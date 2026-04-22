@@ -27,7 +27,6 @@ import {
   type DepositInsights,
 } from "../services/depositService";
 
-// Fix for default Leaflet marker icons not showing up due to webpack/vite issues
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
@@ -47,7 +46,6 @@ interface LocationData {
   lng: number;
 }
 
-// Helper component to capture map clicks and update marker
 function LocationSelector({
   location,
   setLocation,

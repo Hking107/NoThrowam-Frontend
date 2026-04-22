@@ -142,5 +142,17 @@ export const wasteService = {
 
   reportDeposit: (ws: WebSocketService, payload: any) => {
     ws.sendEvent('deposit.create', payload);
-  }
+  },
+
+  getMyListings: async () => {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch('http://127.0.0.1:8000/api/v0/waste-posts/my/', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error("Erreur");
+    return response.json();
+  },
+  
 };
