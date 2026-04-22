@@ -3,13 +3,13 @@ import { X, CheckCircle, Building2, Loader2, AlertCircle } from 'lucide-react';
 import { wasteService } from '../services/wasteService';
 
 interface PotentialBuyersModalProps {
-  listing: any; 
+  listing: any;
   onClose: () => void;
 }
 
 const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) => {
   const [soldTo, setSoldTo] = useState<string | null>(null);
-  
+
   const [offers, setOffers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,47 +24,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
 
       setIsLoading(true);
       setError(null);
-      try {
-        const token = localStorage.getItem("token");
-        
-        const response = await fetch(`/api/v0/waste-posts/${listing.id}/proposals/`, {
-          method: 'GET',
-          headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
 
-        if (response.ok) {
-          const data = await response.json();
-          setOffers(data.proposals || []);
-        } else {
-          setError(`Failed to load offers. Server responded with status: ${response.status}`);
-          console.error("Server Error:", response.status);
-        }
-      } catch (err) {
-        setError("A network error occurred while fetching proposals.");
-        console.error("Network Error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOffers();
-  }, [listing]);
-  
-  useEffect(() => {
-    const fetchOffers = async () => {
-      if (!listing || !listing.id) {
-        setError("Invalid listing ID.");
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-      
       try {
         const proposalsData = await wasteService.getProposals(listing.id);
         setOffers(proposalsData);
@@ -79,7 +39,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
     fetchOffers();
   }, [listing]);
 
-  const handleSell = async (offerId: string | number, buyerName: string) => {
+  const handleSell = async (_offerId: string | number, buyerName: string) => {
     setSoldTo(buyerName);
     setTimeout(() => {
       alert(`Congratulations! You have sold "${listing.title || 'this item'}" to ${buyerName}.`);
@@ -95,9 +55,15 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-md font-sans p-4 animate-[fadeIn_0.2s_ease-out]">
-      <main className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
-        
+    <div
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-md font-sans p-4 animate-[fadeIn_0.2s_ease-out]"
+      onClick={onClose}
+    >
+      <main
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+
         <div className="px-8 py-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50 shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -109,7 +75,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
               {listing.title || listing.category?.label || 'Untitled Listing'}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Quantity: <span className="font-bold text-gray-700">{listing.quantity || listing.weight || 0} {listing.unit || 'kg'}</span> • 
+              Quantity: <span className="font-bold text-gray-700">{listing.quantity || listing.weight || 0} {listing.unit || 'kg'}</span> •
               Your Price: <span className="font-bold text-gray-700">{listing.price || listing.estimated_price || 0} FCFA</span>
             </p>
           </div>
@@ -122,7 +88,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
             Potential Buyers <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{offers.length}</span>
           </h3>
-          
+
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="animate-spin text-green-500 mb-4" size={32} />
@@ -167,7 +133,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
                         <p className="text-xs text-gray-500 uppercase tracking-wide">Offer</p>
                         <p className="font-bold text-lg text-gray-900">{offeredPrice} FCFA</p>
                       </div>
-                      <button 
+                      <button
                         onClick={() => handleSell(offer.id, buyerName)}
                         disabled={soldTo !== null}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm

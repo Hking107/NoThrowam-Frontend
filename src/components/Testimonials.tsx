@@ -3,6 +3,7 @@ import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -77,6 +78,7 @@ const testimonials = [
 const CARDS_PER_PAGE = 3;
 
 export function Testimonials() {
+  const navigate = useNavigate();
   const container = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -298,7 +300,10 @@ export function Testimonials() {
             Join over <span className="text-brand-green font-bold">3,500+</span>{" "}
             active members across Cameroon
           </p>
-          <button className="btn-primary inline-flex items-center gap-2 px-8 py-3">
+          <button
+            onClick={() => navigate("/signup")}
+            className="btn-primary inline-flex items-center gap-2 px-8 py-3"
+          >
             Become Part of the Story
           </button>
         </div>

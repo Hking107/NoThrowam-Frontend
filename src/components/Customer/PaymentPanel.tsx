@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { X, CreditCard, Smartphone, CheckCircle } from 'lucide-react';
-
-import type { MarketPoint } from '../../types/MarketPoint';
-import { CATEGORY_EMOJI } from '../../contexts/constants/constants';
-import { PurchaseBus } from '../../Customer_Section/Customeragentchat';
-import { createProposal } from '../../services/ProposalAPI';
+import React, { useState, useRef } from "react";
+import {
+  X,
+  CreditCard,
+  Smartphone,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import type { MarketPoint } from "../../types/MarketPoint";
+import { CATEGORY_EMOJI } from "../../contexts/constants/constants";
+import { PurchaseBus } from "../../services/eventBus";
+import { createProposal } from "../../services/ProposalAPI";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 type PaymentPhase = "choose" | "processing" | "done" | "error";
 
@@ -14,17 +22,30 @@ interface PaymentPanelProps {
   onComplete: (method: string, txRef: string) => void;
 }
 
-const PaymentPanel: React.FC<PaymentPanelProps> = ({ point, onClose, onComplete }) => {
-  const [phase, setPhase]     = useState<PaymentPhase>("choose");
-  const [method, setMethod]   = useState<string | null>(null);
-  const [txRef, setTxRef]     = useState("");
-  const [errMsg, setErrMsg]   = useState("");
-  const [visible, setVisible] = useState(false);
+const PaymentPanel: React.FC<PaymentPanelProps> = ({
+  point,
+  onClose,
+  onComplete,
+}) => {
+  const [phase, setPhase] = useState<PaymentPhase>("choose");
+  const [method, setMethod] = useState<string | null>(null);
+  const [txRef, setTxRef] = useState("");
+  const [errMsg, setErrMsg] = useState("");
 
-  const emoji =  CATEGORY_EMOJI[point.category] ||  "📦";
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+  useGSAP(() => {
+    gsap.fromTo(
+      overlayRef.current,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3 },
+    );
+    gsap.fromTo(
+      containerRef.current,
+      { scale: 0.9, opacity: 0, y: 20 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
+    );
   }, []);
 
   const handlePay = async (m: string) => {
@@ -35,12 +56,10 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({ point, onClose, onComplete 
       const ref = alreadyExists
         ? "PROP-EXIST"
         : "PROP-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-      
+
       setTxRef(ref);
       setPhase("done");
-      
       PurchaseBus.setState({ phase: "done", txRef: ref });
-      
       onComplete(m, ref);
     } catch (e: any) {
       setErrMsg(e?.message ?? "Erreur inconnue");
@@ -48,213 +67,255 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({ point, onClose, onComplete 
     }
   };
 
+  const handleClose = () => {
+    gsap.to(containerRef.current, {
+      scale: 0.9,
+      opacity: 0,
+      y: 10,
+      duration: 0.3,
+      ease: "power2.in",
+    });
+    gsap.to(overlayRef.current, {
+      opacity: 0,
+      duration: 0.3,
+      onComplete: onClose,
+    });
+  };
+
   const methods = [
-    { id: "card",   label: "Carte Bancaire", icon: CreditCard, color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
-    { id: "momo",   label: "MTN MoMo",       icon: Smartphone, color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
-    { id: "orange", label: "Orange Money",   icon: Smartphone, color: "#f97316", bg: "#fff7ed", border: "#fed7aa" },
+    {
+      id: "card",
+      label: "Carte Bancaire",
+      icon: CreditCard,
+      color: "bg-blue-600",
+      border: "border-blue-100",
+      highlight: "bg-blue-50",
+    },
+    {
+      id: "momo",
+      label: "MTN MoMo",
+      icon: Smartphone,
+      color: "bg-amber-500",
+      border: "border-amber-100",
+      highlight: "bg-amber-50",
+    },
+    {
+      id: "orange",
+      label: "Orange Money",
+      icon: Smartphone,
+      color: "bg-orange-600",
+      border: "border-orange-100",
+      highlight: "bg-orange-50",
+    },
   ];
 
+  const emoji = CATEGORY_EMOJI[point.category] || "📦";
+
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 4000,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,.35)", backdropFilter: "blur(4px)",
-      }}
-      onClick={phase === "choose" ? onClose : undefined}
-    >
+    <div className="fixed inset-0 z-4000 flex items-center justify-center p-4 font-sans">
       <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: 390, background: "white", borderRadius: 24, overflow: "hidden",
-          boxShadow: "0 32px 80px rgba(0,0,0,.25)",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-          transform: visible ? "scale(1)" : "scale(0.88)",
-          opacity:   visible ? 1 : 0,
-          transition: "transform .35s cubic-bezier(.34,1.56,.64,1), opacity .25s",
-        }}
+        ref={overlayRef}
+        onClick={phase === "choose" ? handleClose : undefined}
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+      />
+
+      <div
+        ref={containerRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.3)] overflow-hidden"
       >
-        {/* Header */}
-        <div style={{
-          background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-          padding: "20px 22px 16px",
-          borderBottom: "1px solid rgba(34,197,94,.12)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontWeight: 800, fontSize: 17, color: "#15803d" }}>Proposer un achat</span>
+        {/* Header Section */}
+        <div className="p-8 pb-6 bg-linear-to-br from-emerald-50 via-emerald-50/30 to-white border-b border-emerald-100/50">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-black text-emerald-900 tracking-tight">
+              Finaliser l'achat
+            </h2>
             {phase === "choose" && (
-              <button onClick={onClose} style={{
-                width: 28, height: 28, borderRadius: 8, border: "none",
-                background: "rgba(0,0,0,.06)", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b",
-              }}><X size={13} /></button>
+              <button
+                onClick={handleClose}
+                className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:shadow-lg transition-all"
+              >
+                <X size={18} />
+              </button>
             )}
           </div>
 
-          {/* Lot summary */}
-          <div style={{
-            background: "white", borderRadius: 14, padding: "14px 16px",
-            border: "1px solid rgba(34,197,94,.15)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }}>{emoji}</span>
-              <div>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#111827" }}>{point.label}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>{point.description}</p>
+          <div className="bg-white rounded-3xl p-5 border border-emerald-100/80 shadow-sm">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl shadow-inner">
+                {emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-slate-900 truncate uppercase tracking-tight">
+                  {point.label}
+                </p>
+                <p className="text-[11px] font-bold text-slate-400 truncate uppercase mt-0.5 tracking-wider">
+                  {point.category}
+                </p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{
-                flex: 1, padding: "10px 12px", borderRadius: 11,
-                background: "#f8fafc", border: "1px solid #e2e8f0", textAlign: "center",
-              }}>
-                <p style={{ margin: 0, fontSize: 9, color: "#94a3b8", fontWeight: 700, letterSpacing: ".05em" }}>QUANTITÉ</p>
-                <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 800, color: "#374151" }}>
-                  {point.fixedWeight}
-                  <span style={{ fontSize: 11, fontWeight: 500, color: "#94a3b8" }}> {point.weightUnit}</span>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  Poids Total
                 </p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-slate-800">
+                    {point.fixedWeight}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">
+                    {point.weightUnit}
+                  </span>
+                </div>
               </div>
-              <div style={{
-                flex: 1, padding: "10px 12px", borderRadius: 11,
-                background: "#f0fdf4", border: "1px solid #bbf7d0", textAlign: "center",
-              }}>
-                <p style={{ margin: 0, fontSize: 9, color: "#4ade80", fontWeight: 700, letterSpacing: ".05em" }}>PRIX</p>
-                <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 800, color: "#15803d" }}>
-                  {point.fixedPrice?.toLocaleString()}
-                  <span style={{ fontSize: 10, fontWeight: 500, color: "#4ade80" }}> {point.currency}</span>
+              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                <p className="text-[9px] font-black text-emerald-600/60 uppercase tracking-widest mb-1">
+                  Montant
                 </p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-emerald-700">
+                    {point.fixedPrice?.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-black text-emerald-600/50">
+                    {point.currency}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ padding: "20px 22px" }}>
+        <div className="p-8">
           {phase === "choose" && (
-            <>
-              <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                Choisir le mode de paiement
-              </p>
-              <p style={{ margin: "0 0 14px", fontSize: 11, color: "#94a3b8" }}>
-                Une proposition PENDING sera créée et le vendeur sera notifié.
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {methods.map(m => (
-                  <button key={m.id} onClick={() => handlePay(m.id)} style={{
-                    display: "flex", alignItems: "center", gap: 14,
-                    padding: "14px 16px", borderRadius: 14,
-                    border: `1.5px solid ${m.border}`,
-                    background: m.bg, cursor: "pointer",
-                    transition: "transform .15s",
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    textAlign: "left",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.02)")}
-                    onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+            <div className="space-y-6">
+              <div>
+                <p className="text-sm font-black text-slate-800 tracking-tight mb-1">
+                  Mode de règlement
+                </p>
+                <p className="text-xs font-medium text-slate-400">
+                  Sélectionnez votre moyen de paiement préféré.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {methods.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => handlePay(m.id)}
+                    className={`w-full group flex items-center gap-4 p-4 rounded-3xl border-2 ${m.border} transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${m.highlight}`}
                   >
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 11, background: m.color, flexShrink: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <m.icon size={18} color="white" />
+                    <div
+                      className={`w-12 h-12 rounded-2xl ${m.color} flex items-center justify-center text-white shadow-lg transition-transform group-hover:rotate-6`}
+                    >
+                      <m.icon size={22} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: m.color }}>{m.label}</p>
-                      <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>Paiement instantané et sécurisé</p>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: m.color }}>
-                        {point.fixedPrice?.toLocaleString()}
+                    <div className="flex-1 text-left">
+                      <p
+                        className={`text-sm font-black tracking-tight ${m.color.replace("bg-", "text-")}`}
+                      >
+                        {m.label}
                       </p>
-                      <p style={{ margin: 0, fontSize: 10, color: "#94a3b8" }}>{point.currency}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Sécurisé & Instantané
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-base font-black ${m.color.replace("bg-", "text-")}`}
+                      >
+                        {point.fixedPrice}
+                      </span>
+                      <span className="text-[10px] font-black opacity-40 ml-1 uppercase">
+                        {point.currency}
+                      </span>
                     </div>
                   </button>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
           {phase === "processing" && (
-            <div style={{ textAlign: "center", padding: "28px 0" }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: "50%",
-                border: "3px solid rgba(34,197,94,.15)",
-                borderTop: "3px solid #22c55e",
-                animation: "custSpin 1s linear infinite",
-                margin: "0 auto 18px",
-              }} />
-              <p style={{ margin: 0, fontWeight: 700, color: "#15803d", fontSize: 15 }}>Création de la proposition…</p>
-              <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 12 }}>
-                {methods.find(m => m.id === method)?.label}
+            <div className="py-12 text-center animate-in fade-in zoom-in duration-500">
+              <div className="relative w-20 h-20 mx-auto mb-8">
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-50" />
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2
+                    size={32}
+                    className="text-emerald-500 animate-pulse"
+                  />
+                </div>
+              </div>
+              <h3 className="text-lg font-black text-emerald-900 tracking-tight">
+                Traitement en cours
+              </h3>
+              <p className="text-sm font-medium text-slate-400 mt-2">
+                Veuillez ne pas quitter cette page...
               </p>
-              <style>{`@keyframes custSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
             </div>
           )}
 
           {phase === "done" && (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{
-                width: 68, height: 68, borderRadius: "50%",
-                background: "linear-gradient(135deg,#22c55e,#16a34a)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 16px",
-                boxShadow: "0 8px 28px rgba(34,197,94,.38)",
-              }}>
-                <CheckCircle size={32} color="white" />
+            <div className="py-8 text-center animate-in fade-in zoom-in slide-in-from-bottom-4 duration-500">
+              <div className="w-24 h-24 rounded-full bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-500/30 scale-110">
+                <CheckCircle size={48} className="text-white" />
               </div>
-              <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#15803d", fontSize: 17 }}>
-                {txRef === "PROP-EXIST" ? "Proposition déjà existante" : "Proposition envoyée !"}
-              </p>
-              <div style={{
-                display: "inline-block", padding: "6px 16px", borderRadius: 8,
-                background: "#f0fdf4", border: "1px solid #bbf7d0", marginBottom: 14,
-              }}>
-                <span style={{ fontSize: 12, color: "#64748b" }}>Réf : </span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: "#15803d", letterSpacing: ".05em" }}>
+
+              <h3 className="text-xl font-black text-emerald-900 tracking-tight">
+                {txRef === "PROP-EXIST" ? "Déjà en cours" : "Offre envoyée !"}
+              </h3>
+
+              <div className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-100">
+                <span className="text-[10px] font-black text-emerald-800/40 uppercase tracking-widest leading-none">
+                  Référence :
+                </span>
+                <span className="text-xs font-black text-emerald-700 tracking-wider leading-none">
                   {txRef}
                 </span>
               </div>
-              <p style={{ margin: "0 0 22px", fontSize: 12, color: "#64748b", lineHeight: 1.65 }}>
+
+              <p className="mt-8 text-sm font-medium text-slate-500 leading-relaxed px-4">
                 {txRef === "PROP-EXIST"
-                  ? "Vous avez déjà une proposition en cours pour ce lot."
-                  : "Le vendeur a été notifié. Votre proposition est en attente de confirmation."
-                }
+                  ? "Une demande pour ce lot est déjà en attente. Vous serez notifié dès qu'elle sera acceptée."
+                  : "Votre proposition a été transmise au vendeur. Vous recevrez une notification d'ici peu."}
               </p>
-              <button onClick={onClose} style={{
-                padding: "12px 32px", borderRadius: 12, border: "none",
-                background: "linear-gradient(135deg,#22c55e,#16a34a)",
-                color: "white", fontWeight: 700, fontSize: 14, cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(34,197,94,.38)",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
-              }}>Terminer</button>
+
+              <button
+                onClick={handleClose}
+                className="mt-10 w-full py-4 bg-linear-to-br from-emerald-500 to-emerald-700 rounded-3xl text-sm font-black text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all active:scale-95"
+              >
+                C'est compris
+              </button>
             </div>
           )}
 
           {phase === "error" && (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{
-                width: 68, height: 68, borderRadius: "50%",
-                background: "linear-gradient(135deg,#ef4444,#dc2626)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 16px",
-                boxShadow: "0 8px 28px rgba(239,68,68,.38)",
-              }}>
-                <X size={32} color="white" />
+            <div className="py-8 text-center animate-in fade-in zoom-in duration-500">
+              <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
+                <AlertCircle size={40} className="text-red-500" />
               </div>
-              <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#dc2626", fontSize: 17 }}>
-                Erreur
+              <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase">
+                Échec du paiement
+              </h3>
+              <p className="mt-2 text-sm font-medium text-slate-400 px-6">
+                {errMsg}
               </p>
-              <p style={{ margin: "0 0 22px", fontSize: 12, color: "#64748b" }}>{errMsg}</p>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                <button onClick={() => setPhase("choose")} style={{
-                  padding: "10px 20px", borderRadius: 12, border: "1.5px solid #e2e8f0",
-                  background: "white", color: "#374151", fontWeight: 600, fontSize: 13, cursor: "pointer",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                }}>Réessayer</button>
-                <button onClick={onClose} style={{
-                  padding: "10px 20px", borderRadius: 12, border: "none",
-                  background: "#ef4444", color: "white", fontWeight: 600, fontSize: 13, cursor: "pointer",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                }}>Fermer</button>
+
+              <div className="mt-10 grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setPhase("choose")}
+                  className="py-4 bg-slate-50 border border-slate-100 rounded-3xl text-sm font-black text-slate-600 hover:bg-slate-100 transition-all"
+                >
+                  Réessayer
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="py-4 bg-red-500 rounded-3xl text-sm font-black text-white shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
+                >
+                  Abandonner
+                </button>
               </div>
             </div>
           )}

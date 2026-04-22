@@ -162,12 +162,12 @@ export function HowToUse() {
   return (
     <section
       ref={containerRef}
-      id="how-to-use"
+      id="about"
       className="h-screen w-full flex flex-col justify-center bg-brand-surface overflow-hidden relative py-12"
     >
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col h-full">
         {/* Header */}
-        <div className="text-center mb-8 md:mb-12 shrink-0">
+        <div className="text-center mb-6 md:mb-6 shrink-0">
           <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4">
             {sectionTitle}
           </h2>

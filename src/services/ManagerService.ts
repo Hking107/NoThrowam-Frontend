@@ -1,17 +1,24 @@
 import type { ApiDeposit, GarbagePoint } from "../types/ManagerMap";
-import { toPoint } from "../Manager_Section/Manager_Map";
+import { toPoint } from "../Manager_Section/utils";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+
+function getCsrfToken() {
+  const match = document.cookie.match(/(^|;)\s*csrftoken=([^;]+)/);
+  return match ? match[2] : "";
+}
 
 export function authHeaders(): HeadersInit {
   return {
     "Accept":                      "application/json",
-    "Authorization":               `Bearer ${localStorage.getItem("token") || ""}`,
+    "Authorization":               `Bearer ${localStorage.getItem("access_token") || ""}`,
     "ngrok-skip-browser-warning":  "69420",
-    "X-CSRFTOKEN":                 "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
+    "X-CSRFTOKEN":                 getCsrfToken() || "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
   };
 }
 
 export async function collectDeposit(id: number): Promise<void> {
-  const res = await fetch(`/api/v0/deposits/${id}/collect/`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/${id}/collect/`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -21,7 +28,7 @@ export async function collectDeposit(id: number): Promise<void> {
 }
 
 export async function fetchDepositDetail(id: number): Promise<GarbagePoint> {
-  const res = await fetch(`/api/v0/deposits/${id}/`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/${id}/`, {
     method: "GET",
     headers: authHeaders(),
   });
@@ -31,7 +38,7 @@ export async function fetchDepositDetail(id: number): Promise<GarbagePoint> {
 }
 
 export async function fetchUncollected(): Promise<GarbagePoint[]> {
-  const res = await fetch(`/api/v0/deposits/?collected=false`, {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/?collected=false`, {
     method: "GET",
     headers: authHeaders(),
   });
@@ -44,4 +51,30 @@ export async function fetchUncollected(): Promise<GarbagePoint[]> {
     .filter(d => d.latitude != null && d.longitude != null)
     .filter(d => !isNaN(parseFloat(d.latitude)) && !isNaN(parseFloat(d.longitude)))
     .map(toPoint);
+}
+
+// Fetch all deposits (both collected and pending) within 24-hour validity
+export async function fetchAllDeposits(): Promise<GarbagePoint[]> {
+  const res = await fetch(`${API_BASE}/api/v0/deposits/`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+
+  const data: ApiDeposit[] = await res.json();
+  console.log(`API returned ${data.length} deposits:`, data.map(d => ({ 
+    id: d.id, 
+    collected: d.collected, 
+    created_at: d.created_at, 
+    collected_at: d.collected_at 
+  })));
+  
+  const processed = data
+    .filter(d => d.latitude != null && d.longitude != null)
+    .filter(d => !isNaN(parseFloat(d.latitude)) && !isNaN(parseFloat(d.longitude)))
+    .map(toPoint);
+    
+  console.log(`Processed ${processed.length} valid points`);
+  return processed;
 }

@@ -4,15 +4,14 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-    server: {
+  server: {
     proxy: {
-      '/api': {
+      "/api": {
         // target: 'http://172.17.0.1:8000',
-        target: 'http://127.0.0.1:8000',
+        target: "https://no-throwam-backend.onrender.com",
         changeOrigin: true,
         secure: false,
-      }
-    }
-  }
-
+      },
+    },
+  },
 });
