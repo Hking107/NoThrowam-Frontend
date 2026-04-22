@@ -13,6 +13,7 @@ import MaterialMixChart from '../components/Seller/MaterialMix';
 import { StatCard } from '../components/Seller/StatCards';
 import { TableRow } from '../components/Seller/TableRows';
 import WalletModal from './WalletModal';
+import CameraCapture from '../components/Seller/CameraCapture';
 
 import { usePosts } from '../hooks/usePosts';
 

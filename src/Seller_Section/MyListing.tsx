@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit2, Package, X, Users, Loader2 } from 'lucide-react';
 import BuyersModal from './BuyerModal';
 import { wasteService } from '../services/wasteService';
+import { usePosts } from '../hooks/usePosts';
 
 interface MyListingsModalProps {
   onClose: () => void;
@@ -19,6 +20,8 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   const categories = ['All Categories', 'Plastic', 'Metal', 'Paper', 'Compost', 'Glass', 'Other'];
   const statuses = ['All Statuses', 'ACTIVE', 'PENDING', 'PUBLISHED', 'DRAFT', 'RESERVED', 'SOLD', 'REJECTED'];
 
+  const {posts} = usePosts();
+
   useEffect(() => {
     const fetchMyListings = async () => {
       setIsLoading(true);
@@ -34,6 +37,19 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
 
     fetchMyListings();
   }, []);
+
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      const latestPost = posts[0]; 
+      
+      const alreadyExists = listings.find(l => l.id === latestPost.id);
+      
+      if (!alreadyExists) {
+        setListings(prev => [latestPost, ...prev]);
+      }
+    }
+  }, [posts]); 
+  
 
   const getStatusStyle = (s: string) => {
     switch (s?.toUpperCase()) {

@@ -1,7 +1,11 @@
 import React, { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { Camera, Upload, RefreshCw, CheckCircle } from 'lucide-react';
+<<<<<<< HEAD
 import { wasteService } from '../services/wasteService';
 
+=======
+import CameraCapture from '../components/Seller/CameraCapture';
+>>>>>>> 1cf1b7e (subchanges)
 
 interface WasteScannerModalProps {
   onClose: () => void;
@@ -141,19 +145,32 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
                 className={`flex flex-col items-center justify-center p-8 border-4 border-dashed rounded-xl cursor-pointer transition-all ${isDragging ? 'border-green-500 bg-green-50 scale-[1.02]' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-green-400'}`}
               >
                 <Upload className="text-gray-400 mb-2" size={40} />
-                <h3 className="text-lg font-bold text-gray-700">Glissez ou parcourez</h3>
+                <h3 className="text-lg font-bold text-gray-700">Drop or select a photo</h3>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
               </div>
 
               {/* Bouton Caméra (Mobile Spécifique) */}
+<<<<<<< HEAD
               <button
+=======
+              <button 
+                type="button" 
+>>>>>>> 1cf1b7e (subchanges)
                 onClick={() => cameraInputRef.current?.click()}
                 className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95"
               >
                 <Camera size={24} />
-                Prendre une photo
-                <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
+                Snap a picture
+                <input 
+                  type="file" 
+                  ref={cameraInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/jpeg, image/png" // Plus spécifique
+                  capture="environment" 
+                  className="hidden" 
+                />
               </button>
+              
             </div>
           ) : (
             <div className="flex flex-col items-center">
