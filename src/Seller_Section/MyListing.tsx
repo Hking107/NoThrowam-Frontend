@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit2, Package, X, Users, Loader2 } from 'lucide-react';
-import BuyersModal from './BuyerModal'; 
+import BuyersModal from './BuyerModal';
 import { wasteService } from '../services/wasteService';
 
 interface MyListingsModalProps {
@@ -11,7 +11,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  
+
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
   const [listings, setListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -23,12 +23,12 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
     const fetchMyListings = async () => {
       setIsLoading(true);
       try {
-        const listingsData = await wasteService.getMyListings();
+        const listingsData = await wasteService.getMyListing();
         setListings(listingsData);
       } catch (error) {
         console.error("Network Error:", error);
       } finally {
-        setIsLoading(false); 
+        setIsLoading(false);
       }
     };
 
@@ -36,11 +36,11 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   }, []);
 
   const getStatusStyle = (s: string) => {
-    switch(s?.toUpperCase()) {
+    switch (s?.toUpperCase()) {
       case 'SOLD': return 'bg-green-100 text-green-700 border-green-200';
-      case 'PUBLISHED': 
+      case 'PUBLISHED':
       case 'ACTIVE': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'RESERVED': 
+      case 'RESERVED':
       case 'PENDING': return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'DRAFT': return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'REJECTED': return 'bg-red-100 text-red-700 border-red-200';
@@ -68,21 +68,21 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   return (
     <>
       {selectedListing && (
-        <BuyersModal 
-          listing={selectedListing} 
-          onClose={() => setSelectedListing(null)} 
+        <BuyersModal
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
         />
       )}
 
-      <div 
+      <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
         onClick={onClose}
       >
-        <main 
+        <main
           className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out] flex flex-col max-h-[90vh]"
           onClick={(e) => e.stopPropagation()}
         >
-          
+
           <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between shrink-0">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -99,7 +99,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
           <div className="px-8 py-4 bg-gray-50 border-b border-gray-100 flex flex-col lg:flex-row gap-4 justify-between shrink-0">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input 
+              <input
                 type="text" placeholder="Search listings..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
               />
@@ -124,7 +124,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
 
           <div className="flex-1 overflow-y-auto p-8 bg-white">
             <div className="space-y-4">
-              
+
               {isLoading ? (
                 <div className="flex justify-center items-center py-10">
                   <Loader2 className="animate-spin text-green-500" size={32} />
@@ -170,14 +170,14 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
                         <div className="font-bold text-lg text-gray-900 md:text-right">
                           {listing.price || listing.estimated_price || 0} FCFA
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <Edit2 size={18} />
                           </button>
-                          
+
                           {displayStatus !== 'DRAFT' && (
-                            <button 
+                            <button
                               onClick={() => {
                                 console.log("Ouverture du modal pour l'annonce :", listing.id); // Ajout d'un log pour vérifier
                                 setSelectedListing(listing);
