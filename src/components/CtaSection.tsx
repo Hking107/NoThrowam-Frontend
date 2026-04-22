@@ -59,7 +59,7 @@ export function CtaSection({ onContactClick }: { onContactClick: () => void }) {
             </div>
 
             {/* Actions */}
-            <div className="reveal-item flex flex-col sm:flex-row gap-4 shrink-0 w-full lg:w-auto px-4 sm:px-0">
+            <div className="reveal-item flex justify-center flex-col sm:flex-row gap-4 shrink-0 w-full lg:w-auto px-4 sm:px-0">
               <button
                 onClick={() => navigate("/signup")}
                 className="flex items-center justify-center gap-2 bg-brand-yellow hover:bg-[#e0b810] text-brand-text px-8 py-4 rounded-full text-lg font-bold shadow-xl transition-all transform active:scale-95 cursor-pointer"
@@ -68,7 +68,7 @@ export function CtaSection({ onContactClick }: { onContactClick: () => void }) {
                 <ArrowRight className="h-5 w-5" />
               </button>
 
-              <button 
+              <button
                 onClick={onContactClick}
                 className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-bold transition-all transform active:scale-95 cursor-pointer"
               >
