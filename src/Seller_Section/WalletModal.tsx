@@ -122,7 +122,10 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-gray-50/30 custom-scrollbar scrollbar-customer">
+        <div 
+          className="flex-1 overflow-y-auto p-6 md:p-10 bg-gray-50/30 custom-scrollbar scrollbar-customer"
+          data-lenis-prevent
+        >
           <div className="max-w-3xl mx-auto space-y-8 md:space-y-10">
             {/* Balance Card */}
             <div className="bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500">

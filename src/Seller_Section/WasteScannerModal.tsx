@@ -180,7 +180,10 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
           </p>
         </header>
 
-        <div className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer">
+        <div 
+          className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer"
+          data-lenis-prevent
+        >
           {!previewUrl ? (
             <div className="space-y-6">
               {/* Drag & Drop Zone */}
