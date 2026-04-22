@@ -15,6 +15,7 @@ import {
   CATEGORY_COLORS,
   CATEGORY_EMOJI,
 } from "../contexts/constants/constants";
+import { wasteService } from "../services/wasteService";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
 
@@ -46,15 +47,7 @@ function toMarketPoint(p: WastePost): MarketPoint {
 }
 
 async function fetchWastePosts(): Promise<MarketPoint[]> {
-  const res = await fetch(`/api/v0/waste-posts/`, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
-      "ngrok-skip-browser-warning": "69420",
-    },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data: WastePost[] = await res.json();
+  const data = await wasteService.getWastePosts();
   return data
     .filter((p) => p.status === "PUBLISHED" && p.latitude && p.longitude)
     .map(toMarketPoint)

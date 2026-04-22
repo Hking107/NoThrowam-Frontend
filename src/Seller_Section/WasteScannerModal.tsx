@@ -1,9 +1,11 @@
 import React, { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { Camera, Upload, RefreshCw, CheckCircle } from 'lucide-react';
+import { wasteService } from '../services/wasteService';
+
 
 interface WasteScannerModalProps {
   onClose: () => void;
-  onPublish?: (data: any) => void; 
+  onPublish?: (data: any) => void;
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -23,12 +25,12 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   const [aiResult, setAiResult] = useState<any | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null); 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
-  
+
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -48,7 +50,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     }
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
-    setAiResult(null); 
+    setAiResult(null);
   };
 
   const handleReset = () => {
@@ -63,47 +65,46 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     if (!selectedFile) return;
     setIsAnalyzing(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       if (!token) {
         alert("Session expirée. Veuillez vous reconnecter.");
         setIsAnalyzing(false);
         return;
       }
 
-      const base64Image = await fileToBase64(selectedFile);
-      const createResponse = await fetch("/api/v0/waste-posts/create/", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          image: base64Image,
-          quantity: Math.floor(Math.random() * 100) + 1, 
-          unit: "kg",
-          latitude: 3.8500,
-          longitude: 11.5083,
-        })
+      const uploadResponse = await wasteService.uploadImage(selectedFile);
+
+      // Géolocalisation du navigateur (fallback : Yaoundé)
+      const coords = await new Promise<{ latitude: number; longitude: number }>((resolve) => {
+        if (!navigator.geolocation) {
+          resolve({ latitude: 3.8500, longitude: 11.5083 });
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          () => resolve({ latitude: 3.8500, longitude: 11.5083 }),
+          { timeout: 8000, enableHighAccuracy: true }
+        );
       });
 
-      if (!createResponse.ok) throw new Error(`Erreur création: ${createResponse.status}`);
-      const { id: postId } = await createResponse.json();
-
-      const analyzeResponse = await fetch(`/api/v0/waste-posts/${postId}/analyze/`, {
-        method: "POST",
-        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
+      const post = await wasteService.hCreatePost({
+        image_url: uploadResponse.url,
+        quantity: Math.floor(Math.random() * 100) + 1,
+        unit: "kg",
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
 
-      if (!analyzeResponse.ok) throw new Error(`Erreur analyse: ${analyzeResponse.status}`);
-      const analyzeData = await analyzeResponse.json();
+      const { id: postId } = post;
+
+      const analyzeResponse = await wasteService.analyzePost(postId);
 
       setAiResult({
-        category: analyzeData.category || 'Inconnu',
-        price: analyzeData.price || 0,
-        sorted: analyzeData.sorted ?? false,
-        action: analyzeData.sorted ? "Validé pour recyclage" : (analyzeData.rejection_reason || "Déchet non conforme"),
-        description: analyzeData.description || ""
+        category: analyzeResponse.category || 'Inconnu',
+        price: analyzeResponse.price || 0,
+        sorted: analyzeResponse.sorted ?? false,
+        action: analyzeResponse.sorted ? "Validé pour recyclage" : (analyzeResponse.rejection_reason || "Déchet non conforme"),
+        description: analyzeResponse.description || ""
       });
     } catch (error: any) {
       alert(`Erreur: ${error.message}`);
@@ -113,15 +114,15 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
       onClick={onClose}
     >
-      <main 
+      <main
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out]"
         onClick={(e) => e.stopPropagation()}
       >
-        
+
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10">
           <XIcon />
         </button>
@@ -145,7 +146,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
               </div>
 
               {/* Bouton Caméra (Mobile Spécifique) */}
-              <button 
+              <button
                 onClick={() => cameraInputRef.current?.click()}
                 className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95"
               >
@@ -186,11 +187,11 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
               </div>
             </div>
 
-            <button 
-              onClick={() => { if (aiResult.sorted && onPublish) onPublish(aiResult); aiResult.sorted ? onClose() : handleReset(); }} 
+            <button
+              onClick={() => { if (aiResult.sorted && onPublish) onPublish(aiResult); aiResult.sorted ? onClose() : handleReset(); }}
               className={`mt-6 w-full py-4 rounded-xl font-bold shadow-md transition flex justify-center items-center gap-2 ${aiResult.sorted ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-100 text-red-700 border border-red-300'}`}
             >
-              {aiResult.sorted ? <><CheckCircle size={20}/> Publier sur la Marketplace</> : <><RefreshCw size={20}/> Réessayer avec une autre photo</>}
+              {aiResult.sorted ? <><CheckCircle size={20} /> Publier sur la Marketplace</> : <><RefreshCw size={20} /> Réessayer avec une autre photo</>}
             </button>
           </div>
         )}

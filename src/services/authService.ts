@@ -31,9 +31,9 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData?.detail ||
-          errorData?.message ||
-          errorData?.email ||
-          "Registration failed. Please check your information.",
+        errorData?.message ||
+        errorData?.email ||
+        "Registration failed. Please check your information.",
       );
     }
 
@@ -90,9 +90,9 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData?.reason ||
-          errorData?.detail ||
-          errorData?.message ||
-          "OTP verification failed",
+        errorData?.detail ||
+        errorData?.message ||
+        "OTP verification failed",
       );
     }
 
@@ -121,8 +121,8 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData?.detail ||
-          errorData?.message ||
-          "Failed to request password reset",
+        errorData?.message ||
+        "Failed to request password reset",
       );
     }
 
@@ -170,7 +170,7 @@ export const authService = {
       const errorData = await response.json().catch(() => ({}));
       if (response.status === 401) {
         throw new Error(
-          "Invalid email or password. If you haven't verified your email yet, check for OTP in your inbox.",
+          errorData?.detail || "Login failed"
         );
       }
       throw new Error(
