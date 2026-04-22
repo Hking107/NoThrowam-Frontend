@@ -84,7 +84,16 @@ export const wasteService = {
     });
     if (!response.ok) throw new Error("Failed to fetch proposals");
     const data = await response.json();
-    return data.proposals || [];
+    return data.proposals;
+  },
+
+  acceptProposal: async (proposalId: number | string) => {
+    const response = await fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to accept proposal");
+    return response.json();
   },
 
   uploadImage: async (file: File) => {

@@ -11,6 +11,7 @@ import type { MarketPoint } from "../../types/MarketPoint";
 import { CATEGORY_EMOJI } from "../../contexts/constants/constants";
 import { PurchaseBus } from "../../services/eventBus";
 import { createProposal } from "../../services/ProposalAPI";
+import { useWebSocket } from "../../WebSocketProvider";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -31,6 +32,8 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
   const [method, setMethod] = useState<string | null>(null);
   const [txRef, setTxRef] = useState("");
   const [errMsg, setErrMsg] = useState("");
+
+  const { proposalWs } = useWebSocket();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -53,6 +56,14 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
     setPhase("processing");
     try {
       const { alreadyExists } = await createProposal(point.id);
+
+      if (!alreadyExists) {
+        // Broadcast via global WebSocket
+        if (proposalWs) {
+          proposalWs.sendEvent('proposal.create', { post_id: point.id });
+        }
+      }
+
       const ref = alreadyExists
         ? "PROP-EXIST"
         : "PROP-" + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -83,22 +94,6 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
   };
 
   const methods = [
-    {
-      id: "card",
-      label: "Carte Bancaire",
-      icon: CreditCard,
-      color: "bg-blue-600",
-      border: "border-blue-100",
-      highlight: "bg-blue-50",
-    },
-    {
-      id: "momo",
-      label: "MTN MoMo",
-      icon: Smartphone,
-      color: "bg-amber-500",
-      border: "border-amber-100",
-      highlight: "bg-amber-50",
-    },
     {
       id: "orange",
       label: "Orange Money",
@@ -279,7 +274,7 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
               <p className="mt-8 text-sm font-medium text-slate-500 leading-relaxed px-4">
                 {txRef === "PROP-EXIST"
                   ? "Une demande pour ce lot est déjà en attente. Vous serez notifié dès qu'elle sera acceptée."
-                  : "Votre proposition a été transmise au vendeur. Vous recevrez une notification d'ici peu."}
+                  : "Votre proposition a été transmise au vendeur ! Nous vous enverrons une notification dès que le vendeur aura accepté votre proposition."}
               </p>
 
               <button

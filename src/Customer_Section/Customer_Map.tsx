@@ -18,6 +18,7 @@ import {
 import { wasteService } from "../services/wasteService";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
+import { useWebSocket } from "../WebSocketProvider";
 
 declare global {
   interface Window {
@@ -149,6 +150,8 @@ export const CustomerMap = () => {
     loadPoints();
   }, [loadPoints]);
 
+
+
   useEffect(() => {
     if (window.L) {
       setLeaf(true);
@@ -267,6 +270,83 @@ export const CustomerMap = () => {
     setToast(msg);
     setTimeout(() => setToast(null), 2800);
   }, []);
+
+  const { postsWs, proposalsWs } = useWebSocket();
+
+  useEffect(() => {
+    if (!postsWs) return;
+
+    const handleNewPost = (data: any) => {
+      console.log("[WS] Nouveau/Mise à jour post reçu:", data);
+      loadPoints();
+
+      const post = data.post || data;
+      // Si c'est juste publié, on peut montrer un toast, sinon silencieux
+      if (data.type === "post.created" || data.type === "post_created") {
+        showToast("Nouveau lot de déchets disponible !");
+      }
+    };
+
+    const handlePostList = (data: any) => {
+      console.log("[WS] Liste initiale de posts reçue:", data);
+      if (data.posts && Array.isArray(data.posts)) {
+        const pts = data.posts
+          .filter((p: any) => p.status === "PUBLISHED" && p.latitude && p.longitude)
+          .map(toMarketPoint);
+        setPoints(pts);
+      }
+    };
+
+    const handleProposalUpdate = (data: any) => {
+      console.log("[WS] Mise à jour proposition reçue:", data);
+
+      const proposal = data.proposal || data;
+      const status = proposal.status || data.status;
+      const customerId = proposal.customer?.id || data.customer?.id || proposal.customer_id;
+
+      // On récupère l'ID de l'utilisateur actuel depuis le token
+      const token = localStorage.getItem("access_token");
+      let currentUserId = null;
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          currentUserId = payload.user_id || payload.id || payload.sub;
+        } catch (e) { }
+      }
+
+      console.log(`[WS] Checking ID: current=${currentUserId}, target=${customerId}, status=${status}`);
+
+      if (status === "ACCEPTED" && String(customerId) === String(currentUserId)) {
+        const title = proposal.post_title || "votre lot";
+        showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+      }
+    };
+
+    postsWs.on("post.created", handleNewPost);
+    postsWs.on("post_created", handleNewPost);
+    postsWs.on("post.updated", handleNewPost);
+    postsWs.on("post_updated", handleNewPost);
+    postsWs.on("post_list", handlePostList);
+
+    // Ecouter sur proposalsWs
+    if (proposalsWs) {
+      proposalsWs.on("proposal.updated", handleProposalUpdate);
+      proposalsWs.on("proposal_updated", handleProposalUpdate);
+    }
+
+    return () => {
+      postsWs.off("post.created", handleNewPost);
+      postsWs.off("post_created", handleNewPost);
+      postsWs.off("post.updated", handleNewPost);
+      postsWs.off("post_updated", handleNewPost);
+      postsWs.off("post_list", handlePostList);
+
+      if (proposalsWs) {
+        proposalsWs.off("proposal.updated", handleProposalUpdate);
+        proposalsWs.off("proposal_updated", handleProposalUpdate);
+      }
+    };
+  }, [postsWs, proposalsWs, loadPoints, showToast]);
 
   useEffect(() => {
     const unsub = MapEventBus.onCommand((cmd) => {

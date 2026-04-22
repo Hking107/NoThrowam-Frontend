@@ -2,28 +2,40 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { WebSocketService } from './services/webSocketService';
 import { WS_BASE_URL } from './api/websocket';
 
-const WebSocketContext = createContext<WebSocketService | null>(null);
+interface WSContextType {
+  postsWs: WebSocketService;
+  proposalWs: WebSocketService;
+  proposalsWs: WebSocketService;
+}
+
+const WebSocketContext = createContext<WSContextType | null>(null);
 
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const [wsService] = useState(() => {
-    const token = localStorage.getItem('token');
-    const wsUrl = token 
-      ? `${WS_BASE_URL}?token=${token}`
-      : WS_BASE_URL;
-      
-    return new WebSocketService(wsUrl);
+  const [services] = useState<WSContextType>(() => {
+    return {
+      // Créer les instances de WebSocketService
+      postsWs: new WebSocketService(`${WS_BASE_URL}posts/public/`),
+      proposalWs: new WebSocketService(`${WS_BASE_URL}proposal/public/`),
+      proposalsWs: new WebSocketService(`${WS_BASE_URL}proposals/public/`),
+    };
   });
 
   useEffect(() => {
-    wsService.connect();
+    // Connecter tous les WebSockets
+    services.postsWs.connect();
+    services.proposalWs.connect();
+    services.proposalsWs.connect();
 
     return () => {
-      wsService.disconnect();
+      // Déconnecter proprement
+      services.postsWs.disconnect();
+      services.proposalWs.disconnect();
+      services.proposalsWs.disconnect();
     };
-  }, [wsService]);
+  }, [services]);
 
   return (
-    <WebSocketContext.Provider value={wsService}>
+    <WebSocketContext.Provider value={services}>
       {children}
     </WebSocketContext.Provider>
   );
