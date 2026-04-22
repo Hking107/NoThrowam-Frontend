@@ -13,14 +13,10 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
-<<<<<<< HEAD
 import { ReportWaste } from "./pages/ReportWaste";
 import { NotFound } from "./pages/NotFound";
 import { Unauthorized } from "./pages/Unauthorized";
 import { SmoothScroll } from "./components/SmoothScroll";
-=======
-//import { ReportWaste } from "./pages/ReportWaste";
->>>>>>> 1cf1b7e (subchanges)
 
 function App() {
   return (
