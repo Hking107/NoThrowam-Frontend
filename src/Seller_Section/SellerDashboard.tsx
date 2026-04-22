@@ -333,13 +333,9 @@ const SellerDashboard: React.FC = () => {
         </div>
 
         <div className={`border-t border-gray-100/50 transition-all duration-500 p-6 ${isSidebarCollapsed ? 'md:p-2' : ''}`}>
-<<<<<<< HEAD
-          <button 
-            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-lg font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
-=======
+
           <button
-            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-2xl font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
->>>>>>> origin/main
+            className={`w-full flex items-center text-gray-500 hover:bg-gray-50 rounded-lg font-medium transition-all mb-4 gap-3 px-4 py-3 ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-3' : ''}`}
             title="Settings"
           >
             <Settings size={20} className="shrink-0" />
@@ -436,39 +432,19 @@ const SellerDashboard: React.FC = () => {
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:max-w-xs group">
                 <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
-<<<<<<< HEAD
                 <input 
                   type="text" 
                   placeholder="Search transactions..." 
                   className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all shadow-sm"
                 />
               </div>
-              
-              <button className="p-3 text-gray-500 hover:text-emerald-600 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all relative">
-                <Bell size={20} />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
-              
-              <button 
-                onClick={() => setIsModalOpen(true)} 
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
-=======
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all shadow-sm"
-                />
-              </div>
-
               <button className="p-3 text-gray-500 hover:text-emerald-600 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all relative">
                 <Bell size={20} />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
-
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
->>>>>>> origin/main
               >
                 <Plus size={20} />
                 <span className="hidden sm:inline">Create Listing</span>
