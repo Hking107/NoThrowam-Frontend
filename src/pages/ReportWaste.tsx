@@ -718,6 +718,7 @@ export function ReportWaste() {
                   <MapContainer
                     center={[location.lat, location.lng]}
                     zoom={17}
+                    attributionControl={false}
                     style={{
                       height: "100%",
                       minHeight: "400px",
