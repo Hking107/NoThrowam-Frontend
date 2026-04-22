@@ -408,7 +408,7 @@ export const ManagerMap = () => {
       {/* Error banner */}
       {fetchError && !loading && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1400 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1400] 
                         bg-white/95 backdrop-blur-xl p-8 rounded-3xl border border-red-200 
                         shadow-2xl shadow-red-500/10 text-center max-w-xs animate-in zoom-in duration-300"
         >
@@ -431,7 +431,7 @@ export const ManagerMap = () => {
       {/* Empty state */}
       {!loading && !fetchError && points.length === 0 && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-500 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] 
                         bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
                         shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
         >
