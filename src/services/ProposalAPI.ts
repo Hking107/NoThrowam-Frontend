@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+import { API_BASE_URL as API_BASE } from "../config/api";
 
 export async function createProposal(postId: number): Promise<{ alreadyExists: boolean }> {
   const res = await fetch(`${API_BASE}/api/v0/proposals/waste-posts/${postId}/create/`, {
