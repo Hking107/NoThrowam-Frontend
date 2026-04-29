@@ -91,7 +91,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
       )}
 
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
         onClick={onClose}
       >
         <main
