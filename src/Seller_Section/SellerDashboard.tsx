@@ -52,6 +52,23 @@ const SellerDashboard: React.FC = () => {
     setIsOpenWallet(false);
   };
 
+  // Lock background scroll when any modal is open
+  const isAnyModalOpen =
+    isModalOpen || isProductModalOpen || isMyListingsOpen || isOpenWallet;
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.classList.add("lenis-stopped");
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.classList.remove("lenis-stopped");
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.classList.remove("lenis-stopped");
+    };
+  }, [isAnyModalOpen]);
+
   const sidebarRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
