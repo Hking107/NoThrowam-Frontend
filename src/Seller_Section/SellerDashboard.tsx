@@ -45,6 +45,13 @@ const SellerDashboard: React.FC = () => {
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
 
+  const closeAllModals = () => {
+    setIsModalOpen(false);
+    setIsProductModalOpen(false);
+    setIsMyListingsOpen(false);
+    setIsOpenWallet(false);
+  };
+
   const sidebarRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -591,6 +598,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsMyListingsOpen(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -615,6 +623,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsProductModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -635,6 +644,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsOpenWallet(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -803,7 +813,10 @@ const SellerDashboard: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  closeAllModals();
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus size={20} />
