@@ -19,6 +19,7 @@ import {
   Recycle,
 } from "lucide-react";
 import { wasteService } from "../services/wasteService";
+import { useLenis } from "../contexts/LenisContext";
 // import CameraCapture from "../components/Seller/CameraCapture";
 interface WasteScannerModalProps {
   onClose: () => void;
@@ -67,6 +68,15 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
       videoRef.current.play().catch(console.error);
     }
   }, [isCameraActive]);
+
+  // Control Lenis when modal is open
+  const { disableLenis, enableLenis } = useLenis();
+  useEffect(() => {
+    disableLenis();
+    return () => {
+      enableLenis();
+    };
+  }, [disableLenis, enableLenis]);
 
   const startCamera = async () => {
     try {

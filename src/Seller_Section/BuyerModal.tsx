@@ -11,8 +11,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { wasteService } from "../services/wasteService";
-import React, { useState, useEffect, useCallback } from 'react';
-import { useWebSocket } from '../WebSocketProvider';
+import React, { useState, useEffect, useCallback } from "react";
+import { useWebSocket } from "../WebSocketProvider";
+import { useLenis } from "../contexts/LenisContext";
 
 const CustToast = ({ msg }: { msg: string }) => (
   <div
@@ -30,7 +31,10 @@ interface PotentialBuyersModalProps {
   onClose: () => void;
 }
 
-const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) => {
+const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
+  listing,
+  onClose,
+}) => {
   const [soldTo, setSoldTo] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -39,6 +43,15 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   const [error, setError] = useState<string | null>(null);
 
   const { proposalsWs, proposalWs } = useWebSocket();
+
+  // Control Lenis when modal is open
+  const { disableLenis, enableLenis } = useLenis();
+  useEffect(() => {
+    disableLenis();
+    return () => {
+      enableLenis();
+    };
+  }, [disableLenis, enableLenis]);
 
   const fetchOffers = useCallback(async () => {
     if (!listing || !listing.id) return;
@@ -112,15 +125,17 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
       // 2. Notification temps réel (WebSocket)
       if (proposalsWs) {
         const status = "ACCEPTED";
-        proposalsWs.sendEvent('proposal.accept', {
+        proposalsWs.sendEvent("proposal.accept", {
           proposal_id: _offerId,
-          status: status
+          status: status,
         });
       }
 
       // 3. Mise à jour UI
       setSoldTo(buyerName);
-      setToastMsg(`Félicitations ! Vous avez accepté la proposition de ${buyerName}.`);
+      setToastMsg(
+        `Félicitations ! Vous avez accepté la proposition de ${buyerName}.`,
+      );
       setTimeout(() => {
         onClose();
       }, 2500);
@@ -130,7 +145,12 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
   };
 
   const getBuyerName = (offer: any) => {
-    return offer.buyer_name || offer.buyer?.username || offer.buyer?.name || "Acheteur inconnu";
+    return (
+      offer.buyer_name ||
+      offer.buyer?.username ||
+      offer.buyer?.name ||
+      "Acheteur inconnu"
+    );
   };
 
   return (
@@ -151,24 +171,36 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
               </span>
             </div>
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              {listing.title || listing.category?.label || 'Titre Inconnu'}
+              {listing.title || listing.category?.label || "Titre Inconnu"}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Quantité : <span className="font-bold text-gray-700">{listing.quantity || listing.weight || 0} {listing.unit || 'kg'}</span> •
-              Votre Prix : <span className="font-bold text-gray-700">{listing.price || listing.estimated_price || 0} FCFA</span>
+              Quantité :{" "}
+              <span className="font-bold text-gray-700">
+                {listing.quantity || listing.weight || 0} {listing.unit || "kg"}
+              </span>{" "}
+              • Votre Prix :{" "}
+              <span className="font-bold text-gray-700">
+                {listing.price || listing.estimated_price || 0} FCFA
+              </span>
             </p>
           </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-900 bg-gray-100/50 hover:bg-gray-100 rounded-full p-2.5 transition-all duration-300 group"
           >
-            <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+            <X
+              size={24}
+              className="group-hover:rotate-90 transition-transform duration-300"
+            />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 bg-white">
           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-            Acheteurs Potentiels <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{offers.length}</span>
+            Acheteurs Potentiels{" "}
+            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+              {offers.length}
+            </span>
           </h3>
 
           {isLoading ? (
@@ -189,14 +221,19 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
             <div className="space-y-4">
               {offers.map((offer, idx) => {
                 const buyerName = getBuyerName(offer);
-                const offeredPrice = offer.proposed_price || offer.amount || offer.price || 0;
+                const offeredPrice =
+                  offer.proposed_price || offer.amount || offer.price || 0;
                 const isSoldToThis = soldTo === buyerName;
 
                 // Gérer les cas où le backend renvoie l'ID sous un autre nom
-                const offerId = offer.id || offer.proposal_id || offer.uuid || offer.pk;
+                const offerId =
+                  offer.id || offer.proposal_id || offer.uuid || offer.pk;
 
                 return (
-                  <div key={offerId || idx} className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl border transition-all relative overflow-hidden group ${isSoldToThis ? 'border-green-500 bg-green-50' : 'border-gray-100 hover:border-emerald-200 hover:shadow-md'}`}>
+                  <div
+                    key={offerId || idx}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl border transition-all relative overflow-hidden group ${isSoldToThis ? "border-green-500 bg-green-50" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+                  >
                     <div className="flex gap-4 items-center relative z-10">
                       <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <Building2 size={24} />
@@ -211,30 +248,48 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({ listing, onClose }) 
                           </p>
                         )}
                         {!offerId && (
-                          <p className="text-[10px] text-red-400 font-bold mt-1">⚠️ ID Introuvable</p>
+                          <p className="text-[10px] text-red-400 font-bold mt-1">
+                            ⚠️ ID Introuvable
+                          </p>
                         )}
                       </div>
                     </div>
 
                     <div className="mt-6 sm:mt-0 flex items-center justify-between sm:justify-end gap-8 shrink-0 relative z-10">
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">Proposed Offer</p>
-                        <p className={`font-black text-2xl tracking-tighter ${isSoldToThis ? 'text-emerald-700' : 'text-gray-900 group-hover:text-emerald-600 transition-colors'}`}>
-                          {offeredPrice.toLocaleString()} <span className="text-sm font-bold opacity-50">FCFA</span>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">
+                          Proposed Offer
+                        </p>
+                        <p
+                          className={`font-black text-2xl tracking-tighter ${isSoldToThis ? "text-emerald-700" : "text-gray-900 group-hover:text-emerald-600 transition-colors"}`}
+                        >
+                          {offeredPrice.toLocaleString()}{" "}
+                          <span className="text-sm font-bold opacity-50">
+                            FCFA
+                          </span>
                         </p>
                       </div>
                       <button
                         onClick={() => handleSell(offerId, buyerName)}
                         disabled={soldTo !== null || !offerId}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm
-                          ${isSoldToThis ? 'bg-green-500 text-white cursor-default' : (soldTo !== null || !offerId) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30'}`}
+                          ${isSoldToThis ? "bg-green-500 text-white cursor-default" : soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30"}`}
                       >
-                        {isSoldToThis ? (<>Vendu ! <CheckCircle2 size={18} /></>) : ('Accepter')}
+                        {isSoldToThis ? (
+                          <>
+                            Vendu ! <CheckCircle2 size={18} />
+                          </>
+                        ) : (
+                          "Accepter"
+                        )}
                       </button>
                     </div>
 
                     {/* Decorative Background Icon */}
-                    <Building2 className={`absolute -right-8 -bottom-8 transition-all duration-700 pointer-events-none z-0 ${isSoldToThis ? 'scale-125 opacity-[0.08] text-emerald-600' : 'opacity-[0.03] group-hover:scale-110 group-hover:rotate-12 group-hover:opacity-[0.05]'}`} size={160} />
+                    <Building2
+                      className={`absolute -right-8 -bottom-8 transition-all duration-700 pointer-events-none z-0 ${isSoldToThis ? "scale-125 opacity-[0.08] text-emerald-600" : "opacity-[0.03] group-hover:scale-110 group-hover:rotate-12 group-hover:opacity-[0.05]"}`}
+                      size={160}
+                    />
                   </div>
                 );
               })}

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import {
   Wallet,
   X,
@@ -11,6 +12,7 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
+import { useLenis } from "../contexts/LenisContext";
 
 interface WalletModalProps {
   onClose: () => void;
@@ -29,6 +31,15 @@ interface Transaction {
 const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  // Control Lenis when modal is open
+  const { disableLenis, enableLenis } = useLenis();
+  useEffect(() => {
+    disableLenis();
+    return () => {
+      enableLenis();
+    };
+  }, [disableLenis, enableLenis]);
 
   // Dummy Transaction Data
   const transactions: Transaction[] = [
@@ -118,11 +129,14 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
             onClick={onClose}
             className="text-gray-400 hover:text-gray-900 bg-gray-100/50 hover:bg-gray-100 rounded-full p-3 transition-all duration-300 group"
           >
-            <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+            <X
+              size={24}
+              className="group-hover:rotate-90 transition-transform duration-300"
+            />
           </button>
         </div>
 
-        <div 
+        <div
           className="flex-1 overflow-y-auto p-6 md:p-10 bg-gray-50/30 custom-scrollbar scrollbar-customer"
           data-lenis-prevent
         >
@@ -138,12 +152,18 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                     <h3 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-lg">
                       {balance.toLocaleString()}
                     </h3>
-                    <span className="text-xl md:text-2xl font-bold text-emerald-200">FCFA</span>
+                    <span className="text-xl md:text-2xl font-bold text-emerald-200">
+                      FCFA
+                    </span>
                   </div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-                  <p className="text-xs font-bold text-emerald-50 opacity-70 mb-1">Lifetime Earnings</p>
-                  <p className="text-xl font-black">{(balance + 7000).toLocaleString()} FCFA</p>
+                  <p className="text-xs font-bold text-emerald-50 opacity-70 mb-1">
+                    Lifetime Earnings
+                  </p>
+                  <p className="text-xl font-black">
+                    {(balance + 7000).toLocaleString()} FCFA
+                  </p>
                 </div>
               </div>
 
@@ -154,21 +174,27 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
 
             {/* Withdrawal Section */}
             <div className="glass-card rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 space-y-8 bg-white border border-gray-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
-                
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
+
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-inner">
                   <ArrowDownCircle size={24} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-black text-gray-900 tracking-tight">Withdraw Funds</h4>
-                  <p className="text-sm text-gray-400 font-medium">Fast and secure transfers to your mobile wallet</p>
+                  <h4 className="text-xl font-black text-gray-900 tracking-tight">
+                    Withdraw Funds
+                  </h4>
+                  <p className="text-sm text-gray-400 font-medium">
+                    Fast and secure transfers to your mobile wallet
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Amount to Withdraw</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">
+                    Amount to Withdraw
+                  </label>
                   <div className="relative group">
                     <input
                       type="number"
@@ -177,12 +203,14 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                       onChange={(e) => setWithdrawalAmount(e.target.value)}
                       className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 md:px-6 md:py-5 text-xl md:text-2xl font-black focus:outline-none focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-gray-300"
                     />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">FCFA</div>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">
+                      FCFA
+                    </div>
                   </div>
-                  
+
                   {/* Quick select */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {quickAmounts.map(amt => (
+                    {quickAmounts.map((amt) => (
                       <button
                         key={amt}
                         onClick={() => setWithdrawalAmount(amt.toString())}
@@ -195,7 +223,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button 
+                  <button
                     disabled={isWithdrawing}
                     onClick={() => handleWithdraw("MTN MoMo")}
                     className="group flex items-center justify-between gap-4 bg-[#FFCC00] hover:bg-[#F2C200] text-black font-black py-4 px-6 md:py-5 md:px-8 rounded-[1.5rem] transition-all shadow-lg shadow-yellow-200/50 active:scale-[0.98] disabled:opacity-50"
@@ -206,10 +234,13 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                       </div>
                       <span className="text-sm md:text-base">MTN MoMo</span>
                     </div>
-                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </button>
 
-                  <button 
+                  <button
                     disabled={isWithdrawing}
                     onClick={() => handleWithdraw("Orange Money")}
                     className="group flex items-center justify-between gap-4 bg-[#FF6600] hover:bg-[#E65C00] text-white font-black py-4 px-6 md:py-5 md:px-8 rounded-[1.5rem] transition-all shadow-lg shadow-orange-200/50 active:scale-[0.98] disabled:opacity-50"
@@ -220,7 +251,10 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                       </div>
                       <span className="text-sm md:text-base">Orange Money</span>
                     </div>
-                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </button>
                 </div>
               </div>
@@ -233,9 +267,13 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner">
                     <History size={24} />
                   </div>
-                  <h4 className="text-xl font-black text-gray-900 tracking-tight">Recent Activity</h4>
+                  <h4 className="text-xl font-black text-gray-900 tracking-tight">
+                    Recent Activity
+                  </h4>
                 </div>
-                <button className="text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-colors">View All</button>
+                <button className="text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-colors">
+                  View All
+                </button>
               </div>
 
               <div className="space-y-3">
@@ -245,38 +283,69 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                     className="flex items-center justify-between p-5 rounded-3xl bg-white border border-gray-50 hover:border-emerald-100 hover:shadow-md transition-all group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transform group-hover:scale-110 transition-transform ${
-                        tx.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-                      }`}>
-                        {tx.type === 'income' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                      <div
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transform group-hover:scale-110 transition-transform ${
+                          tx.type === "income"
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-red-50 text-red-600"
+                        }`}
+                      >
+                        {tx.type === "income" ? (
+                          <TrendingUp size={20} />
+                        ) : (
+                          <TrendingDown size={20} />
+                        )}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900">{tx.description}</p>
+                        <p className="font-bold text-gray-900">
+                          {tx.description}
+                        </p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{tx.id}</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            {tx.id}
+                          </span>
                           <span className="w-1 h-1 rounded-full bg-gray-200"></span>
-                          <span className="text-xs text-gray-400 font-medium">{new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          <span className="text-xs text-gray-400 font-medium">
+                            {new Date(tx.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-black text-lg ${
-                        tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
-                      }`}>
-                        {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString()} FCFA
+                      <p
+                        className={`font-black text-lg ${
+                          tx.type === "income"
+                            ? "text-emerald-600"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {tx.type === "income" ? "+" : "-"}
+                        {tx.amount.toLocaleString()} FCFA
                       </p>
                       <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                         {tx.status === 'completed' ? (
-                           <CheckCircle2 size={12} className="text-emerald-500" />
-                         ) : tx.status === 'pending' ? (
-                           <Clock size={12} className="text-orange-400" />
-                         ) : null}
-                         <span className={`text-[10px] font-black uppercase tracking-tight ${
-                           tx.status === 'completed' ? 'text-emerald-500' : 
-                           tx.status === 'pending' ? 'text-orange-400' : 'text-red-400'
-                         }`}>
-                           {tx.status}
-                         </span>
+                        {tx.status === "completed" ? (
+                          <CheckCircle2
+                            size={12}
+                            className="text-emerald-500"
+                          />
+                        ) : tx.status === "pending" ? (
+                          <Clock size={12} className="text-orange-400" />
+                        ) : null}
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-tight ${
+                            tx.status === "completed"
+                              ? "text-emerald-500"
+                              : tx.status === "pending"
+                                ? "text-orange-400"
+                                : "text-red-400"
+                          }`}
+                        >
+                          {tx.status}
+                        </span>
                       </div>
                     </div>
                   </div>
