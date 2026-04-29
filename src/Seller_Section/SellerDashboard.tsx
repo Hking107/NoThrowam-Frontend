@@ -45,6 +45,12 @@ const SellerDashboard: React.FC = () => {
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
 
+  const closeAllModals = () => {
+    setIsModalOpen(false);
+    setIsProductModalOpen(false);
+    setIsMyListingsOpen(false);
+    setIsOpenWallet(false);
+  };
 
   const sidebarRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
@@ -535,7 +541,7 @@ const SellerDashboard: React.FC = () => {
         {/* Close drawer X — mobile only */}
         <button
           onClick={() => setIsMobileMenuOpen(false)}
-          className="md:hidden absolute top-6 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors z-[60]"
+          className="md:hidden absolute top-6 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors z-60"
         >
           <X size={22} />
         </button>
@@ -592,6 +598,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsMyListingsOpen(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -616,6 +623,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsProductModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -636,6 +644,7 @@ const SellerDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                closeAllModals();
                 setIsOpenWallet(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -785,7 +794,6 @@ const SellerDashboard: React.FC = () => {
               </div>
             </div>
 
-
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:max-w-xs group">
                 <Search
@@ -805,7 +813,10 @@ const SellerDashboard: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  closeAllModals();
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus size={20} />
@@ -852,7 +863,6 @@ const SellerDashboard: React.FC = () => {
             <div className="glass-card p-8 rounded-xl lg:col-span-2 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -z-10"></div>
 
-
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <h3 className="text-xl font-black text-gray-900 tracking-tight">
@@ -886,7 +896,6 @@ const SellerDashboard: React.FC = () => {
                   </select>
                 </div>
               </div>
-
 
               <div className="h-72 w-full relative group/chart">
                 {/* Y-Axis Labels */}
@@ -924,7 +933,6 @@ const SellerDashboard: React.FC = () => {
                     </filter>
                   </defs>
 
-
                   {/* Grid Lines */}
                   {[0, 10, 20, 30, 40].map((y) => (
                     <line
@@ -938,14 +946,12 @@ const SellerDashboard: React.FC = () => {
                     />
                   ))}
 
-
                   {/* Area Fill */}
                   <path
                     d={chartData.fillPath || "M0,40 L100,40 Z"}
                     fill="url(#chartGradient)"
                     className="transition-all duration-1000 ease-in-out"
                   />
-
 
                   {/* Line Path */}
                   <path
@@ -957,7 +963,6 @@ const SellerDashboard: React.FC = () => {
                     strokeLinejoin="round"
                     className="transition-all duration-1000 ease-in-out"
                   />
-
 
                   {/* Data Points */}
                   {chartData.points?.map((p: any) => (
@@ -994,7 +999,6 @@ const SellerDashboard: React.FC = () => {
                   )}
                 </svg>
 
-
                 {/* X-Axis Labels */}
                 <div className="absolute -bottom-6 w-full flex justify-between text-[10px] font-black text-gray-400 px-2 uppercase tracking-tighter">
                   {chartData.months?.map((m: string) => (
@@ -1028,7 +1032,6 @@ const SellerDashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-gray-600">

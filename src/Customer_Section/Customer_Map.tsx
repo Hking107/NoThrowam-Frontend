@@ -69,7 +69,7 @@ const CustToast = ({ msg }: { msg: string }) => (
 
 const Ring = ({ x, y, color }: { x: number; y: number; color: string }) => (
   <div
-    className="fixed pointer-events-none z-[1800] rounded-full border-2"
+    className="fixed pointer-events-none z-1800 rounded-full border-2"
     style={{
       left: x - 22,
       top: y - 22,
@@ -149,8 +149,6 @@ export const CustomerMap = () => {
   useEffect(() => {
     loadPoints();
   }, [loadPoints]);
-
-
 
   useEffect(() => {
     if (window.L) {
@@ -291,7 +289,9 @@ export const CustomerMap = () => {
       console.log("[WS] Liste initiale de posts reçue:", data);
       if (data.posts && Array.isArray(data.posts)) {
         const pts = data.posts
-          .filter((p: any) => p.status === "PUBLISHED" && p.latitude && p.longitude)
+          .filter(
+            (p: any) => p.status === "PUBLISHED" && p.latitude && p.longitude,
+          )
           .map(toMarketPoint);
         setPoints(pts);
       }
@@ -302,7 +302,8 @@ export const CustomerMap = () => {
 
       const proposal = data.proposal || data;
       const status = proposal.status || data.status;
-      const customerId = proposal.customer?.id || data.customer?.id || proposal.customer_id;
+      const customerId =
+        proposal.customer?.id || data.customer?.id || proposal.customer_id;
 
       // On récupère l'ID de l'utilisateur actuel depuis le token
       const token = localStorage.getItem("access_token");
@@ -311,14 +312,21 @@ export const CustomerMap = () => {
         try {
           const payload = JSON.parse(atob(token.split(".")[1]));
           currentUserId = payload.user_id || payload.id || payload.sub;
-        } catch (e) { }
+        } catch (e) {}
       }
 
-      console.log(`[WS] Checking ID: current=${currentUserId}, target=${customerId}, status=${status}`);
+      console.log(
+        `[WS] Checking ID: current=${currentUserId}, target=${customerId}, status=${status}`,
+      );
 
-      if (status === "ACCEPTED" && String(customerId) === String(currentUserId)) {
+      if (
+        status === "ACCEPTED" &&
+        String(customerId) === String(currentUserId)
+      ) {
         const title = proposal.post_title || "votre lot";
-        showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+        showToast(
+          `Félicitations ! Votre offre pour "${title}" a été acceptée !`,
+        );
       }
     };
 
