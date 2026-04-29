@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Leaf,
   ShieldCheck,
+  ScanText,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -498,6 +499,17 @@ export function ReportWaste() {
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-green/5 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-yellow/5 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
+      {/* Scan animation styles */}
+      <style>{`
+        @keyframes report-scan-sweep {
+          0% { top: -30%; }
+          100% { top: 120%; }
+        }
+        .animate-report-scan-sweep {
+          animation: report-scan-sweep 2s linear infinite;
+        }
+      `}</style>
+
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -787,13 +799,38 @@ export function ReportWaste() {
                       Proof Image
                     </h3>
                   </div>
-                  <div className="aspect-video rounded-2xl overflow-hidden shadow-inner border border-black/5">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden shadow-inner border border-black/5">
                     {photoPreview && (
                       <img
                         src={photoPreview}
                         alt="Review"
                         className="w-full h-full object-cover"
                       />
+                    )}
+
+                    {/* Scanner animation during submission */}
+                    {submissionStatus === "submitting" && (
+                      <>
+                        {/* Dark tint overlay */}
+                        <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-[2px] pointer-events-none z-0 transition-opacity duration-500"></div>
+
+                        {/* Holographic Scanner Sweep */}
+                        <div className="absolute left-0 right-0 h-32 z-10 animate-report-scan-sweep pointer-events-none overflow-visible">
+                          <div className="absolute bottom-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,1)] z-20"></div>
+                          <div className="absolute bottom-1 w-full h-32 bg-gradient-to-t from-emerald-400/40 to-transparent"></div>
+                        </div>
+
+                        {/* Analyzing Badge */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+                          <div className="bg-black/80 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-black text-sm tracking-widest uppercase flex items-center gap-3 border border-emerald-500/30 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+                            <ScanText
+                              size={18}
+                              className="animate-spin text-emerald-400"
+                            />
+                            {submitPhase === "uploading" ? "Uploading..." : "Analyzing..."}
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
