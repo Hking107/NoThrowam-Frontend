@@ -64,7 +64,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                    bg-white/80 backdrop-blur-xl border-b border-brand-green/10 md:hidden shadow-lg shadow-black/5"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
+          <div className="w-9 h-9 rounded-xl from-brand-green to-[#005f48] 
                           flex items-center justify-center shadow-lg shadow-brand-green/20">
             <ShoppingCart size={16} className="text-white" />
           </div>
