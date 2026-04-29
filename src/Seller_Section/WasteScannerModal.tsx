@@ -43,9 +43,78 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Clean up camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  // Attach stream to video element when camera becomes active
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [isCameraActive]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      streamRef.current = stream;
+      setIsCameraActive(true);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Unable to access camera. Please upload an image instead.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const takePhotoFromStream = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const file = new File([blob], "camera-photo.jpg", {
+                type: "image/jpeg",
+              });
+              setSelectedFile(file);
+              setPreviewUrl(URL.createObjectURL(blob));
+              setAiResult(null);
+              stopCamera();
+            }
+          },
+          "image/jpeg",
+          0.8,
+        );
+      }
+    }
+  };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -90,6 +159,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
     setSelectedFile(null);
     setPreviewUrl(null);
     setAiResult(null);
+    stopCamera();
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
@@ -199,7 +269,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
           className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer"
           data-lenis-prevent
         >
-          {!previewUrl ? (
+          {!previewUrl && !isCameraActive ? (
             <div className="space-y-6">
               {/* Drag & Drop Zone */}
               <div
@@ -232,10 +302,10 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                 />
               </div>
 
-              {/* Camera Button (Mobile Specific) */}
+              {/* Camera Button */}
               <button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={startCamera}
                 className="w-full flex items-center justify-between gap-4 bg-gray-900 hover:bg-black text-white font-black py-5 px-8 rounded-2xl shadow-xl shadow-gray-200 transition-all active:scale-95 group"
               >
                 <div className="flex items-center gap-3">
@@ -254,6 +324,35 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                   className="hidden"
                 />
               </button>
+            </div>
+          ) : isCameraActive ? (
+            /* Live Camera Viewfinder */
+            <div className="flex flex-col items-center">
+              <div className="relative w-full max-w-md">
+                <div className="relative overflow-hidden rounded-[2rem] shadow-2xl border-4 border-white bg-black aspect-[4/3]">
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    playsInline
+                    muted
+                  />
+                  <div className="absolute inset-0 border-4 border-white/20 rounded-[2rem] pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-6 flex justify-center items-center gap-8">
+                    <button
+                      onClick={stopCamera}
+                      className="w-14 h-14 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={takePhotoFromStream}
+                      className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full border-4 border-white flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <div className="w-14 h-14 bg-white rounded-full shadow-inner" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center">
