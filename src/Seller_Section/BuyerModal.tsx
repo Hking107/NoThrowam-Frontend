@@ -13,7 +13,6 @@ import {
 import { wasteService } from "../services/wasteService";
 import React, { useState, useEffect, useCallback } from "react";
 import { useWebSocket } from "../WebSocketProvider";
-import { useLenis } from "../contexts/LenisContext";
 
 const CustToast = ({ msg }: { msg: string }) => (
   <div
@@ -44,14 +43,6 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
 
   const { proposalsWs, proposalWs } = useWebSocket();
 
-  // Control Lenis when modal is open
-  const { disableLenis, enableLenis } = useLenis();
-  useEffect(() => {
-    disableLenis();
-    return () => {
-      enableLenis();
-    };
-  }, [disableLenis, enableLenis]);
 
   const fetchOffers = useCallback(async () => {
     if (!listing || !listing.id) return;

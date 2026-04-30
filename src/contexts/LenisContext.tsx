@@ -10,23 +10,37 @@ interface LenisContextType {
 
 const LenisContext = createContext<LenisContextType | undefined>(undefined);
 
+// Reference-counted lock so nested modals don't race each other.
+// The body scroll is only re-enabled when ALL modals have released their lock.
+let scrollLockCount = 0;
+
 export const LenisProvider: React.FC<{
   children: ReactNode;
   lenisInstance: Lenis | null;
 }> = ({ children, lenisInstance }) => {
   const [isEnabled, setIsEnabled] = React.useState(true);
 
-  const enableLenis = React.useCallback(() => {
-    if (lenisInstance) {
-      lenisInstance.start();
-      setIsEnabled(true);
+  const disableLenis = React.useCallback(() => {
+    scrollLockCount++;
+    if (scrollLockCount === 1) {
+      // First caller — actually lock scroll
+      if (lenisInstance) {
+        lenisInstance.stop();
+        setIsEnabled(false);
+      }
+      document.body.style.overflow = "hidden";
     }
   }, [lenisInstance]);
 
-  const disableLenis = React.useCallback(() => {
-    if (lenisInstance) {
-      lenisInstance.stop();
-      setIsEnabled(false);
+  const enableLenis = React.useCallback(() => {
+    scrollLockCount = Math.max(0, scrollLockCount - 1);
+    if (scrollLockCount === 0) {
+      // Last modal released — unlock scroll
+      if (lenisInstance) {
+        lenisInstance.start();
+        setIsEnabled(true);
+      }
+      document.body.style.overflow = "";
     }
   }, [lenisInstance]);
 

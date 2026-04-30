@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { X, Search, Filter, ShoppingCart, Leaf } from "lucide-react";
-import { useLenis } from "../contexts/LenisContext";
-import { useEffect } from "react";
+import { X, Search, Filter, Leaf } from "lucide-react";
 
 interface ProductModalProps {
   onClose: () => void;
@@ -49,14 +47,7 @@ const mockProducts = [
 const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Control Lenis when modal is open
-  const { disableLenis, enableLenis } = useLenis();
-  useEffect(() => {
-    disableLenis();
-    return () => {
-      enableLenis();
-    };
-  }, [disableLenis, enableLenis]);
+
 
   return (
     <div

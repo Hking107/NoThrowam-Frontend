@@ -12,7 +12,6 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
-import { useLenis } from "../contexts/LenisContext";
 
 interface WalletModalProps {
   onClose: () => void;
@@ -32,14 +31,6 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  // Control Lenis when modal is open
-  const { disableLenis, enableLenis } = useLenis();
-  useEffect(() => {
-    disableLenis();
-    return () => {
-      enableLenis();
-    };
-  }, [disableLenis, enableLenis]);
 
   // Dummy Transaction Data
   const transactions: Transaction[] = [

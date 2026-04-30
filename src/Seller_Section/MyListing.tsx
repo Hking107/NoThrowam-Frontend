@@ -11,7 +11,6 @@ import {
 import BuyersModal from "./BuyerModal";
 import { wasteService } from "../services/wasteService";
 import { usePosts } from "../hooks/usePosts";
-import { useLenis } from "../contexts/LenisContext";
 
 interface MyListingsModalProps {
   onClose: () => void;
@@ -48,14 +47,6 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
 
   const { posts } = usePosts();
 
-  // Control Lenis when modal is open
-  const { disableLenis, enableLenis } = useLenis();
-  useEffect(() => {
-    disableLenis();
-    return () => {
-      enableLenis();
-    };
-  }, [disableLenis, enableLenis]);
 
   useEffect(() => {
     const fetchMyListings = async () => {
