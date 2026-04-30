@@ -104,8 +104,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
             </button>
           </div>
         </div>
-
-        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50" data-lenis-prevent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {mockProducts
               .filter(

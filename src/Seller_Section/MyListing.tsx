@@ -200,8 +200,7 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
               </div>
             </div>
           </div>
-
-          <div className="flex-1 overflow-y-auto p-8 bg-white">
+          <div className="flex-1 overflow-y-auto p-8 bg-white" data-lenis-prevent>
             <div className="space-y-4">
               {isLoading ? (
                 <div className="flex justify-center items-center py-10">

@@ -185,8 +185,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
             />
           </button>
         </div>
-
-        <div className="flex-1 overflow-y-auto p-8 bg-white">
+        <div className="flex-1 overflow-y-auto p-8 bg-white" data-lenis-prevent>
           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
             Acheteurs Potentiels{" "}
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
