@@ -68,6 +68,8 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
     }
   }, [isCameraActive]);
 
+
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({

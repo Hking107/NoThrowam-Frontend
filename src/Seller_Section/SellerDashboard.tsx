@@ -30,9 +30,9 @@ import MaterialMixChart from "../components/Seller/MaterialMix";
 import { StatCard } from "../components/Seller/StatCards";
 import { TableRow } from "../components/Seller/TableRows";
 import WalletModal from "./WalletModal";
-import CameraCapture from "../components/Seller/CameraCapture";
 
 import { usePosts } from "../hooks/usePosts";
+import { useLenis } from "../contexts/LenisContext";
 
 const SellerDashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>("");
@@ -44,6 +44,27 @@ const SellerDashboard: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
+
+  // Lenis control for modal scrolling
+  const { disableLenis, enableLenis } = useLenis();
+
+  // Disable Lenis when any modal is open
+  useEffect(() => {
+    const anyModalOpen =
+      isModalOpen || isProductModalOpen || isMyListingsOpen || isOpenWallet;
+    if (anyModalOpen) {
+      disableLenis();
+    } else {
+      enableLenis();
+    }
+  }, [
+    isModalOpen,
+    isProductModalOpen,
+    isMyListingsOpen,
+    isOpenWallet,
+    disableLenis,
+    enableLenis,
+  ]);
 
   const closeAllModals = () => {
     setIsModalOpen(false);
