@@ -22,7 +22,7 @@ const mockProducts = [
     price: "400 FCFA",
     stock: "120 kg",
     image:
-      "https://images.unsplash.com/photo-1550503192-3bc5505c2194?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1561503412-852800622772?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     id: "P-03",
@@ -31,7 +31,7 @@ const mockProducts = [
     price: "50 FCFA",
     stock: "1000 kg",
     image:
-      "https://images.unsplash.com/photo-1605600659909-b78f4b005bd9?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1647618983077-b9d5e9037517?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     id: "P-04",
@@ -46,8 +46,6 @@ const mockProducts = [
 
 const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
-
-
 
   return (
     <div
@@ -104,7 +102,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50" data-lenis-prevent>
+        <div
+          className="flex-1 overflow-y-auto p-8 bg-gray-50/50"
+          data-lenis-prevent
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {mockProducts
               .filter(
