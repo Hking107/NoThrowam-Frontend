@@ -1,4 +1,6 @@
 
+import { authService } from "./authService";
+
 type MessageHandler = (message: any) => void;
 
 export class WebSocketService {
@@ -18,7 +20,7 @@ export class WebSocketService {
   public connect() {
     this.intentionalDisconnect = false;
 
-    const token = localStorage.getItem('access_token');
+    const token = authService.getAccessToken();
     let finalUrl = this.url;
 
     if (token) {

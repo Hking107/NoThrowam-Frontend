@@ -1,3 +1,4 @@
+import { authService } from "./authService";
 import type { AgentApiResponse } from "../types/AgentAPIResponse";
 import type {
   AgentResult,
@@ -27,7 +28,7 @@ export const agentService = {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
+        Authorization: `Bearer ${authService.getAccessToken() || ""}`,
         "ngrok-skip-browser-warning": "69420",
       },
       body: JSON.stringify({

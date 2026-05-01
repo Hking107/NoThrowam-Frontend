@@ -24,8 +24,6 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       infinite: false,
     });
 
-    setLenis(lenisInstance);
-
     // 2. Synchronize Lenis with GSAP ScrollTrigger
     // This is crucial: Whenever Lenis scrolls, tell ScrollTrigger to update positions.
     lenisInstance.on("scroll", ScrollTrigger.update);
@@ -41,6 +39,14 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     // 4. Disable GSAP's lag smoothing
     // This prevents "jumps" when returning to the tab or when the browser throttles frames.
     gsap.ticker.lagSmoothing(0);
+
+    // Handle scrollbar visibility
+    if (document.documentElement) {
+      document.documentElement.classList.add('no-scrollbar');
+    }
+    if (document.body) {
+      document.body.classList.add('no-scrollbar');
+    }
 
     // 5. Cleanup on unmount
     return () => {

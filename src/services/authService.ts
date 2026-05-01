@@ -5,9 +5,9 @@ const headers = {
   "ngrok-skip-browser-warning": "69420",
 };
 
-const getAuthHeaders = () => ({
+const getAuthHeaders = async () => ({
   ...headers,
-  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  Authorization: `Bearer ${await authService.getAccessToken()}`,
 });
 
 export const authService = {
@@ -41,6 +41,13 @@ export const authService = {
     sessionStorage.setItem("pending_email", userData.email);
     sessionStorage.setItem("pending_role", userData.role);
     return data;
+  },
+
+   /**
+   * Get stored access token
+   */
+  getAccessToken: () => {
+    return localStorage.getItem("access_token");
   },
 
   /**
@@ -213,7 +220,7 @@ export const authService = {
   getMe: async () => {
     const response = await fetch(`${API_BASE}/api/v0/auth/me/`, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -264,7 +271,7 @@ export const authService = {
    * Check if user is authenticated
    */
   isAuthenticated: () => {
-    const token = localStorage.getItem("access_token");
+    const token = authService.getAccessToken();
     if (!token) return false;
 
     // Check if token is expired
@@ -276,10 +283,8 @@ export const authService = {
     }
   },
 
-  /**
-   * Get stored access token
-   */
-  getAccessToken: () => localStorage.getItem("access_token"),
+ 
+  
 
   /**
    * Get stored user role
