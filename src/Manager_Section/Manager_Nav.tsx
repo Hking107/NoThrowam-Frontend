@@ -6,7 +6,7 @@ import {
 import { ManagerMap } from "./ManagerMap";
 import { AgentChat } from "./AgentChat";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 import { Sidebar } from "../components/Dashboard/Sidebar";
 import { MobileNav } from "../components/Dashboard/MobileNav";
 import { DashboardLayout } from "../components/Dashboard/DashboardLayout";
@@ -18,10 +18,11 @@ export const Manager_Nav = () => {
   const [agentOpen, setAgentOpen]   = useState(false);
 
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    authService.logout();
-    navigate("/");
+    logout();
+    navigate("/signin");
   };
 
   const navItems = [
