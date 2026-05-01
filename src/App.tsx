@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { LandingPage } from "./pages/LandingPage";
+import { LandingPage } from "./pages/LandingPageTest";
 import { SignIn } from "./pages/SignIn";
 import { Signup } from "./pages/Signup";
 import { WebSocketProvider } from "./WebSocketProvider";
@@ -53,7 +53,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/signin" element={<SignIn />} />
-            
+
             {/* Must be placed in a protected Route later on */}
             <Route path="/report-waste" element={<ReportWaste />} />
 
@@ -67,7 +67,7 @@ function App() {
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            
+
             {/* Protected Dashboard Routes */}
             <Route
               path="/dashboard_customer"
