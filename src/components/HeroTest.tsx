@@ -180,9 +180,9 @@ export function HeroTest() {
 
       {/* Animated accent blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="hero-bg-blob absolute -top-24 -left-24 w-[400px] h-[400px] rounded-full bg-white/[0.03] blur-[80px]" />
-        <div className="hero-bg-blob absolute bottom-[-10%] right-[-5%] w-[350px] h-[350px] rounded-full bg-brand-yellow/[0.06] blur-[100px]" />
-        <div className="hero-bg-blob absolute top-[30%] right-[10%] w-[300px] h-[300px] rounded-full bg-brand-green/[0.08] blur-[90px]" />
+        <div className="hero-bg-blob absolute -top-24 -left-24 w-[400px] h-[400px] rounded-full bg-white/3 blur-[80px]" />
+        <div className="hero-bg-blob absolute bottom-[-10%] right-[-5%] w-[350px] h-[350px] rounded-full bg-brand-yellow/6 blur-[100px]" />
+        <div className="hero-bg-blob absolute top-[30%] right-[10%] w-[300px] h-[300px] rounded-full bg-brand-green/8 blur-[90px]" />
       </div>
 
       {/* ═══════════════════════════════════════════════
@@ -191,7 +191,7 @@ export function HeroTest() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20 min-h-screen flex items-center">
         <div className="w-full max-w-2xl py-28 lg:py-20">
           {/* Badge */}
-          <div className="hero-badge inline-flex items-center gap-2 bg-white/[0.08] backdrop-blur-md border border-white/[0.12] text-white/90 font-medium px-4 py-2 rounded-full text-sm mb-10">
+          <div className="hero-badge inline-flex items-center gap-2 bg-white/8 backdrop-blur-md border border-white/12 text-white/90 font-medium px-4 py-2 rounded-full text-sm mb-10">
             <MapPin size={15} className="text-brand-yellow" />
             <span className="tracking-wide">NoThrowam Initiative</span>
           </div>
@@ -240,7 +240,7 @@ export function HeroTest() {
             {/* Secondary CTA */}
             <button
               onClick={() => navigate("/signup")}
-              className="hero-cta flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] backdrop-blur-md text-white border border-white/[0.15] hover:border-white/[0.3] px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer group"
+              className="hero-cta flex items-center gap-2 bg-white/6 hover:bg-white/12 backdrop-blur-md text-white border border-white/15 hover:border-white/30 px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer group"
             >
               Learn More
               <ArrowRight className="h-4 w-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -274,46 +274,52 @@ export function HeroTest() {
       {/* ═══════════════════════════════════════════════
           REPORT WASTE WIDGET — premium dashboard style
           ═══════════════════════════════════════════════ */}
-      <div className="hero-report-card absolute right-[5%] lg:right-[8%] xl:right-[12%] top-[50%] -translate-y-1/2 z-20 hidden md:flex flex-col items-end gap-3 perspective-[1200px]">
+      <div className="hero-report-card absolute right-[5%] lg:right-[8%] xl:right-[12%] top-[50%] -translate-y-1/2 z-20 hidden md:flex flex-col items-end gap-3 perspective-distant">
         {/* Status Indicator */}
         <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-lg">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75" style={{ animationDuration: '2s' }}></span>
+            <span
+              className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75"
+              style={{ animationDuration: "2s" }}
+            ></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
           </span>
-          <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">Active Region</span>
+          <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">
+            Active Region
+          </span>
         </div>
 
         {/* Main Widget Card */}
-        <div className="relative w-[22rem] bg-linear-to-br from-white/[0.08] to-black/60 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden group/card transition-all duration-500 hover:border-white/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)] hover:-translate-y-1">
+        <div className="relative w-88 bg-linear-to-br from-white/8 to-black/60 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden group/card transition-all duration-500 hover:border-white/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)] hover:-translate-y-1">
           {/* Decorative Top Highlight */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[1px] bg-linear-to-r from-transparent via-brand-yellow/80 to-transparent opacity-60" />
-          
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-px bg-linear-to-r from-transparent via-brand-yellow/80 to-transparent opacity-60" />
+
           <div className="flex items-start gap-4 mb-5">
             {/* Floating Icon */}
-            <div className="relative flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-brand-red to-[#9e0b1c] shadow-[0_0_20px_rgba(244,63,94,0.4)] group-hover/card:shadow-[0_0_30px_rgba(244,63,94,0.6)] transition-shadow duration-300">
+            <div className="relative shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-brand-red to-[#9e0b1c] shadow-[0_0_20px_rgba(244,63,94,0.4)] group-hover/card:shadow-[0_0_30px_rgba(244,63,94,0.6)] transition-shadow duration-300">
               <TriangleAlert size={22} className="text-white" />
             </div>
-            
+
             {/* Copy */}
             <div>
               <h3 className="text-white text-lg font-bold tracking-tight mb-1">
                 See Waste? Report It.
               </h3>
               <p className="text-white/60 text-xs leading-relaxed font-medium">
-                Help us map illegal dumping sites. Your report triggers immediate action.
+                Help us map illegal dumping sites. Your report triggers
+                immediate action.
               </p>
             </div>
           </div>
 
           {/* Action Button */}
-          <button 
+          <button
             onClick={handleReportWaste}
             className="group/btn w-full relative overflow-hidden flex items-center justify-between bg-white text-black font-extrabold text-sm px-5 py-3.5 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
           >
             {/* Button Hover Background Fill */}
             <div className="absolute inset-0 bg-brand-yellow transform scale-x-0 origin-left group-hover/btn:scale-x-100 transition-transform duration-300 ease-out" />
-            
+
             <span className="relative z-10 flex items-center gap-2 group-hover/btn:text-black transition-colors">
               <Camera size={16} /> Snap Photo & Report
             </span>
