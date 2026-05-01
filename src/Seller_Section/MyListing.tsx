@@ -11,6 +11,7 @@ import {
 import BuyersModal from "./BuyerModal";
 import { wasteService } from "../services/wasteService";
 import { usePosts } from "../hooks/usePosts";
+import { useWebSocket } from '../WebSocketProvider';
 
 interface MyListingsModalProps {
   onClose: () => void;
@@ -47,6 +48,8 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
 
   const { posts } = usePosts();
 
+  const { posts } = usePosts();
+  const { postsWs } = useWebSocket();
 
   useEffect(() => {
     const fetchMyListings = async () => {
@@ -62,13 +65,18 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
     };
 
     fetchMyListings();
-  }, []);
+
+    // Trigger websocket real-time list fetching
+    if (postsWs) {
+      postsWs.sendEvent('post_list', {});
+    }
+  }, [postsWs]);
 
   useEffect(() => {
     if (posts && posts.length > 0) {
       const latestPost = posts[0];
 
-      const alreadyExists = listings.find((l) => l.id === latestPost.id);
+      const alreadyExists = listings.find(l => l.id === latestPost.id);
 
       if (!alreadyExists) {
         setListings((prev) => [latestPost, ...prev]);

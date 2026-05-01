@@ -101,13 +101,12 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
           <img
             src={imgs[idx].url}
             alt={point.label}
-            className={`w-full h-full object-cover transition-all duration-300 ${
-              animating
+            className={`w-full h-full object-cover transition-all duration-300 ${animating
                 ? direction === "right"
                   ? "-translate-x-4 opacity-0"
                   : "translate-x-4 opacity-0"
                 : "translate-x-0 opacity-100"
-            }`}
+              }`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">
@@ -217,7 +216,7 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
                      shadow-xl shadow-brand-green/20 hover:shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all"
         >
           <ShoppingCart size={18} />
-          Faire une offre — {point.fixedPrice?.toLocaleString()}{" "}
+          Proposer une offre — {point.fixedPrice?.toLocaleString()}{" "}
           {point.currency}
         </button>
 

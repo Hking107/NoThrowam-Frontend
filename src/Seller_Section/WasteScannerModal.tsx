@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { wasteService } from "../services/wasteService";
 import { authService } from "../services/authService";
+
 interface WasteScannerModalProps {
   onClose: () => void;
   onPublish?: (data: any) => void;
@@ -50,6 +51,11 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Clean up camera stream on unmount
+
+  const { postsWs } = useWebSocket();
+
   // Scanning animation effect
   useEffect(() => {
     let interval: any;
@@ -185,7 +191,9 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
         return;
       }
 
+      console.log("Uploading image...")
       const uploadResponse = await wasteService.uploadImage(selectedFile);
+      console.log("Upload succesfull")
 
       // Géolocalisation du navigateur
       const coords = await new Promise<{ latitude: number; longitude: number }>(
@@ -206,6 +214,8 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
         },
       );
 
+      console.log("Perfect. Creating post...")
+
       const post = await wasteService.hCreatePost({
         image_url: uploadResponse.url,
         quantity: Math.floor(Math.random() * 100) + 1,
@@ -213,12 +223,22 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
         latitude: coords.latitude,
         longitude: coords.longitude,
       });
+      console.log("Post created")
 
       const { id: postId } = post;
-
+      console.log("Analysing data ...")
       const analyzeData = await wasteService.analyzePost(postId);
+      console.log("Data analysed. Sending message...")
 
+      if (postsWs) {
+        postsWs.sendEvent("post.created",
+          {
+            post_id: postId
+          }
+        );
+      }
       setAiResult({
+        post: post, // Added complete post data for websocket broadcast
         category: analyzeData.category || "Unknown",
         price: analyzeData.price || 0,
         sorted: analyzeData.sorted ?? false,
@@ -290,11 +310,10 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex flex-col items-center justify-center p-12 border-4 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500 overflow-hidden relative group ${
-                  isDragging
-                    ? "border-emerald-500 bg-emerald-50/50 scale-[0.98]"
-                    : "border-gray-100 bg-gray-50/50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5"
-                }`}
+                className={`flex flex - col items - center justify - center p - 12 border - 4 border - dashed rounded - [2rem] cursor - pointer transition - all duration - 500 overflow - hidden relative group ${isDragging
+                  ? "border-emerald-500 bg-emerald-50/50 scale-[0.98]"
+                  : "border-gray-100 bg-gray-50/50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5"
+                  }`}
               >
                 <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                   <Upload size={32} />
@@ -328,7 +347,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                 </div>
                 <ChevronRight size={20} className="text-gray-500" />
               </button>
-            </div>
+            </div >
           ) : isCameraActive ? (
             /* ── Live Camera View ──────────────────────────────────── */
             <div className="flex flex-col items-center">
@@ -412,21 +431,23 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                 </button>
               </div>
 
-              {!aiResult && !isAnalyzing && (
-                <button
-                  onClick={handleAnalyze}
-                  className="mt-8 w-full max-w-md py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
-                >
-                  <RefreshCw
-                    size={24}
-                    className="group-hover:rotate-180 transition-transform duration-700"
-                  />
-                  Start AI Analysis
-                </button>
-              )}
-            </div>
+              {
+                !aiResult && !isAnalyzing && (
+                  <button
+                    onClick={handleAnalyze}
+                    className="mt-8 w-full max-w-md py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                  >
+                    <RefreshCw
+                      size={24}
+                      className="group-hover:rotate-180 transition-transform duration-700"
+                    />
+                    Start AI Analysis
+                  </button>
+                )
+              }
+            </div >
           )}
-        </div>
+        </div >
 
         {aiResult && (
           <div className="bg-gray-50/80 backdrop-blur-md border-t border-gray-100 p-8 animate-[slideUp_0.5s_ease-out]">
@@ -486,14 +507,20 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
 
             <button
               onClick={() => {
-                if (aiResult.sorted && onPublish) onPublish(aiResult);
-                aiResult.sorted ? onClose() : handleReset();
+                if (aiResult.sorted) {
+                  if (onPublish) onPublish(aiResult);
+                  if (postsWs) {
+                    postsWs.sendEvent('post.created', { post: aiResult.post });
+                  }
+                  onClose();
+                } else {
+                  handleReset();
+                }
               }}
-              className={`mt-8 w-full py-5 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-3 shadow-lg ${
-                aiResult.sorted
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 active:scale-95"
-                  : "bg-white text-red-600 border-2 border-red-100 hover:bg-red-50 active:scale-95"
-              }`}
+              className={`mt - 8 w - full py - 5 rounded - 2xl font - black text - lg transition - all flex justify - center items - center gap - 3 shadow - lg ${aiResult.sorted
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 active:scale-95"
+                : "bg-white text-red-600 border-2 border-red-100 hover:bg-red-50 active:scale-95"
+                }`}
             >
               {aiResult.sorted ? (
                 <>
@@ -507,8 +534,8 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
             </button>
           </div>
         )}
-      </main>
-    </div>
+      </main >
+    </div >
   );
 };
 
@@ -532,7 +559,7 @@ const ResultCard = ({
         {label}
       </p>
     </div>
-    <p className={`text-xl font-black ${color}`}>{value}</p>
+    <p className={`text - xl font - black ${color}`}>{value}</p>
   </div>
 );
 

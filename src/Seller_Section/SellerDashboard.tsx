@@ -42,14 +42,14 @@ import {
 
 type PaymentSocketMessage =
   | {
-      type: "payments_list";
-      payments?: SellerPayment[];
-    }
+    type: "payments_list";
+    payments?: SellerPayment[];
+  }
   | {
-      type: "payment.updated";
-      payment?: SellerPayment;
-      data?: SellerPayment;
-    };
+    type: "payment.updated";
+    payment?: SellerPayment;
+    data?: SellerPayment;
+  };
 
 const SellerDashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>("");
@@ -687,15 +687,13 @@ const SellerDashboard: React.FC = () => {
       {/* --- SIDEBAR --- */}
       <aside
         ref={sidebarRef}
-        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${
-          isMobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0"
-        } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${
-          anyModalOpen
+        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${isMobileMenuOpen
+          ? "translate-x-0"
+          : "-translate-x-full md:translate-x-0"
+          } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${anyModalOpen
             ? "opacity-40 scale-[0.98] blur-[1px] pointer-events-none grayscale-[0.2]"
             : ""
-        }`}
+          }`}
       >
         {/* Collapse pill — desktop only */}
         <button
@@ -907,22 +905,20 @@ const SellerDashboard: React.FC = () => {
 
       {/* Overlay for mobile menu */}
       <div
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-500 ${
-          isMobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-500 ${isMobileMenuOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
       {/* --- MAIN CONTENT --- */}
       <main
         ref={mainRef}
-        className={`flex-1 w-full transition-all duration-500 ${
-          anyModalOpen
+        className={`flex-1 w-full transition-all duration-500 ${anyModalOpen
             ? "opacity-40 scale-[0.99] blur-[1px] pointer-events-none grayscale-[0.2]"
             : ""
-        }`}
+          }`}
       >
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
@@ -1052,13 +1048,12 @@ const SellerDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                      chartData.trend?.positive === true
-                        ? "bg-emerald-50 text-emerald-600"
-                        : chartData.trend?.positive === false
-                          ? "bg-red-50 text-red-600"
-                          : "bg-gray-50 text-gray-400"
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${chartData.trend?.positive === true
+                      ? "bg-emerald-50 text-emerald-600"
+                      : chartData.trend?.positive === false
+                        ? "bg-red-50 text-red-600"
+                        : "bg-gray-50 text-gray-400"
+                      }`}
                   >
                     {chartData.trend?.positive === true && (
                       <TrendingUp size={14} />
@@ -1283,13 +1278,12 @@ const SellerDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-5">
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
-                              payment.status === "SUCCESSFUL"
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${payment.status === "SUCCESSFUL"
                                 ? "bg-emerald-50 text-emerald-700"
                                 : payment.status === "PENDING"
                                   ? "bg-amber-50 text-amber-700"
                                   : "bg-red-50 text-red-700"
-                            }`}
+                              }`}
                           >
                             {payment.status}
                           </span>
