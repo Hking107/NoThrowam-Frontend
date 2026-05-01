@@ -119,6 +119,19 @@ export function HeroTest() {
         delay: 1.7,
       });
 
+      // Smooth continuous levitation (3D feel)
+      gsap.to(".hero-report-card", {
+        y: "-=15",
+        rotationX: 2,
+        rotationY: -4,
+        rotationZ: 1,
+        duration: 3.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: 2.9,
+      });
+
       /* ───────────────────────────────────────────────
          AMBIENT — Floating background blobs
          ─────────────────────────────────────────────── */
@@ -160,9 +173,9 @@ export function HeroTest() {
         {/* Green tint overlay — blends image into the green theme */}
         <div className="absolute inset-0 bg-[#003d2e]/70" />
         {/* Gradient fade: image is most visible on the right, fades to green on the left */}
-        <div className="absolute inset-0 bg-linear-to-r from-[#002b20]/95 via-[#004d3a]/80 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#002b20]/70 via-[#004d3a]/20 to-transparent" />
         {/* Bottom fade for the wave divider */}
-        <div className="absolute inset-0 bg-linear-to-t from-[#003d2e]/60 via-transparent to-[#002b20]/40" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#003d2e]/20 via-transparent to-[#002b20]/10" />
       </div>
 
       {/* Animated accent blobs */}
@@ -259,38 +272,56 @@ export function HeroTest() {
       </div>
 
       {/* ═══════════════════════════════════════════════
-          REPORT WASTE CARD — right side
+          REPORT WASTE WIDGET — premium dashboard style
           ═══════════════════════════════════════════════ */}
-      <div className="hero-report-card absolute right-[10%] xl:right-[20%] top-1/2 -translate-y-1/2 z-20 hidden lg:block animate-[pulse_5s_ease-in-out_infinite]">
-        <button
-          onClick={handleReportWaste}
-          className="group relative flex flex-col items-start text-left w-64 bg-black/40 backdrop-blur-xl border border-white/[0.15] hover:border-white/[0.3] rounded-3xl p-6 shadow-2xl transition-all duration-500 hover:-translate-y-1 hover:bg-black/50 cursor-pointer"
-        >
-          {/* Icon */}
-          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-red shadow-lg shadow-brand-red/30 mb-4 transition-transform duration-300 group-hover:scale-105">
-            <TriangleAlert size={24} className="text-white" />
+      <div className="hero-report-card absolute right-[5%] lg:right-[8%] xl:right-[12%] top-[50%] -translate-y-1/2 z-20 hidden md:flex flex-col items-end gap-3 perspective-[1200px]">
+        {/* Status Indicator */}
+        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-lg">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75" style={{ animationDuration: '2s' }}></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
+          </span>
+          <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">Active Region</span>
+        </div>
+
+        {/* Main Widget Card */}
+        <div className="relative w-[22rem] bg-linear-to-br from-white/[0.08] to-black/60 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden group/card transition-all duration-500 hover:border-white/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)] hover:-translate-y-1">
+          {/* Decorative Top Highlight */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[1px] bg-linear-to-r from-transparent via-brand-yellow/80 to-transparent opacity-60" />
+          
+          <div className="flex items-start gap-4 mb-5">
+            {/* Floating Icon */}
+            <div className="relative flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-brand-red to-[#9e0b1c] shadow-[0_0_20px_rgba(244,63,94,0.4)] group-hover/card:shadow-[0_0_30px_rgba(244,63,94,0.6)] transition-shadow duration-300">
+              <TriangleAlert size={22} className="text-white" />
+            </div>
+            
+            {/* Copy */}
+            <div>
+              <h3 className="text-white text-lg font-bold tracking-tight mb-1">
+                See Waste? Report It.
+              </h3>
+              <p className="text-white/60 text-xs leading-relaxed font-medium">
+                Help us map illegal dumping sites. Your report triggers immediate action.
+              </p>
+            </div>
           </div>
 
-          {/* Text */}
-          <div className="mb-4">
-            <h3 className="text-white text-lg font-bold tracking-tight mb-1">
-              Spotted Waste?
-            </h3>
-            <p className="text-white/70 text-sm leading-relaxed">
-              Take immediate action for a cleaner environment.
-            </p>
-          </div>
-
-          {/* Action */}
-          <div className="flex items-center gap-2 text-brand-yellow font-semibold text-sm transition-colors group-hover:text-yellow-400">
-            <Camera size={16} />
-            <span>Snap & Report</span>
-            <ArrowRight
-              size={14}
-              className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-            />
-          </div>
-        </button>
+          {/* Action Button */}
+          <button 
+            onClick={handleReportWaste}
+            className="group/btn w-full relative overflow-hidden flex items-center justify-between bg-white text-black font-extrabold text-sm px-5 py-3.5 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+          >
+            {/* Button Hover Background Fill */}
+            <div className="absolute inset-0 bg-brand-yellow transform scale-x-0 origin-left group-hover/btn:scale-x-100 transition-transform duration-300 ease-out" />
+            
+            <span className="relative z-10 flex items-center gap-2 group-hover/btn:text-black transition-colors">
+              <Camera size={16} /> Snap Photo & Report
+            </span>
+            <div className="relative z-10 w-6 h-6 rounded-full bg-black/5 flex items-center justify-center group-hover/btn:translate-x-1 transition-transform">
+              <ArrowRight size={14} className="text-black" />
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Curved Shape Divider at Bottom */}
