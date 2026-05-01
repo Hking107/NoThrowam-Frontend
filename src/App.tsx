@@ -30,7 +30,7 @@ const RoleBasedRedirect = () => {
       const path = location.pathname;
       // Only redirect if on landing page or auth pages
       if (path === "/" ) {
-        if (user.role === "CUSTOMER") {
+        if (user.role === "CUSTOMER") {  
           navigate("/dashboard_customer");
         } else if (user.role === "MANAGER") {
           navigate("/manager");
