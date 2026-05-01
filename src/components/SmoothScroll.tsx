@@ -40,6 +40,14 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     // This prevents "jumps" when returning to the tab or when the browser throttles frames.
     gsap.ticker.lagSmoothing(0);
 
+    // Handle scrollbar visibility
+    if (document.documentElement) {
+      document.documentElement.classList.add('no-scrollbar');
+    }
+    if (document.body) {
+      document.body.classList.add('no-scrollbar');
+    }
+
     // 5. Cleanup on unmount
     return () => {
       gsap.ticker.remove(raf);

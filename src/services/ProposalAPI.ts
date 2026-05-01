@@ -1,3 +1,4 @@
+import { authService } from "./authService";
 import { API_BASE_URL as API_BASE } from "../config/api";
 
 export async function createProposal(postId: number): Promise<{ alreadyExists: boolean }> {
@@ -6,7 +7,7 @@ export async function createProposal(postId: number): Promise<{ alreadyExists: b
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
+      Authorization: `Bearer ${authService.getAccessToken() || ""}`,
       "ngrok-skip-browser-warning": "69420",
     },
   });

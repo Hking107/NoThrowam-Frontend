@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { SignIn } from "./pages/SignIn";
 import { Signup } from "./pages/Signup";
@@ -17,11 +17,38 @@ import { ReportWaste } from "./pages/ReportWaste";
 import { NotFound } from "./pages/NotFound";
 import { Unauthorized } from "./pages/Unauthorized";
 import { SmoothScroll } from "./components/SmoothScroll";
+import { useAuth } from "./contexts/AuthContext";
+import { useEffect } from "react";
+
+const RoleBasedRedirect = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      const path = location.pathname;
+      // Only redirect if on landing page or auth pages
+      if (path === "/" ) {
+        if (user.role === "CUSTOMER") {
+          navigate("/dashboard_customer");
+        } else if (user.role === "MANAGER") {
+          navigate("/manager");
+        } else if (user.role === "SELLER") {
+          navigate("/dashboard_seller");
+        }
+      }
+    }
+  }, [isLoading, isAuthenticated, user, navigate, location.pathname]);
+
+  return null;
+};
 
 function App() {
   return (
     <WebSocketProvider>
       <Router>
+        <RoleBasedRedirect />
         <SmoothScroll>
           <Routes>
             <Route path="/" element={<LandingPage />} />

@@ -1,10 +1,11 @@
+import { authService } from "./authService";
 import { WebSocketService } from "./webSocketService";
 import type { WastePost } from "../types/WastePost";
 
 import { API_BASE_URL as API_BASE } from "../config/api";
 
-const getHeaders = () => {
-  const token = localStorage.getItem("access_token");
+const getHeaders = async () => {
+  const token = await authService.getAccessToken();
   return {
     'Authorization': `Bearer ${token}`,
     'ngrok-skip-browser-warning': 'true',
@@ -13,18 +14,19 @@ const getHeaders = () => {
 };
 
 // Pour les requêtes multipart/FormData : pas de Content-Type (le navigateur l'ajoute avec le boundary)
-const getAuthHeader = () => {
-  const token = localStorage.getItem("access_token");
+const getAuthHeader = async () => {
+  const token = await authService.getAccessToken();
   return { 'Authorization': `Bearer ${token}`, 'ngrok-skip-browser-warning': 'true' };
 };
 
 export const wasteService = {
 
   getWastePosts: async (): Promise<WastePost[]> => {
+    const token = await authService.getAccessToken();
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/`, {
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem("access_token") || ""}`,
+        'Authorization': `Bearer ${token || ""}`,
         'ngrok-skip-browser-warning': '69420',
       },
     });
@@ -35,7 +37,7 @@ export const wasteService = {
   getProposals: async (listingId: number | string) => {
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/${listingId}/proposals/`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error("Failed to fetch proposals");
     const data = await response.json();
@@ -45,7 +47,7 @@ export const wasteService = {
   acceptProposal: async (proposalId: number | string) => {
     const response = await fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error("Failed to accept proposal");
     return response.json();
@@ -64,7 +66,7 @@ export const wasteService = {
 
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/upload-image/`, {
       method: 'POST',
-      headers: getAuthHeader(),
+      headers: await getAuthHeader(),
       body: formData,
     });
 
@@ -75,7 +77,7 @@ export const wasteService = {
   hCreatePost: async (payload: any) => {
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/create/`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(payload),
     });
     if (!response.ok) throw new Error("Failed to create post");
@@ -85,7 +87,7 @@ export const wasteService = {
   getMyListing: async () => {
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error("Failed to fetch my listings");
     return response.json();
@@ -94,7 +96,7 @@ export const wasteService = {
   analyzePost: async (postId: number | string) => {
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/${postId}/analyze/`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error("Failed to analyze post");
     return response.json();
@@ -109,7 +111,7 @@ export const wasteService = {
   },
 
   getMyListings: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = await authService.getAccessToken();
     const response = await fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
       headers: {
         'Authorization': `Bearer ${token}`

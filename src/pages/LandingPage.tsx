@@ -23,7 +23,7 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text">
+    <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text no-scrollbar">
       {/* 1. Header & Navigation */}
       <Navbar onContactClick={() => setIsContactModalOpen(true)} />
 

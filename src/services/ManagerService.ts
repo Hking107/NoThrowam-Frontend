@@ -1,3 +1,4 @@
+import { authService } from "./authService";
 import type { ApiDeposit, GarbagePoint } from "../types/ManagerMap";
 import { toPoint } from "../Manager_Section/utils";
 
@@ -11,7 +12,7 @@ function getCsrfToken() {
 export function authHeaders(): HeadersInit {
   return {
     "Accept": "application/json",
-    "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
+    "Authorization": `Bearer ${authService.getAccessToken() || ""}`,
     "ngrok-skip-browser-warning": "69420",
     "X-CSRFTOKEN": getCsrfToken() || "yKwR20NnZY6dVjuL1eqmWjx2Ao3Q0bJsh7Ev2UlVZMoywOKTUmphBZ2f1URLCKZZ",
   };
