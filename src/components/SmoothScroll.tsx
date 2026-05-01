@@ -24,8 +24,6 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       infinite: false,
     });
 
-    setLenis(lenisInstance);
-
     // 2. Synchronize Lenis with GSAP ScrollTrigger
     // This is crucial: Whenever Lenis scrolls, tell ScrollTrigger to update positions.
     lenisInstance.on("scroll", ScrollTrigger.update);

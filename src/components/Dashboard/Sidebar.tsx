@@ -81,13 +81,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       ref={sidebarRef}
       className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-stretch
-                 bg-white/80 backdrop-blur-xl border border-brand-green/15 
+                 bg-white/80 backdrop-blur-xl border border-brand-green/15 rounded-[2rem]
                  py-6 px-3 shadow-2xl overflow-hidden group"
       style={{ width: isCollapsed ? 80 : 240 }}
     >
       {/* Brand / Logo */}
       <div className={`flex items-center gap-3 mb-8 px-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-        <div className="shrink-0 w-10 h-10 rounded-xl from-brand-green to-[#005f48] 
+        <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                         flex items-center justify-center shadow-lg shadow-brand-green/20">
           <Recycle color="white" size={24} className="scale-100" />
         </div>
@@ -110,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              // ref={el => itemsRef.current[index] = el}
+              ref={el => itemsRef.current[index] = el}
               onClick={() => onItemClick(item.id)}
               className={`
                 group relative flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300
@@ -158,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
         {!isCollapsed ? (
           <div className="flex items-center gap-3 p-2.5 rounded-lg bg-brand-green/5 border border-brand-green/10">
-            <div className="w-10 h-10 rounded-xl from-brand-green to-[#005f48] 
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                             flex items-center justify-center shrink-0 border border-white/20 shadow-sm">
               <User size={18} className="text-white" />
             </div>
@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ) : (
           <div className="flex justify-center group relative">
-            <div className="w-10 h-10 rounded-xl from-brand-green to-[#005f48] 
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                             flex items-center justify-center shrink-0 border border-white/20 shadow-sm">
               <User size={18} className="text-white" />
             </div>

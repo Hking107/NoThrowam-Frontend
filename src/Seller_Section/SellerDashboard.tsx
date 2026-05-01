@@ -30,8 +30,7 @@ import MaterialMixChart from "../components/Seller/MaterialMix";
 import { StatCard } from "../components/Seller/StatCards";
 import { TableRow } from "../components/Seller/TableRows";
 import WalletModal from "./WalletModal";
-// import CameraCapture from "../components/Seller/CameraCapture";
-import { useAuth } from "../contexts/AuthContext";
+
 import { usePosts } from "../hooks/usePosts";
 import { useLenis } from "../contexts/LenisContext";
 
@@ -79,7 +78,7 @@ const SellerDashboard: React.FC = () => {
   const cardsRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { logout } = useAuth();
+
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Sidebar Entrance
@@ -123,7 +122,7 @@ const SellerDashboard: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem("access_token");
     window.location.href = "/signin";
   };
 
@@ -486,7 +485,7 @@ const SellerDashboard: React.FC = () => {
         }
       } catch (error) {
         console.error("Erreur de dashboard:", error);
-        setDashboardStats(() => ({isLoading: false }));
+        setDashboardStats((prev) => ({ ...prev, isLoading: false }));
       }
     };
     fetchDashboardData();
