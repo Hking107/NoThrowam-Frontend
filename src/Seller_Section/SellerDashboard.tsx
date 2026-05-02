@@ -690,10 +690,14 @@ const SellerDashboard: React.FC = () => {
         className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${isMobileMenuOpen
           ? "translate-x-0"
           : "-translate-x-full md:translate-x-0"
+<<<<<<< HEAD
           } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${anyModalOpen
             ? "opacity-40 scale-[0.98] blur-[1px] pointer-events-none grayscale-[0.2]"
             : ""
           }`}
+=======
+          } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"}`}
+>>>>>>> 67a7c8f (Real-Time communication ...50%)
       >
         {/* Collapse pill — desktop only */}
         <button

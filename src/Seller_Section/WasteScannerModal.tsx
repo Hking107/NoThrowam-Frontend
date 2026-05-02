@@ -18,8 +18,9 @@ import {
   DollarSign,
   Recycle,
 } from "lucide-react";
-import { wasteService } from "../services/wasteService";
-import { authService } from "../services/authService";
+import { wasteService } from '../services/wasteService';
+import { authService } from '../services/authService';
+import { useWebSocket } from '../WebSocketProvider';
 
 interface WasteScannerModalProps {
   onClose: () => void;
@@ -228,17 +229,10 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
       const { id: postId } = post;
       console.log("Analysing data ...")
       const analyzeData = await wasteService.analyzePost(postId);
-      console.log("Data analysed. Sending message...")
+      console.log("Data analysed.")
 
-      if (postsWs) {
-        postsWs.sendEvent("post.created",
-          {
-            post_id: postId
-          }
-        );
-      }
       setAiResult({
-        post: post, // Added complete post data for websocket broadcast
+        post: post, // Added complete post data
         category: analyzeData.category || "Unknown",
         price: analyzeData.price || 0,
         sorted: analyzeData.sorted ?? false,
@@ -310,7 +304,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex flex - col items - center justify - center p - 12 border - 4 border - dashed rounded - [2rem] cursor - pointer transition - all duration - 500 overflow - hidden relative group ${isDragging
+                className={`flex flex-col items-center justify-center p-12 border-4 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500 overflow-hidden relative group ${isDragging
                   ? "border-emerald-500 bg-emerald-50/50 scale-[0.98]"
                   : "border-gray-100 bg-gray-50/50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5"
                   }`}
@@ -385,7 +379,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
               <div className="relative w-full max-w-md group">
                 <div className="relative overflow-hidden rounded-4xl shadow-2xl border-4 border-white">
                   <img
-                    src={previewUrl}
+                    src={previewUrl ? previewUrl : ""}
                     alt="Preview"
                     className="w-full h-64 object-cover"
                   />
@@ -509,15 +503,17 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({
               onClick={() => {
                 if (aiResult.sorted) {
                   if (onPublish) onPublish(aiResult);
-                  if (postsWs) {
-                    postsWs.sendEvent('post.created', { post: aiResult.post });
+                  if (postsWs && aiResult.post) {
+                    postsWs.sendEvent("post.created", {
+                      post_id: aiResult.post.id
+                    });
                   }
                   onClose();
                 } else {
                   handleReset();
                 }
               }}
-              className={`mt - 8 w - full py - 5 rounded - 2xl font - black text - lg transition - all flex justify - center items - center gap - 3 shadow - lg ${aiResult.sorted
+              className={`mt-8 w-full py-5 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-3 shadow-lg ${aiResult.sorted
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 active:scale-95"
                 : "bg-white text-red-600 border-2 border-red-100 hover:bg-red-50 active:scale-95"
                 }`}
@@ -559,7 +555,7 @@ const ResultCard = ({
         {label}
       </p>
     </div>
-    <p className={`text - xl font - black ${color}`}>{value}</p>
+    <p className={`text-xl font-black ${color}`}>{value}</p>
   </div>
 );
 

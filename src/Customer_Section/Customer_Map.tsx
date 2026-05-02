@@ -20,7 +20,6 @@ import { authService } from "../services/authService";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
 import { useWebSocket } from "../WebSocketProvider";
-import { createProposal } from "../services/ProposalAPI";
 
 declare global {
   interface Window {
@@ -290,7 +289,7 @@ export const CustomerMap = () => {
     setTimeout(() => setToast(null), 2800);
   }, []);
 
-  const { postsWs, proposalsWs, proposalWs } = useWebSocket();
+  const { postsWs, proposalsWs } = useWebSocket();
 
   useEffect(() => {
     if (!postsWs) return;
@@ -305,11 +304,13 @@ export const CustomerMap = () => {
           if (!prev.find(p => p.id === post.id)) {
             return [...prev, toMarketPoint(post)];
           }
-          return prev;
+          // Si on veut mettre à jour un post existant
+          return prev.map(p => p.id === post.id ? toMarketPoint(post) : p);
         });
       }
 
-      loadPoints();
+      // We DO NOT call loadPoints() here to prevent it from replacing the 
+      // newly appended optimistic point with stale cached GET request results.
 
       // Si c'est juste publié, on peut montrer un toast, sinon silencieux
       if (data.type === "post.created" || data.type === "post_created") {
@@ -348,6 +349,7 @@ export const CustomerMap = () => {
 
       if (status === "ACCEPTED" && String(customerId) === String(currentUserId)) {
 <<<<<<< HEAD
+<<<<<<< HEAD
         const title = proposal.post_title || "votre lot";
         showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
 =======
@@ -361,6 +363,10 @@ export const CustomerMap = () => {
           showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
         }
 >>>>>>> 325be77 (Customer/Seller flux)
+=======
+        const title = proposal.post_title || "votre lot";
+        showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+>>>>>>> 5bed8dd (Real-Time communication ...50%)
       }
     };
 
@@ -429,17 +435,14 @@ export const CustomerMap = () => {
     return unsub;
   }, [flashRing, showToast]);
 
-  const handleBuy = async () => {
+  const handleBuy = () => {
     if (!popup) return;
-    try {
-      const { alreadyExists } = await createProposal(popup.point.id);
-      if (!alreadyExists && proposalWs) {
-        proposalWs.sendEvent('proposal.create', { post_id: popup.point.id });
-      }
-      showToast("Votre proposition a été transmise au vendeur !");
-    } catch (e: any) {
-      showToast("Erreur lors de l'envoi de la proposition.");
-    }
+    PurchaseBus.setState({
+      phase: "selecting",
+      pointId: popup.point.id,
+      qty: 1,
+    });
+    setPayment(popup.point);
     setPopup(null);
   };
 

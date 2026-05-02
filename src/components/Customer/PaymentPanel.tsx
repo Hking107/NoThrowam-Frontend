@@ -10,6 +10,7 @@ import {
 import type { MarketPoint } from "../../types/MarketPoint";
 import { CATEGORY_EMOJI } from "../../hooks/constants/constants";
 import { PurchaseBus } from "../../services/eventBus";
+import { createProposal } from "../../services/ProposalAPI";
 import { useWebSocket } from "../../WebSocketProvider";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -53,15 +54,28 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
   const handlePay = async (m: string) => {
     setMethod(m);
     setPhase("processing");
+    try {
+      const { alreadyExists } = await createProposal(point.id);
 
-    // Simulating verified payment process with delay
-    setTimeout(() => {
-      const ref = "PAY-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      if (!alreadyExists) {
+        // Broadcast via global WebSocket
+        if (proposalWs) {
+          proposalWs.sendEvent('proposal.create', { post_id: point.id });
+        }
+      }
+
+      const ref = alreadyExists
+        ? "PROP-EXIST"
+        : "PROP-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+
       setTxRef(ref);
       setPhase("done");
       PurchaseBus.setState({ phase: "done", txRef: ref });
       onComplete(m, ref);
-    }, 1500);
+    } catch (e: any) {
+      setErrMsg(e?.message ?? "Erreur inconnue");
+      setPhase("error");
+    }
   };
 
   const handleClose = () => {
@@ -109,7 +123,7 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
         <div className="p-8 pb-6 bg-linear-to-br from-emerald-50 via-emerald-50/30 to-white border-b border-emerald-100/50">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-black text-emerald-900 tracking-tight">
-              Paiement de l'offre
+              Finaliser l'achat
             </h2>
             {phase === "choose" && (
               <button
@@ -213,13 +227,6 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
                     </div>
                   </button>
                 ))}
-
-                <button
-                  onClick={handleClose}
-                  className="w-full mt-4 py-4 border-2 border-red-100 bg-red-50 text-red-600 rounded-3xl font-black text-sm hover:bg-red-100 transition-all active:scale-[0.98]"
-                >
-                  Refuser et Annuler
-                </button>
               </div>
             </div>
           )}
@@ -252,7 +259,7 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
               </div>
 
               <h3 className="text-xl font-black text-emerald-900 tracking-tight">
-                Paiement Réussi !
+                {txRef === "PROP-EXIST" ? "Déjà en cours" : "Offre envoyée !"}
               </h3>
 
               <div className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-100">
@@ -265,7 +272,9 @@ const PaymentPanel: React.FC<PaymentPanelProps> = ({
               </div>
 
               <p className="mt-8 text-sm font-medium text-slate-500 leading-relaxed px-4">
-                Votre paiement a été traité avec succès. Le vendeur a été notifié de la conclusion de la transaction !
+                {txRef === "PROP-EXIST"
+                  ? "Une demande pour ce lot est déjà en attente. Vous serez notifié dès qu'elle sera acceptée."
+                  : "Votre proposition a été transmise au vendeur ! Nous vous enverrons une notification dès que le vendeur aura accepté votre proposition."}
               </p>
 
               <button

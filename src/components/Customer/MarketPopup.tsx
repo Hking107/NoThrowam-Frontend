@@ -216,7 +216,7 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
                      shadow-xl shadow-brand-green/20 hover:shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all"
         >
           <ShoppingCart size={18} />
-          Proposer une offre — {point.fixedPrice?.toLocaleString()}{" "}
+          Faire une offre — {point.fixedPrice?.toLocaleString()}{" "}
           {point.currency}
         </button>
 

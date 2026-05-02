@@ -47,8 +47,6 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
   ];
 
   const { posts } = usePosts();
-
-  const { posts } = usePosts();
   const { postsWs } = useWebSocket();
 
   useEffect(() => {
@@ -74,13 +72,32 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (posts && posts.length > 0) {
-      const latestPost = posts[0];
-
-      const alreadyExists = listings.find(l => l.id === latestPost.id);
-
-      if (!alreadyExists) {
-        setListings((prev) => [latestPost, ...prev]);
-      }
+      setListings((prevListings) => {
+        const updatedListings = [...prevListings];
+        posts.forEach((incomingPost) => {
+          const idx = updatedListings.findIndex((l) => l.id === incomingPost.id);
+          if (idx !== -1) {
+            // Update existing post
+            updatedListings[idx] = { ...updatedListings[idx], ...incomingPost };
+          } else {
+            // Check if it belongs to current seller
+            const token = localStorage.getItem("access_token");
+            let myUserId = null;
+            if (token) {
+              try {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                myUserId = payload.user_id || payload.id || payload.sub;
+              } catch (e) { }
+            }
+            if (myUserId && incomingPost.seller === myUserId) {
+              updatedListings.unshift(incomingPost);
+            } else if (!myUserId && updatedListings.length > 0 && incomingPost.seller === updatedListings[0].seller) {
+              updatedListings.unshift(incomingPost);
+            }
+          }
+        });
+        return updatedListings;
+      });
     }
   }, [posts]);
 
