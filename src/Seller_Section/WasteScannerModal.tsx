@@ -179,6 +179,17 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
           </p>
         </header>
 
+        {/* Scan animation styles */}
+        <style>{`
+          @keyframes report-scan-sweep {
+            0% { top: -30%; }
+            100% { top: 120%; }
+          }
+          .animate-report-scan-sweep {
+            animation: report-scan-sweep 2s linear infinite;
+          }
+        `}</style>
+
         <div 
           className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer"
           data-lenis-prevent
@@ -243,22 +254,29 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
                 <div className="overflow-hidden rounded-[2rem] shadow-2xl border-4 border-white">
                   <img src={previewUrl} alt="Preview" className="w-full h-64 object-cover" />
                   
-                  {/* Scanning Animation Line */}
+                  {/* Scanning Animation UI */}
                   {isAnalyzing && (
-                    <div 
-                      className="absolute left-0 right-0 h-1 bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)] z-10 transition-all duration-300"
-                      style={{ top: `${scanningLinePos}%` }}
-                    ></div>
-                  )}
+                    <>
+                      {/* Dark tint overlay */}
+                      <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-[2px] pointer-events-none z-0 transition-opacity duration-500"></div>
 
-                  {/* Scanning Overlay */}
-                  {isAnalyzing && (
-                    <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[1px] flex items-center justify-center animate-pulse">
-                      <div className="bg-black/60 text-white px-6 py-3 rounded-2xl font-black text-sm tracking-widest uppercase flex items-center gap-3 border border-white/20">
-                        <ScanText size={18} className="animate-spin" />
-                        Analyzing...
+                      {/* Holographic Scanner Sweep */}
+                      <div className="absolute left-0 right-0 h-32 z-10 animate-report-scan-sweep pointer-events-none overflow-visible">
+                        <div className="absolute bottom-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,1)] z-20"></div>
+                        <div className="absolute bottom-1 w-full h-32 bg-gradient-to-t from-emerald-400/40 to-transparent"></div>
                       </div>
-                    </div>
+
+                      {/* Analyzing Badge */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+                        <div className="bg-black/80 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-black text-sm tracking-widest uppercase flex items-center gap-3 border border-emerald-500/30 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+                          <ScanText
+                            size={18}
+                            className="animate-spin text-emerald-400"
+                          />
+                          Analyzing...
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
 

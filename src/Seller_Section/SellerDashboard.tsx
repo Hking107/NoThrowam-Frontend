@@ -519,6 +519,9 @@ const SellerDashboard: React.FC = () => {
     });
   }, []);
 
+  const anyModalOpen =
+    isModalOpen || isProductModalOpen || isMyListingsOpen || isOpenWallet;
+
   return (
     <div className="flex min-h-screen bg-[#fcfdfb] font-sans text-gray-800 selection:bg-emerald-100 selection:text-emerald-900">
       {isModalOpen && (
@@ -545,7 +548,11 @@ const SellerDashboard: React.FC = () => {
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0"
-        } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"}`}
+        } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${
+          anyModalOpen
+            ? "opacity-40 scale-[0.98] blur-[1px] pointer-events-none grayscale-[0.2]"
+            : ""
+        }`}
       >
         {/* Collapse pill — desktop only */}
         <button
@@ -766,7 +773,14 @@ const SellerDashboard: React.FC = () => {
       />
 
       {/* --- MAIN CONTENT --- */}
-      <main ref={mainRef} className="flex-1 w-full">
+      <main
+        ref={mainRef}
+        className={`flex-1 w-full transition-all duration-500 ${
+          anyModalOpen
+            ? "opacity-40 scale-[0.99] blur-[1px] pointer-events-none grayscale-[0.2]"
+            : ""
+        }`}
+      >
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
           <div className="flex items-center gap-2">
