@@ -30,7 +30,8 @@ import MaterialMixChart from "../components/Seller/MaterialMix";
 import { StatCard } from "../components/Seller/StatCards";
 import { TableRow } from "../components/Seller/TableRows";
 import WalletModal from "./WalletModal";
-
+import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 import { usePosts } from "../hooks/usePosts";
 import { useLenis } from "../contexts/LenisContext";
 
@@ -44,7 +45,7 @@ const SellerDashboard: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
-
+  const { logout } = useAuth();
   // Lenis control for modal scrolling
   const { disableLenis, enableLenis } = useLenis();
 
@@ -122,7 +123,7 @@ const SellerDashboard: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
+    logout();
     window.location.href = "/signin";
   };
 
@@ -162,7 +163,7 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("access_token");
+        const token = authService.getAccessToken();
         if (!token) {
           setUserEmail("Non connecté");
           return;
@@ -379,7 +380,7 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("access_token");
+        const token = authService.getAccessToken();
         if (!token) return;
 
         const response = await fetch("/api/v0/waste-posts/my/", {

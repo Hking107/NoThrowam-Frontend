@@ -26,7 +26,7 @@ import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { PurchaseBus } from "../services/eventBus";
-
+import { authService } from "../services/authService";
 async function callAgent(
   message: string,
   state: MapStateSnapshot,
@@ -39,7 +39,7 @@ async function callAgent(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      Authorization: `Bearer ${authService.getAccessToken() || ""}`,
       "ngrok-skip-browser-warning": "69420",
     },
     body: JSON.stringify({

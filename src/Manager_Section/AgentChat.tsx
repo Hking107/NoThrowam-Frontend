@@ -25,7 +25,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 import { ManagerMapBus as MapEventBus } from "../services/eventBus";
-
+import { authService } from "../services/authService";
 async function callAgent(
   message: string,
   hasImage: boolean,
@@ -38,7 +38,7 @@ async function callAgent(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      Authorization: `Bearer ${authService.getAccessToken() || ""}`,
       "ngrok-skip-browser-warning": "69420",
     },
     body: JSON.stringify({
