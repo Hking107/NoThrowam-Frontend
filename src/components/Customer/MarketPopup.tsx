@@ -10,7 +10,7 @@ import {
 import {
   CATEGORY_COLORS,
   CATEGORY_EMOJI,
-} from "../../contexts/constants/constants";
+} from "../../hooks/constants/constants";
 import type { MarketPoint } from "../../types/MarketPoint";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";

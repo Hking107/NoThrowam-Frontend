@@ -8,7 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { MarketPoint } from "../../types/MarketPoint";
-import { CATEGORY_EMOJI } from "../../contexts/constants/constants";
+import { CATEGORY_EMOJI } from "../../hooks/constants/constants";
 import { PurchaseBus } from "../../services/eventBus";
 import { createProposal } from "../../services/ProposalAPI";
 import { useWebSocket } from "../../WebSocketProvider";

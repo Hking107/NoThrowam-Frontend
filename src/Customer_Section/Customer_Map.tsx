@@ -14,7 +14,7 @@ import {
   CATEGORY_LABEL,
   CATEGORY_COLORS,
   CATEGORY_EMOJI,
-} from "../contexts/constants/constants";
+} from "../hooks/constants/constants";
 import { wasteService } from "../services/wasteService";
 import { authService } from "../services/authService";
 
