@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { wasteService } from '../services/wasteService';
 import { authService } from '../services/authService';
-import CameraCapture from '../components/Seller/CameraCapture';
 interface WasteScannerModalProps {
   onClose: () => void;
   onPublish?: (data: any) => void;
@@ -36,9 +35,12 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [aiResult, setAiResult] = useState<any | null>(null);
   const [scanningLinePos, setScanningLinePos] = useState(0);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   // Scanning animation effect
   useEffect(() => {
     let interval: any;
@@ -90,10 +92,74 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
     setAiResult(null);
   };
 
+  // ── Live Camera ──────────────────────────────────────────────────────
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      streamRef.current = stream;
+      setIsCameraActive(true);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Unable to access camera. Please upload an image instead.");
+    }
+  };
+
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [isCameraActive]);
+
+  // Clean up camera on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const takePhotoFromStream = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const file = new File([blob], "camera-photo.jpg", {
+                type: "image/jpeg",
+              });
+              processFile(file);
+              stopCamera();
+            }
+          },
+          "image/jpeg",
+          0.8,
+        );
+      }
+    }
+  };
+
   const handleReset = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setAiResult(null);
+    stopCamera();
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
@@ -154,7 +220,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
       onClick={onClose}
     >
       <main
@@ -194,7 +260,7 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
           className="p-8 pt-2 flex-1 overflow-y-auto custom-scrollbar scrollbar-customer"
           data-lenis-prevent
         >
-          {!previewUrl ? (
+          {!previewUrl && !isCameraActive ? (
             <div className="space-y-6">
               {/* Drag & Drop Zone */}
               <div
@@ -223,11 +289,10 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
                 />
               </div>
 
-              {/* Camera Button (Mobile Specific) */}
+              {/* Live Camera Button */}
               <button 
                 type="button" 
-
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={startCamera}
                 className="w-full flex items-center justify-between gap-4 bg-gray-900 hover:bg-black text-white font-black py-5 px-8 rounded-2xl shadow-xl shadow-gray-200 transition-all active:scale-95 group"
               >
                 <div className="flex items-center gap-3">
@@ -237,16 +302,39 @@ const WasteScannerModal: React.FC<WasteScannerModalProps> = ({ onClose, onPublis
                   <span>Take a Photo</span>
                 </div>
                 <ChevronRight size={20} className="text-gray-500" />
-                <input
-                  type="file"
-                  ref={cameraInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                />
               </button>
-              
+            </div>
+          ) : isCameraActive ? (
+            /* ── Live Camera View ──────────────────────────────────── */
+            <div className="flex flex-col items-center">
+              <div className="relative w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white bg-black aspect-[4/3]">
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  playsInline
+                  muted
+                />
+                {/* Viewfinder frame */}
+                <div className="absolute inset-0 border-4 border-white/20 rounded-[2rem] pointer-events-none" />
+
+                {/* Camera controls */}
+                <div className="absolute inset-x-0 bottom-6 flex justify-center items-center gap-8">
+                  {/* Cancel */}
+                  <button
+                    onClick={stopCamera}
+                    className="w-14 h-14 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                  {/* Shutter */}
+                  <button
+                    onClick={takePhotoFromStream}
+                    className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full border-4 border-white flex items-center justify-center hover:scale-105 transition-transform"
+                  >
+                    <div className="w-14 h-14 bg-white rounded-full shadow-inner" />
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center">

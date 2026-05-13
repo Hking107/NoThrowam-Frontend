@@ -92,7 +92,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
       onClick={onClose}
     >
       <main
