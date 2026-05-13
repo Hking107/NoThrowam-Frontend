@@ -52,16 +52,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
       onClick={onClose}
     >
-      {/* Holographic scan-sweep keyframes — scoped to this modal */}
-      <style>{`
-        @keyframes listing-scan-sweep {
-          0%   { top: -30%; }
-          100% { top: 120%; }
-        }
-        .animate-listing-scan-sweep {
-          animation: listing-scan-sweep 2s linear infinite;
-        }
-      `}</style>
+
 
       <main
         className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out] flex flex-col max-h-[90vh]"
@@ -141,32 +132,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
-                    {/* Subtle ambient tint */}
-                    <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-[2px] pointer-events-none" />
 
-                    {/* Holographic sweep — clipped to image bounds */}
-                    <div
-                      className="absolute inset-0 overflow-hidden pointer-events-none"
-                      style={{ clipPath: "inset(0)" }}
-                    >
-                      <div className="absolute left-0 right-0 h-32 animate-listing-scan-sweep">
-                        {/* Glowing scan line */}
-                        <div className="absolute bottom-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,1)]" />
-                        {/* Gradient trail above the line */}
-                        <div className="absolute bottom-1 w-full h-32 bg-gradient-to-t from-emerald-400/40 to-transparent" />
-                      </div>
-                    </div>
-
-                    {/* Scanning badge — visible on hover */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                      <div className="bg-black/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl font-black text-[10px] tracking-widest uppercase flex items-center gap-1.5 border border-emerald-500/30 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                        <ScanText
-                          size={12}
-                          className="animate-spin text-emerald-400"
-                        />
-                        Scanning
-                      </div>
-                    </div>
 
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-gray-700 shadow-sm uppercase tracking-wide">
                       {product.category}
