@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Search, Filter, Leaf } from "lucide-react";
+import { X, Search, Filter, Leaf, ScanText } from "lucide-react";
 
 interface ProductModalProps {
   onClose: () => void;
@@ -49,9 +49,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm font-sans p-4"
       onClick={onClose}
     >
+
+
       <main
         className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-[fadeIn_0.2s_ease-out] flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -122,13 +124,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
                   key={product.id}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all group flex flex-col"
                 >
-                  {/* Product Image */}
+                  {/* Product Image with holographic scan animation */}
                   <div className="h-48 w-full overflow-hidden relative">
                     <img
                       src={product.image}
                       alt={product.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+
+
+
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-gray-700 shadow-sm uppercase tracking-wide">
                       {product.category}
                     </div>

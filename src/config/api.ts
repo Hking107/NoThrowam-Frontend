@@ -24,3 +24,8 @@ export const WS_DEPOSITS_URL = `${WS_BASE_URL}/deposits/global/`;
 export const API_AUTH_URL = `${API_BASE_URL}/api/v0/auth`;
 export const API_POSTS_URL = `${API_BASE_URL}/api/v0/waste-posts`;
 export const API_DEPOSITS_URL = `${API_BASE_URL}/api/v0/deposits`;
+export const API_PAYMENTS_URL = `${API_BASE_URL}/api/v0/payments`;
+
+// Helper for dynamic Seller Payments WebSocket
+export const WS_SELLER_PAYMENTS_URL = (sellerId: number, accessToken: string) =>
+  `${WS_BASE_URL}/payments/seller/${sellerId}/?token=${encodeURIComponent(accessToken)}`;
