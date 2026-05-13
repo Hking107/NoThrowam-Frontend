@@ -56,7 +56,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
       <style>{`
         @keyframes listing-scan-sweep {
           0%   { top: -30%; }
-          100% { top: 100%; }
+          100% { top: 120%; }
         }
         .animate-listing-scan-sweep {
           animation: listing-scan-sweep 2s linear infinite;
@@ -145,7 +145,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
                     <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-[2px] pointer-events-none" />
 
                     {/* Holographic sweep — clipped to image bounds */}
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ clipPath: 'inset(0)' }}>
+                    <div
+                      className="absolute inset-0 overflow-hidden pointer-events-none"
+                      style={{ clipPath: "inset(0)" }}
+                    >
                       <div className="absolute left-0 right-0 h-32 animate-listing-scan-sweep">
                         {/* Glowing scan line */}
                         <div className="absolute bottom-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,1)]" />
@@ -157,7 +160,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose }) => {
                     {/* Scanning badge — visible on hover */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                       <div className="bg-black/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl font-black text-[10px] tracking-widest uppercase flex items-center gap-1.5 border border-emerald-500/30 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                        <ScanText size={12} className="animate-spin text-emerald-400" />
+                        <ScanText
+                          size={12}
+                          className="animate-spin text-emerald-400"
+                        />
                         Scanning
                       </div>
                     </div>

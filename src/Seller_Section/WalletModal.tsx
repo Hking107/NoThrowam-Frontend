@@ -30,7 +30,11 @@ interface Transaction {
 const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-
+  const [error, setError] = useState<string | null>(null);
+  const [successData, setSuccessData] = useState<{
+    amount: number;
+    method: string;
+  } | null>(null);
 
   // Dummy Transaction Data
   const transactions: Transaction[] = [
@@ -69,13 +73,14 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
   ];
 
   const handleWithdraw = (method: string) => {
+    setError(null);
     const amount = parseFloat(withdrawalAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid amount.");
+      setError("Please enter a valid amount.");
       return;
     }
     if (amount > balance) {
-      alert("Insufficient balance.");
+      setError("Insufficient balance.");
       return;
     }
 
@@ -83,7 +88,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
     // Simulate API call
     setTimeout(() => {
       setIsWithdrawing(false);
-      alert(`Withdrawal of ${amount} FCFA via ${method} initiated!`);
+      setSuccessData({ amount, method });
       setWithdrawalAmount("");
     }, 1500);
   };
@@ -191,20 +196,31 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
                       type="number"
                       placeholder="Enter amount..."
                       value={withdrawalAmount}
-                      onChange={(e) => setWithdrawalAmount(e.target.value)}
+                      onChange={(e) => {
+                        setWithdrawalAmount(e.target.value);
+                        if (error) setError(null);
+                      }}
                       className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 md:px-6 md:py-5 text-xl md:text-2xl font-black focus:outline-none focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-gray-300"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">
                       FCFA
                     </div>
                   </div>
+                  {error && (
+                    <p className="text-red-500 text-sm font-bold mt-2 animate-[fadeIn_0.2s_ease-out]">
+                      {error}
+                    </p>
+                  )}
 
                   {/* Quick select */}
                   <div className="flex flex-wrap gap-2 mt-4">
                     {quickAmounts.map((amt) => (
                       <button
                         key={amt}
-                        onClick={() => setWithdrawalAmount(amt.toString())}
+                        onClick={() => {
+                          setWithdrawalAmount(amt.toString());
+                          if (error) setError(null);
+                        }}
                         className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-sm font-bold text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all active:scale-95"
                       >
                         +{amt.toLocaleString()}
@@ -346,6 +362,42 @@ const WalletModal: React.FC<WalletModalProps> = ({ onClose, balance = 0 }) => {
           </div>
         </div>
       </main>
+
+      {/* Success Modal Overlay */}
+      {successData && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-[scaleIn_0.3s_ease-out] border border-emerald-100 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl -z-10"></div>
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner relative">
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-100 border-t-emerald-500 animate-[spin_3s_linear_infinite] opacity-50"></div>
+              <CheckCircle2
+                size={40}
+                className="text-emerald-500 relative z-10"
+              />
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">
+              Withdrawal Initiated
+            </h3>
+            <p className="text-gray-500 font-medium mb-8 text-sm">
+              Your withdrawal of{" "}
+              <span className="font-bold text-gray-900">
+                {successData.amount.toLocaleString()} FCFA
+              </span>{" "}
+              via{" "}
+              <span className="font-bold text-gray-900">
+                {successData.method}
+              </span>{" "}
+              is currently processing.
+            </p>
+            <button
+              onClick={() => setSuccessData(null)}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-200 active:scale-95"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
