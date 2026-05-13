@@ -33,6 +33,22 @@ import WalletModal from "./WalletModal";
 
 import { usePosts } from "../hooks/usePosts";
 import { useLenis } from "../contexts/LenisContext";
+import { WS_SELLER_PAYMENTS_URL } from "../config/api";
+import {
+  withdrawalService,
+  type SellerPayment,
+} from "../services/withdrawalService";
+
+type PaymentSocketMessage =
+  | {
+      type: "payments_list";
+      payments?: SellerPayment[];
+    }
+  | {
+      type: "payment.updated";
+      payment?: SellerPayment;
+      data?: SellerPayment;
+    };
 
 const SellerDashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>("");
@@ -44,6 +60,7 @@ const SellerDashboard: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const { posts } = usePosts();
   const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [sellerPayments, setSellerPayments] = useState<SellerPayment[]>([]);
 
   // Lenis control for modal scrolling
   const { disableLenis, enableLenis } = useLenis();
@@ -192,6 +209,90 @@ const SellerDashboard: React.FC = () => {
 
     fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let cancelled = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const loadSellerPayments = async () => {
+      try {
+        const payments = await withdrawalService.getSellerPayments(userId);
+        if (!cancelled) {
+          setSellerPayments(payments);
+        }
+      } catch (error) {
+        console.error("Failed to load seller payments:", error);
+      }
+    };
+
+    const upsertPayment = (payment: SellerPayment) => {
+      setSellerPayments((current) => {
+        const existingIndex = current.findIndex((item) => item.id === payment.id);
+        if (existingIndex === -1) {
+          return [payment, ...current];
+        }
+
+        const next = [...current];
+        next[existingIndex] = payment;
+        return next;
+      });
+    };
+
+    const connectSellerPaymentsSocket = () => {
+      const token = localStorage.getItem("access_token");
+      if (!token || cancelled) return;
+
+      socket = new WebSocket(WS_SELLER_PAYMENTS_URL(userId, token));
+
+      socket.onopen = () => {
+        loadSellerPayments();
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data) as PaymentSocketMessage;
+
+          if (message.type === "payments_list") {
+            setSellerPayments(message.payments || []);
+            return;
+          }
+
+          if (message.type === "payment.updated") {
+            const payment = message.payment || message.data;
+            if (payment) {
+              upsertPayment(payment);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to parse seller payment websocket message:", error);
+        }
+      };
+
+      socket.onclose = () => {
+        if (!cancelled) {
+          reconnectTimer = setTimeout(connectSellerPaymentsSocket, 3000);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("Seller payment websocket error:", error);
+      };
+    };
+
+    loadSellerPayments();
+    connectSellerPaymentsSocket();
+
+    return () => {
+      cancelled = true;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      socket?.close();
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (userId !== null && posts.length > 0) {
@@ -485,7 +586,7 @@ const SellerDashboard: React.FC = () => {
         }
       } catch (error) {
         console.error("Erreur de dashboard:", error);
-        setDashboardStats((prev) => ({ ...prev, isLoading: false }));
+        setDashboardStats((prev: any) => ({ ...prev, isLoading: false }));
       }
     };
     fetchDashboardData();
@@ -538,6 +639,8 @@ const SellerDashboard: React.FC = () => {
         <WalletModal
           onClose={() => setIsOpenWallet(false)}
           balance={dashboardStats.totalEarnings}
+          sellerId={userId ?? undefined}
+          payments={sellerPayments}
         />
       )}
 
@@ -1073,16 +1176,15 @@ const SellerDashboard: React.FC = () => {
                 <thead className="bg-gray-50/50 text-gray-400 font-medium text-xs uppercase">
                   <tr>
                     <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Material Type</th>
-                    <th className="px-6 py-4">Listing ID</th>
-                    <th className="px-6 py-4">Weight (kg)</th>
-                    <th className="px-6 py-4">Price</th>
+                    <th className="px-6 py-4">Type</th>
+                    <th className="px-6 py-4">Reference</th>
+                    <th className="px-6 py-4">Gross</th>
+                    <th className="px-6 py-4">Net</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {/* 🆕 6. On map sur myPosts au lieu de recentPosts */}
                   {dashboardStats.isLoading ? (
                     // Transaction Skeletons
                     [1, 2, 3, 4, 5].map((i) => (
@@ -1107,6 +1209,50 @@ const SellerDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-5">
                           <div className="w-24 h-8 skeleton rounded-xl"></div>
+                        </td>
+                        <td className="px-6 py-5"></td>
+                      </tr>
+                    ))
+                  ) : sellerPayments.length > 0 ? (
+                    sellerPayments.map((payment) => (
+                      <tr
+                        key={payment.id}
+                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/40 transition-colors"
+                      >
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          {new Date(payment.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center">
+                              <DollarSign size={16} />
+                            </div>
+                            <span className="font-medium text-gray-900">
+                              Seller payment
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 font-mono text-xs text-gray-500">
+                          {payment.transaction_id}
+                        </td>
+                        <td className="px-6 py-5 font-medium">
+                          {parseFloat(payment.amount).toLocaleString()} FCFA
+                        </td>
+                        <td className="px-6 py-5 font-bold text-emerald-600">
+                          {parseFloat(payment.seller_credit).toLocaleString()} FCFA
+                        </td>
+                        <td className="px-6 py-5">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                              payment.status === "SUCCESSFUL"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : payment.status === "PENDING"
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-red-50 text-red-700"
+                            }`}
+                          >
+                            {payment.status}
+                          </span>
                         </td>
                         <td className="px-6 py-5"></td>
                       </tr>
