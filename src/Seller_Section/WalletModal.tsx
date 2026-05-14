@@ -496,7 +496,8 @@ const WalletModal: React.FC<WalletModalProps> = ({
 
             {step === "OTP" && (
               /* OTP VERIFICATION STEP */
-              <div className="max-w-md mx-auto py-10 space-y-8 animate-[fadeIn_0.3s_ease-out]">
+              <div className="glass-card rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 max-w-md mx-auto space-y-8 bg-white border border-gray-100 shadow-sm relative overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
                 <div className="text-center space-y-4">
                   <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner text-emerald-600">
                     <ShieldCheck size={40} />
