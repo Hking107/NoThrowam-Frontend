@@ -8,13 +8,7 @@ import {
 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useAuth } from "../../contexts/AuthContext";
 // import { Logo } from "../Logo";
-const handleLogout = () => {
-    const { logout } = useAuth();
-    logout();
-    window.location.href = "/signin";
-  };
 interface NavItem {
   id: string;
   label: string;
@@ -39,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
   onItemClick,
+  onLogout,
   userName = "User",
   userRole = "Authenticated User"
 }) => {
@@ -186,10 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <button
-          onClick={() => {
-            handleLogout();
-              // setIsMobileMenuOpen(false);
-          }}
+          onClick={onLogout}
           className={`flex items-center gap-3 w-full p-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors
                      ${isCollapsed ? 'justify-center' : 'justify-start'}`}
         >

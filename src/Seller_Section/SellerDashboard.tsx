@@ -180,20 +180,42 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = authService.getAccessToken();
-        if (!token) {
+        const makeRequest = async () => {
+          const token = authService.getAccessToken();
+          if (!token) {
+            return null;
+          }
+          return fetch("/api/v0/auth/me/", {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "69420",
+            },
+          });
+        };
+
+        let response = await makeRequest();
+        if (!response) {
           setUserEmail("Non connecté");
           return;
         }
 
-        const response = await fetch("/api/v0/auth/me/", {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420",
-          },
-        });
+        if (response.status === 401) {
+          try {
+            await authService.refresh();
+            response = await makeRequest();
+            if (!response) {
+              setUserEmail("Non connecté");
+              return;
+            }
+          } catch (err) {
+            console.error("Refresh token failed", err);
+            authService.logout();
+            setUserEmail("Erreur de session");
+            return;
+          }
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -481,17 +503,34 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = authService.getAccessToken();
-        if (!token) return;
+        const makeRequest = async () => {
+          const token = authService.getAccessToken();
+          if (!token) return null;
+          return fetch("/api/v0/waste-posts/my/", {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "69420",
+            },
+          });
+        };
 
-        const response = await fetch("/api/v0/waste-posts/my/", {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420",
-          },
-        });
+        let response = await makeRequest();
+        if (!response) return;
+
+        if (response.status === 401) {
+          try {
+            await authService.refresh();
+            response = await makeRequest();
+            if (!response) return;
+          } catch (err) {
+            console.error("Refresh token failed", err);
+            authService.logout();
+            setDashboardStats((prev: any) => ({ ...prev, isLoading: false }));
+            return;
+          }
+        }
 
         if (response.ok) {
           const posts = await response.json();

@@ -96,7 +96,7 @@ export async function fetchUncollected(): Promise<GarbagePoint[]> {
         await authService.refresh();
 
         res = await makeRequest();
-      }catch{
+      }catch(err){
         console.error("Refresh token failed", err);
 
       authService.logout?.();
@@ -114,16 +114,28 @@ export async function fetchUncollected(): Promise<GarbagePoint[]> {
 }
 
 export async function fetchAllDeposits(): Promise<GarbagePoint[]> {
-  const res = await fetch(`${API_BASE}/api/v0/deposits/`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
+  const makeRequest = async() => {
+    return fetch(`${API_BASE}/api/v0/deposits/`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+  }
+  
+  let res = await makeRequest();
+  if (res.status === 401){
+    try {
+      await authService.refresh();
 
+      res = await makeRequest();
+    }catch(err){
+      console.error("Refresh token failed", err);
+
+      authService.logout?.();
+
+      throw new Error("Session expired. Please login again.");
+    }
+  }
   if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-  if (res.ok){
-    console.error("========================================================== Token Valid =====================");
-  };
-  if (res.status === 401) authService.refresh();
 
 
   const data: ApiDeposit[] = await res.json();
