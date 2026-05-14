@@ -70,7 +70,7 @@ const CustToast = ({ msg }: { msg: string }) => (
 
 const Ring = ({ x, y, color }: { x: number; y: number; color: string }) => (
   <div
-    className="fixed pointer-events-none z-[1800] rounded-full border-2"
+    className="fixed pointer-events-none z-1800 rounded-full border-2"
     style={{
       left: x - 22,
       top: y - 22,
@@ -427,8 +427,9 @@ export const CustomerMap = () => {
       {fetchError && !loading && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1400 
-                        bg-white p-8 rounded-xl border border-red-100 shadow-2xl shadow-red-500/10 
-                        text-center max-w-xs animate-in zoom-in duration-300"
+                        w-[calc(100vw-2rem)] max-w-xs bg-white p-5 sm:p-8 rounded-2xl sm:rounded-xl 
+                        border border-red-100 shadow-2xl shadow-red-500/10 text-center animate-in 
+                        zoom-in duration-300"
         >
           <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center mx-auto mb-4 border border-red-100">
             <p className="text-xl">⚠️</p>
@@ -452,8 +453,9 @@ export const CustomerMap = () => {
       {!loading && !fetchError && points.length === 0 && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-500 
-                        bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
-                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
+                        w-[calc(100vw-2rem)] max-w-sm bg-white/90 backdrop-blur-xl p-5 sm:p-8 
+                        rounded-3xl sm:rounded-[2.5rem] border border-brand-green/10 shadow-2xl 
+                        shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
         >
           <div className="text-4xl mb-4">📦</div>
           <p className="text-xl font-black text-slate-800 mb-1 leading-tight">
@@ -469,35 +471,38 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.stats}
-          className="absolute top-6 left-6 z-1000 bg-white/90 backdrop-blur-xl border border-brand-green/15 
-                     rounded-xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
+          className="absolute top-18 left-4 right-4 sm:left-6 sm:right-auto sm:top-4 z-1000 bg-white/90
+                     backdrop-blur-xl border border-brand-green/15 rounded-2xl sm:rounded-xl p-3 sm:p-5 
+                     flex flex-row flex-wrap sm:flex-nowrap gap-x-4 gap-y-3 sm:gap-8 items-center 
+                     justify-between sm:justify-start shadow-2xl shadow-black/5 opacity-0 scale-95
+                     max-w-2/4 sm:max-w-none"
         >
-          <div>
-            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+          <div className="min-w-0">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
               Lots
             </p>
-            <p className="text-3xl font-black text-brand-green leading-none">
+            <p className="text-xl sm:text-3xl font-black text-brand-green leading-none">
               {points.length}
-              <span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
+              <span className="text-[10px] sm:text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
                 dispo
               </span>
             </p>
           </div>
-          <div className="w-px h-10 bg-slate-200/50" />
-          <div>
-            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+          <div className="hidden sm:block w-px h-10 bg-slate-200/50" />
+          <div className="min-w-0">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
               Poids Total
             </p>
-            <p className="text-3xl font-black text-blue-500 leading-none">
+            <p className="text-xl sm:text-3xl font-black text-blue-500 leading-none">
               {totalWeight.toFixed(0)}
-              <span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
+              <span className="text-[10px] sm:text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
                 kg
               </span>
             </p>
           </div>
           <button
             onClick={loadPoints}
-            className="w-10 h-10 rounded-lg bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
+            className="ml-auto w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
                        text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -509,24 +514,26 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.legend}
-          className="absolute top-6 right-6 z-1000 bg-white/90 backdrop-blur-xl border border-slate-200/50 
-                     rounded-xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
+          className="absolute top-180 sm:top-30 left-4 right-4 sm:right-auto z-1000 bg-white/90 
+                     backdrop-blur-xl border border-slate-200/50 rounded-2xl sm:rounded-xl p-4 sm:p-5 
+                     flex flex-col gap-2.5 sm:gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95 
+                     w-[calc(100vw-2rem)] max-w-2/4 sm:w-auto sm:max-w-none"
         >
-          <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
             Catégories
           </p>
           {Object.entries(CATEGORY_COLORS)
             .filter(([c]) => c !== "Autre")
             .map(([cat, color]) => (
-              <div key={cat} className="flex items-center gap-4 group">
+              <div key={cat} className="flex items-center gap-2.5 sm:gap-4 group">
                 <div
-                  className="w-3 h-3 rounded-full shadow-lg transition-transform group-hover:scale-125"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-lg transition-transform group-hover:scale-125"
                   style={{
                     background: color,
                     boxShadow: `0 0 10px ${color}66`,
                   }}
                 />
-                <span className="text-sm text-slate-600 font-semibold tracking-tight">
+                <span className="text-xs sm:text-sm text-slate-600 font-semibold tracking-tight">
                   {CATEGORY_EMOJI[cat]} {cat}
                 </span>
               </div>

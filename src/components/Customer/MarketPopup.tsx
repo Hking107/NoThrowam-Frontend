@@ -36,6 +36,8 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
   const imgs = point.images ?? [];
   const color = CATEGORY_COLORS[point.category] || "#22c55e";
   const emoji = CATEGORY_EMOJI[point.category] || "📦";
+  const vw = window.innerWidth;
+  const W = Math.min(320, vw - 24);
 
   useGSAP(() => {
     gsap.fromTo(
@@ -71,11 +73,14 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
     }, 260);
   };
 
-  const W = 320;
-  const vw = window.innerWidth,
-    vh = window.innerHeight;
+  const vh = window.innerHeight;
   let left = origin.x + 32,
     top = origin.y - 180;
+
+  if (vw < 640) {
+    left = 12;
+    top = Math.max(12, Math.min(top, vh - 452));
+  }
 
   if (left + W > vw - 16) left = origin.x - W - 32;
   if (top < 16) top = 16;
@@ -87,7 +92,7 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
     <div
       ref={containerRef}
       onClick={(e) => e.stopPropagation()}
-      className="fixed z-3000 rounded-4xl bg-white shadow-2xl overflow-hidden border border-white/90"
+      className="fixed z-3000 rounded-4xl bg-white shadow-2xl overflow-hidden border border-white/90 max-w-[calc(100vw-1rem)]"
       style={{ left, top, width: W, transformOrigin: `${originSide} center` }}
     >
       {/* Image Section */}
