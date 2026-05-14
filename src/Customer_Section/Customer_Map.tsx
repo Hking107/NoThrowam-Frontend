@@ -88,6 +88,7 @@ export const CustomerMap = () => {
   const leafRef = useRef<any>(null);
   const markersRef = useRef<Record<number, any>>({});
   const pointsRef = useRef<MarketPoint[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const uiRefs = {
     stats: useRef<HTMLDivElement>(null),
@@ -109,6 +110,10 @@ export const CustomerMap = () => {
     { id: string; x: number; y: number; color: string }[]
   >([]);
   const [toast, setToast] = useState<string | null>(null);
+
+  const visiblePoints = selectedCategory
+    ? points.filter((point) => point.category === selectedCategory)
+    : points;
 
   pointsRef.current = points;
 
@@ -208,7 +213,7 @@ export const CustomerMap = () => {
     Object.values(markersRef.current).forEach((m: any) => m.remove());
     markersRef.current = {};
 
-    points.forEach((pt) => {
+    visiblePoints.forEach((pt) => {
       const color = CATEGORY_COLORS[pt.category] || "#94a3b8";
       const icon = L.divIcon({
         className: "",
@@ -234,7 +239,19 @@ export const CustomerMap = () => {
       });
       markersRef.current[pt.id] = marker;
     });
-  }, [points, leafReady]);
+
+    if (visiblePoints.length > 0) {
+      const bounds = L.latLngBounds(
+        visiblePoints.map((point) => [point.lat, point.lng]),
+      );
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    }
+  }, [visiblePoints, leafReady]);
+
+  useEffect(() => {
+    setPopup(null);
+    setPayment(null);
+  }, [selectedCategory]);
 
   useEffect(() => {
     MapEventBus.registerStateProvider(() => ({
@@ -399,7 +416,7 @@ export const CustomerMap = () => {
     setPopup(null);
   };
 
-  const totalWeight = points.reduce((s, p) => s + p.fixedWeight, 0);
+  const totalWeight = visiblePoints.reduce((s, p) => s + p.fixedWeight, 0);
 
   return (
     <div
@@ -514,30 +531,60 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.legend}
-          className="absolute top-180 sm:top-30 left-4 right-4 sm:right-auto z-1000 bg-white/90 
-                     backdrop-blur-xl border border-slate-200/50 rounded-2xl sm:rounded-xl p-4 sm:p-5 
-                     flex flex-col gap-2.5 sm:gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95 
-                     w-[calc(100vw-2rem)] max-w-2/4 sm:w-auto sm:max-w-none"
+          className="absolute top-40 sm:top-30 left-4 right-auto z-1000 bg-white/90 
+                     backdrop-blur-xl border border-slate-200/50 rounded-2xl sm:rounded-xl p-3.5 sm:p-4 
+                     flex flex-col gap-3 sm:gap-3.5 shadow-2xl shadow-black/5 opacity-0 scale-95 
+                     w-46 sm:w-50 max-w-[calc(100vw-2rem)]"
         >
-          <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
-            Catégories
-          </p>
-          {Object.entries(CATEGORY_COLORS)
-            .filter(([c]) => c !== "Autre")
-            .map(([cat, color]) => (
-              <div key={cat} className="flex items-center gap-2.5 sm:gap-4 group">
-                <div
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-lg transition-transform group-hover:scale-125"
-                  style={{
-                    background: color,
-                    boxShadow: `0 0 10px ${color}66`,
-                  }}
-                />
-                <span className="text-xs sm:text-sm text-slate-600 font-semibold tracking-tight">
-                  {CATEGORY_EMOJI[cat]} {cat}
-                </span>
-              </div>
-            ))}
+          <div>
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+              Catégories
+            </p>
+            <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
+              Choisissez une catégorie pour n&apos;afficher que ses lots.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 max-h-[48vh] overflow-y-auto pr-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory(null)}
+              className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${
+                selectedCategory === null
+                  ? "bg-brand-green text-white border-brand-green shadow-lg shadow-brand-green/20"
+                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-brand-green/80 shrink-0" />
+              <span>Tous</span>
+            </button>
+            {Object.entries(CATEGORY_COLORS)
+              .filter(([c]) => c !== "Autre")
+              .map(([cat, color]) => {
+                const active = selectedCategory === cat;
+
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(active ? null : cat)}
+                    className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${
+                      active
+                        ? "text-white shadow-lg shadow-black/10"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+                    }`}
+                    style={active ? { backgroundColor: color, borderColor: color } : {}}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}66` }}
+                    />
+                    <span>
+                      {CATEGORY_EMOJI[cat]} {cat}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
         </div>
       )}
 
