@@ -148,7 +148,8 @@ const MyListing: React.FC<MyListingsModalProps> = ({ onClose }) => {
       {selectedListing && (
         <BuyersModal
           listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
+          onClose={() => {setSelectedListing(null)
+          }}
         />
       )}
 

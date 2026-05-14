@@ -110,10 +110,10 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
     }
 
     try {
-      // 1. Mise à jour Backend (API REST)
-      await wasteService.acceptProposal(_offerId);
+      // 1. Call REST API to accept the proposal
+      await wasteService.acceptProposal(_offerId, "ACCEPTED");
 
-      // 2. Notification temps réel (WebSocket)
+      // 2. Listen for WebSocket confirmation from proposalsWs
       if (proposalsWs) {
         const status = "ACCEPTED";
         proposalsWs.sendEvent("proposal.accept", {
@@ -132,6 +132,35 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
       }, 2500);
     } catch (err: any) {
       setError(err.message || "Échec de l'acceptation de la proposition.");
+    }
+  };
+
+  const handleReject = async (_offerId: string | number, buyerName: string) => {
+    if (!_offerId) {
+      setError("Impossible de refuser : ID de l'offre introuvable.");
+      return;
+    }
+
+    try {
+      // 1. Call REST API to reject the proposal
+      await wasteService.acceptProposal(_offerId, "REJECTED");
+
+      // 2. Listen for WebSocket confirmation from proposalsWs
+      if (proposalsWs) {
+        const status = "REJECTED";
+        proposalsWs.sendEvent("proposal.accept", {
+          proposal_id: _offerId,
+          status: status,
+        });
+      }
+
+      // 3. Mise à jour UI
+      setToastMsg(`Vous avez refusé la proposition de ${buyerName}.`);
+      
+      // Refresh offers list to remove rejected proposal
+      await fetchOffers();
+    } catch (err: any) {
+      setError(err.message || "Échec du refus de la proposition.");
     }
   };
 
@@ -245,7 +274,7 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-6 sm:mt-0 flex items-center justify-between sm:justify-end gap-8 shrink-0 relative z-10">
+                    <div className="mt-6 sm:mt-0 flex items-center justify-between sm:justify-end gap-4 shrink-0 relative z-10">
                       <div className="text-right">
                         <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">
                           Proposed Offer
@@ -259,20 +288,30 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
                           </span>
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleSell(offerId, buyerName)}
-                        disabled={soldTo !== null || !offerId}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm
-                          ${isSoldToThis ? "bg-green-500 text-white cursor-default" : soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30"}`}
-                      >
-                        {isSoldToThis ? (
-                          <>
-                            Vendu ! <CheckCircle2 size={18} />
-                          </>
-                        ) : (
-                          "Accepter"
-                        )}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReject(offerId, buyerName)}
+                          disabled={soldTo !== null || !offerId}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm
+                            ${soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:-translate-y-0.5 hover:shadow-red-500/20"}`}
+                        >
+                          Refuser
+                        </button>
+                        <button
+                          onClick={() => handleSell(offerId, buyerName)}
+                          disabled={soldTo !== null || !offerId}
+                          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm
+                            ${isSoldToThis ? "bg-green-500 text-white cursor-default" : soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30"}`}
+                        >
+                          {isSoldToThis ? (
+                            <>
+                              Vendu ! <CheckCircle2 size={18} />
+                            </>
+                          ) : (
+                            "Accepter"
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Decorative Background Icon */}

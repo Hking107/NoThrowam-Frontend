@@ -32,7 +32,7 @@ export const wasteService = {
         },
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -55,7 +55,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -79,7 +79,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -137,7 +137,7 @@ export const wasteService = {
         body: JSON.stringify(payload),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -160,7 +160,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -183,7 +183,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -216,7 +216,7 @@ export const wasteService = {
         }
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
