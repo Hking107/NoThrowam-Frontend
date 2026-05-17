@@ -72,11 +72,12 @@ export const wasteService = {
     return data.proposals;
   },
 
-  acceptProposal: async (proposalId: number | string) => {
+  acceptProposal: async (proposalId: number | string, status: string = 'ACCEPTED') => {
     const makeRequest = async () => {
       return fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
         method: 'POST',
         headers: await getHeaders(),
+        body: JSON.stringify({ status })
       });
     };
 

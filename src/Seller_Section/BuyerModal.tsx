@@ -48,15 +48,37 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
     if (!listing || !listing.id) return;
     try {
       const proposalsData = await wasteService.getProposals(listing.id);
-      setOffers(proposalsData || []);
+      // Exclude REJECTED and CANCELLED offers from UI
+      const validOffers = (proposalsData || []).filter(
+        (o: any) => o.status !== "REJECTED" && o.status !== "CANCELLED"
+      );
+      setOffers(validOffers);
     } catch (err: any) {
       console.error("Erreur lors de la récupération des offres:", err);
     }
   }, [listing]);
 
-  // Écoute des nouvelles propositions en temps réel
+  // Écoute des nouvelles propositions en temps réel via proposalsWs
   useEffect(() => {
-    if (!proposalWs) return;
+    if (!proposalsWs) return;
+
+    const handleProposalsList = (data: any) => {
+      // Data initial from websocket
+      const incomingOffers = data.proposals || data;
+      if (Array.isArray(incomingOffers)) {
+        // Find those associated with this listing
+        const relevant = incomingOffers.filter(
+          (o: any) =>
+            (o.post_id === listing.id || o.post === listing.id) &&
+            o.status !== "REJECTED" &&
+            o.status !== "CANCELLED"
+        );
+        // Only set if we really got them
+        if (relevant.length > 0) {
+          setOffers(relevant);
+        }
+      }
+    };
 
     const handleNewProposal = (data: any) => {
       const incoming = data.proposal || data;
@@ -70,14 +92,20 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
       }
     };
 
-    proposalWs.on("proposal.created", handleNewProposal);
-    proposalWs.on("proposal_created", handleNewProposal);
+    proposalsWs.on("proposals_list", handleProposalsList);
+    proposalsWs.on("proposal.created", handleNewProposal);
+    proposalsWs.on("proposal_created", handleNewProposal);
+    proposalsWs.on("proposal.updated", handleNewProposal);
+    proposalsWs.on("proposal_updated", handleNewProposal);
 
     return () => {
-      proposalWs.off("proposal.created", handleNewProposal);
-      proposalWs.off("proposal_created", handleNewProposal);
+      proposalsWs.off("proposals_list", handleProposalsList);
+      proposalsWs.off("proposal.created", handleNewProposal);
+      proposalsWs.off("proposal_created", handleNewProposal);
+      proposalsWs.off("proposal.updated", handleNewProposal);
+      proposalsWs.off("proposal_updated", handleNewProposal);
     };
-  }, [proposalWs, listing.id, fetchOffers]);
+  }, [proposalsWs, listing.id, fetchOffers]);
 
   // Chargement initial
   useEffect(() => {
@@ -92,7 +120,10 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
 
       try {
         const proposalsData = await wasteService.getProposals(listing.id);
-        setOffers(proposalsData || []);
+        const validOffers = (proposalsData || []).filter(
+          (o: any) => o.status !== "REJECTED" && o.status !== "CANCELLED"
+        );
+        setOffers(validOffers);
       } catch (err: any) {
         setError(err.message || "Erreur réseau lors de la récupération.");
       } finally {
@@ -111,25 +142,15 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
 
     try {
       // 1. Call REST API to accept the proposal
+      // The backend will automatically broadcast the 'proposal_updated' via Django Channels
       await wasteService.acceptProposal(_offerId, "ACCEPTED");
-
-      // 2. Listen for WebSocket confirmation from proposalsWs
-      if (proposalsWs) {
-        const status = "ACCEPTED";
-        proposalsWs.sendEvent("proposal.accept", {
-          proposal_id: _offerId,
-          status: status,
-        });
-      }
 
       // 3. Mise à jour UI
       setSoldTo(buyerName);
-      setToastMsg(
-        `Félicitations ! Vous avez accepté la proposition de ${buyerName}.`,
-      );
+      setToastMsg(`Félicitations ! Vous avez accepté la proposition de ${buyerName}.`);
       setTimeout(() => {
         onClose();
-      }, 2500);
+      }, 5000);
     } catch (err: any) {
       setError(err.message || "Échec de l'acceptation de la proposition.");
     }
@@ -142,21 +163,13 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
     }
 
     try {
-      // 1. Call REST API to reject the proposal
+      // 1. Call REST API to reject the proposal with REJECTED status
+      // The backend will automatically broadcast the 'proposal_updated' via Django Channels
       await wasteService.acceptProposal(_offerId, "REJECTED");
-
-      // 2. Listen for WebSocket confirmation from proposalsWs
-      if (proposalsWs) {
-        const status = "REJECTED";
-        proposalsWs.sendEvent("proposal.accept", {
-          proposal_id: _offerId,
-          status: status,
-        });
-      }
 
       // 3. Mise à jour UI
       setToastMsg(`Vous avez refusé la proposition de ${buyerName}.`);
-      
+
       // Refresh offers list to remove rejected proposal
       await fetchOffers();
     } catch (err: any) {
@@ -169,13 +182,14 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
       offer.buyer_name ||
       offer.buyer?.username ||
       offer.buyer?.name ||
+      offer.customer_name ||
       "Acheteur inconnu"
     );
   };
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-md font-sans p-4 transition-all duration-300"
       onClick={onClose}
     >
       <main
@@ -242,7 +256,9 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
                 const buyerName = getBuyerName(offer);
                 const offeredPrice =
                   offer.proposed_price || offer.amount || offer.price || 0;
-                const isSoldToThis = soldTo === buyerName;
+
+                const isSoldToThis = soldTo === buyerName || offer.status === "ACCEPTED";
+                const isAnySold = soldTo !== null || offers.some(o => o.status === "ACCEPTED");
 
                 // Gérer les cas où le backend renvoie l'ID sous un autre nom
                 const offerId =
@@ -279,29 +295,21 @@ const BuyersModal: React.FC<PotentialBuyersModalProps> = ({
                         <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">
                           Proposed Offer
                         </p>
-                        <p
-                          className={`font-black text-2xl tracking-tighter ${isSoldToThis ? "text-emerald-700" : "text-gray-900 group-hover:text-emerald-600 transition-colors"}`}
-                        >
-                          {offeredPrice.toLocaleString()}{" "}
-                          <span className="text-sm font-bold opacity-50">
-                            FCFA
-                          </span>
-                        </p>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReject(offerId, buyerName)}
-                          disabled={soldTo !== null || !offerId}
+                          disabled={isAnySold || !offerId}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm
-                            ${soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:-translate-y-0.5 hover:shadow-red-500/20"}`}
+                            ${isAnySold || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:-translate-y-0.5 hover:shadow-red-500/20"}`}
                         >
                           Refuser
                         </button>
                         <button
                           onClick={() => handleSell(offerId, buyerName)}
-                          disabled={soldTo !== null || !offerId}
+                          disabled={isAnySold || !offerId}
                           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm
-                            ${isSoldToThis ? "bg-green-500 text-white cursor-default" : soldTo !== null || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30"}`}
+                            ${isSoldToThis ? "bg-green-500 text-white cursor-default" : isAnySold || !offerId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white hover:-translate-y-0.5 hover:shadow-green-500/30"}`}
                         >
                           {isSoldToThis ? (
                             <>

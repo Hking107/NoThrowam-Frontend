@@ -4,6 +4,7 @@ export type MarketPoint = {
   lng: number;
   label: string;
   category: string;
+  status: string;
   description: string;
   fixedPrice: number;
   fixedWeight: number;
