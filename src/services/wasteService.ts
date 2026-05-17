@@ -32,7 +32,7 @@ export const wasteService = {
         },
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -55,7 +55,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -72,14 +72,15 @@ export const wasteService = {
     return data.proposals;
   },
 
-  acceptProposal: async (proposalId: number | string) => {
+  acceptProposal: async (proposalId: number | string, status: string = 'ACCEPTED') => {
     const makeRequest = async () => {
       return fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
         method: 'POST',
         headers: await getHeaders(),
+        body: JSON.stringify({ status })
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -137,7 +138,7 @@ export const wasteService = {
         body: JSON.stringify(payload),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -160,7 +161,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -183,7 +184,7 @@ export const wasteService = {
         headers: await getHeaders(),
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {
@@ -216,7 +217,7 @@ export const wasteService = {
         }
       });
     };
-    
+
     let response = await makeRequest();
     if (response.status === 401) {
       try {

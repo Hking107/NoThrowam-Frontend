@@ -2,7 +2,7 @@ import { API_PAYMENTS_URL } from "../config/api";
 import { authService } from "./authService";
 
 // Toggle this to true for development/testing when the backend is not ready
-const SIMULATE = true;
+const SIMULATE = false;
 const SIMULATED_STARTING_BALANCE = 50000;
 const simulatedChallenges = new Map<
   string,
@@ -82,7 +82,7 @@ export const withdrawalService = {
     if (SIMULATE) {
       console.log("[WithdrawalService] SIMULATING initiate:", payload);
       await new Promise((resolve) => setTimeout(resolve, 900));
-      
+
       // Simulate Insufficient Balance
       if (parseFloat(payload.amount) > 50000) {
         throw new Error("Insufficient balance. Available: 50000.00 FCFA");
@@ -163,17 +163,17 @@ export const withdrawalService = {
           statusCode: 200,
         };
       } else if (payload.otp_code === "654321") {
-         // Simulate Accepted but processing
-         return {
-            detail: "Withdrawal request accepted and is processing.",
-            amount,
-            operator,
-            reference_id:
-              "REF-PENDING-" +
-              Math.random().toString(36).toUpperCase().substring(2, 10),
-            provider_response: {},
-            statusCode: 202,
-         };
+        // Simulate Accepted but processing
+        return {
+          detail: "Withdrawal request accepted and is processing.",
+          amount,
+          operator,
+          reference_id:
+            "REF-PENDING-" +
+            Math.random().toString(36).toUpperCase().substring(2, 10),
+          provider_response: {},
+          statusCode: 202,
+        };
       } else {
         throw new Error("Invalid OTP code. Please check your email.");
       }

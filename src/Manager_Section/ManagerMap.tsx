@@ -6,22 +6,22 @@ import type { GarbagePoint } from "../types/ManagerMap";
 import { GarbagePopup } from "../components/Manager/GarbagePopup";
 import { collectDeposit } from "../services/ManagerService";
 
-import { useManagerMapData }   from "./useManagerMapData";
-import { useMapLeaflet }        from "./useMapLeaflet";
-import { useMapMarkers }        from "./useMapMarkers";
-import { useManagerMapEvents }  from "./useManagerMapEvents";
+import { useManagerMapData } from "./useManagerMapData";
+import { useMapLeaflet } from "./useMapLeaflet";
+import { useMapMarkers } from "./useMapMarkers";
+import { useManagerMapEvents } from "./useManagerMapEvents";
 import { AgentRing, AgentToast, LoadingOverlay, ErrorOverlay, EmptyOverlay } from "./MapOverlays";
 import { StatsPanel, LegendPanel } from "./MapPanels";
 
 declare global { interface Window { L: any } }
 
 export const ManagerMap = () => {
-  const mapRef     = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<any>(null);
   const markersRef = useRef<Record<number, any>>({});
-  const pointsRef  = useRef<GarbagePoint[]>([]);
-  const statsRef   = useRef<HTMLDivElement | null>(null);
-  const legendRef  = useRef<HTMLDivElement | null>(null);
+  const pointsRef = useRef<GarbagePoint[]>([]);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const legendRef = useRef<HTMLDivElement | null>(null);
 
   const [popup, setPopup] = useState<{ point: GarbagePoint; origin: { x: number; y: number } } | null>(null);
   const [rings, setRings] = useState<{ id: string; x: number; y: number; color: string }[]>([]);
@@ -39,16 +39,16 @@ export const ManagerMap = () => {
     if (!map || !mapRef.current) return;
     const pt = pointsRef.current.find((p) => p.id === ptId);
     if (!pt) return;
-    const cp   = map.latLngToContainerPoint([pt.lat, pt.lng]);
+    const cp = map.latLngToContainerPoint([pt.lat, pt.lng]);
     const rect = mapRef.current.getBoundingClientRect();
-    const rid  = `${Date.now()}${ptId}`;
+    const rid = `${Date.now()}${ptId}`;
     setRings((r) => [...r, { id: rid, x: rect.left + cp.x, y: rect.top + cp.y, color }]);
     setTimeout(() => setRings((r) => r.filter((x) => x.id !== rid)), 1500);
   }, []);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 2600);
+    setTimeout(() => setToast(null), 5000);
   }, []);
 
   useMapMarkers({ points, leafletReady, leafletRef, markersRef, mapDivRef: mapRef, setPoints, setPopup });
@@ -87,7 +87,7 @@ export const ManagerMap = () => {
   }, [loading, fetchError]);
 
   const collectedCount = points.filter((p) => p.status === "collected" && p.isValid).length;
-  const pendingCount   = points.filter((p) => p.status === "pending").length;
+  const pendingCount = points.filter((p) => p.status === "pending").length;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (

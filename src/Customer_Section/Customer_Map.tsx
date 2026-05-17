@@ -20,6 +20,7 @@ import { authService } from "../services/authService";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
 import { useWebSocket } from "../WebSocketProvider";
+import { createProposal } from "../services/ProposalAPI";
 
 declare global {
   interface Window {
@@ -39,6 +40,7 @@ function toMarketPoint(p: WastePost): MarketPoint {
     lng: parseFloat(p.longitude) || 0,
     label: p.title?.trim() || `Post #${p.id}`,
     category: cat,
+    status: p.status,
     description: p.description?.trim() || "",
     fixedPrice: p.price ?? 0,
     fixedWeight: parseFloat(p.quantity) || 0,
@@ -49,9 +51,10 @@ function toMarketPoint(p: WastePost): MarketPoint {
 }
 
 async function fetchWastePosts(): Promise<MarketPoint[]> {
+  // 1. Published posts visible to everyone
   const data = await wasteService.getWastePosts();
   return data
-    .filter((p) => p.status === "PUBLISHED" && p.latitude && p.longitude)
+    .filter((p) => (p.status === "PUBLISHED" || p.status === "RESERVED") && p.latitude && p.longitude)
     .map(toMarketPoint)
     .filter((p) => p.lat !== 0 && p.lng !== 0);
 }
@@ -214,13 +217,20 @@ export const CustomerMap = () => {
     markersRef.current = {};
 
     visiblePoints.forEach((pt) => {
-      const color = CATEGORY_COLORS[pt.category] || "#94a3b8";
+      const isMyAccepted = pt.status === "RESERVED";
+      const color = isMyAccepted ? "#f59e0b" : CATEGORY_COLORS[pt.category] || "#94a3b8";
+      const rippleColor = isMyAccepted ? "#f59e0b44" : `${color}22`;
+      const badge = isMyAccepted
+        ? `<div style="position:absolute;top:-10px;right:-10px;font-size:13px;line-height:1;z-index:3;">⭐</div>`
+        : "";
+
       const icon = L.divIcon({
         className: "",
         html: `
           <div style="position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-            <div style="position:absolute;width:38px;height:38px;border-radius:50%;background:${color}22;animation:ripple2 2.4s ease-out infinite;"></div>
+            <div style="position:absolute;width:38px;height:38px;border-radius:50%;background:${rippleColor};animation:ripple2 2.4s ease-out infinite;"></div>
             <div style="width:22px;height:22px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 3px 14px ${color}77,0 1px 4px rgba(0,0,0,.15);position:relative;z-index:2;"></div>
+            ${badge}
           </div>`,
         iconSize: [56, 56],
         iconAnchor: [28, 28],
@@ -289,16 +299,27 @@ export const CustomerMap = () => {
     setTimeout(() => setToast(null), 2800);
   }, []);
 
-  const { postsWs, proposalsWs } = useWebSocket();
+  const { postsWs, proposalsWs, proposalWs } = useWebSocket();
 
   useEffect(() => {
     if (!postsWs) return;
 
     const handleNewPost = (data: any) => {
       console.log("[WS] Nouveau/Mise à jour post reçu:", data);
-      loadPoints();
 
       const post = data.post || data;
+
+      if (post && post.status === "PUBLISHED" && post.latitude && post.longitude) {
+        setPoints(prev => {
+          if (!prev.find(p => p.id === post.id)) {
+            return [...prev, toMarketPoint(post)];
+          }
+          return prev;
+        });
+      }
+
+      loadPoints();
+
       // Si c'est juste publié, on peut montrer un toast, sinon silencieux
       if (data.type === "post.created" || data.type === "post_created") {
         showToast("Nouveau lot de déchets disponible !");
@@ -335,8 +356,18 @@ export const CustomerMap = () => {
       console.log(`[WS] Checking ID: current=${currentUserId}, target=${customerId}, status=${status}`);
 
       if (status === "ACCEPTED" && String(customerId) === String(currentUserId)) {
-        const title = proposal.post_title || "votre lot";
-        showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+        const postId = proposal.post_id || proposal.post || data.post_id;
+        const pt = pointsRef.current.find((p) => p.id === postId);
+        if (pt) {
+          setPayment(pt);
+          showToast("Votre offre a été acceptée ! Finalisez le paiement.");
+        } else {
+          const title = proposal.post_title || proposal.title || "votre lot";
+          showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+        }
+      } else if ((status === "REJECTED" || status === "CANCELLED") && String(customerId) === String(currentUserId)) {
+        const title = proposal.post_title || proposal.title || "un lot";
+        showToast(`Désolé, votre offre pour "${title}" a été refusée.`);
       }
     };
 
@@ -405,14 +436,27 @@ export const CustomerMap = () => {
     return unsub;
   }, [flashRing, showToast]);
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     if (!popup) return;
-    PurchaseBus.setState({
-      phase: "selecting",
-      pointId: popup.point.id,
-      qty: 1,
-    });
-    setPayment(popup.point);
+    const pt = popup.point;
+
+    // If this is an already-accepted proposal → skip straight to payment
+    if (pt.status === "RESERVED") {
+      setPopup(null);
+      setPayment(pt);
+      return;
+    }
+
+    try {
+      const { alreadyExists } = await createProposal(pt.id);
+      if (alreadyExists) {
+        showToast("Votre proposition a deja été transmise au vendeur ! Patientez qu'il accepte votre offre.");
+      } else {
+        showToast("Votre proposition a été transmise au vendeur !");
+      }
+    } catch (e: any) {
+      showToast("Erreur lors de l'envoi de la proposition.");
+    }
     setPopup(null);
   };
 
@@ -548,11 +592,10 @@ export const CustomerMap = () => {
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
-              className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${
-                selectedCategory === null
-                  ? "bg-brand-green text-white border-brand-green shadow-lg shadow-brand-green/20"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
-              }`}
+              className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${selectedCategory === null
+                ? "bg-brand-green text-white border-brand-green shadow-lg shadow-brand-green/20"
+                : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+                }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-brand-green/80 shrink-0" />
               <span>Tous</span>
@@ -567,11 +610,10 @@ export const CustomerMap = () => {
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(active ? null : cat)}
-                    className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${
-                      active
-                        ? "text-white shadow-lg shadow-black/10"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
-                    }`}
+                    className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${active
+                      ? "text-white shadow-lg shadow-black/10"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+                      }`}
                     style={active ? { backgroundColor: color, borderColor: color } : {}}
                   >
                     <span
@@ -603,7 +645,7 @@ export const CustomerMap = () => {
           point={payment}
           onClose={() => setPayment(null)}
           onComplete={() => {
-            setTimeout(() => setPayment(null), 3500);
+            setTimeout(() => setPayment(null), 5000);
           }}
         />
       )}
