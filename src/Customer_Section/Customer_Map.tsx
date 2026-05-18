@@ -108,6 +108,7 @@ export const CustomerMap = () => {
     origin: { x: number; y: number };
   } | null>(null);
   const [payment, setPayment] = useState<MarketPoint | null>(null);
+  const [paymentTxRef, setPaymentTxRef] = useState("");
   const [leafReady, setLeaf] = useState(!!window.L);
   const [rings, setRings] = useState<
     { id: string; x: number; y: number; color: string }[]
@@ -308,19 +309,49 @@ export const CustomerMap = () => {
       console.log("[WS] Nouveau/Mise à jour post reçu:", data);
 
       const post = data.post || data;
+      if (!post?.id) return;
 
-      if (post && post.status === "PUBLISHED" && post.latitude && post.longitude) {
-        setPoints(prev => {
-          if (!prev.find(p => p.id === post.id)) {
-            return [...prev, toMarketPoint(post)];
+      const status: string = (post.status ?? "").toUpperCase();
+
+      // Post sold or paid → remove from map immediately
+      if (status === "SOLD" || status === "PAID") {
+        setPoints(prev => prev.filter(p => p.id !== post.id));
+
+        // If the customer's open PaymentPanel targets this post → confirm success
+        setPayment(prev => {
+          if (prev && prev.id === post.id) {
+            showToast("Paiement confirmé ! Le lot vous a été attribué.");
+            // Close panel after a short delay so the user sees the toast
+            setTimeout(() => setPayment(null), 3500);
           }
           return prev;
         });
+        return;
       }
 
-      loadPoints();
+      // Published post → add/keep on map
+      if (status === "PUBLISHED" && post.latitude && post.longitude) {
+        setPoints(prev => {
+          const idx = prev.findIndex(p => p.id === post.id);
+          const mp = toMarketPoint(post);
+          if (idx === -1) return [...prev, mp];
+          const next = [...prev];
+          next[idx] = mp;
+          return next;
+        });
+      }
 
-      // Si c'est juste publié, on peut montrer un toast, sinon silencieux
+      // Reserved post → update status in the list
+      if (status === "RESERVED") {
+        setPoints(prev => {
+          const idx = prev.findIndex(p => p.id === post.id);
+          if (idx === -1) return prev;
+          const next = [...prev];
+          next[idx] = { ...next[idx], status: "RESERVED" };
+          return next;
+        });
+      }
+
       if (data.type === "post.created" || data.type === "post_created") {
         showToast("Nouveau lot de déchets disponible !");
       }
@@ -644,8 +675,12 @@ export const CustomerMap = () => {
         <PaymentPanel
           point={payment}
           onClose={() => setPayment(null)}
-          onComplete={() => {
-            setTimeout(() => setPayment(null), 5000);
+          onComplete={(method, ref) => {
+            setPaymentTxRef(ref);
+            showToast("Paiement confirmé ! Le lot vous a été attribué.");
+            // Remove the paid post from the map and close panel
+            setPoints(prev => prev.filter(p => p.id !== payment.id));
+            setTimeout(() => setPayment(null), 3500);
           }}
         />
       )}

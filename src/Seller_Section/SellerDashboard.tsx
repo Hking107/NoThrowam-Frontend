@@ -82,11 +82,11 @@ const SellerDashboard: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const { proposalsWs } = useWebSocket();
   const postsRef = useRef(posts);
-  const userIdRef = useRef(userId);
+  //const userIdRef = useRef(userId);
 
   useEffect(() => {
     postsRef.current = posts;
-    userIdRef.current = userId;
+    //userIdRef.current = userId;
   }, [posts, userId]);
 
   useEffect(() => {
@@ -94,15 +94,14 @@ const SellerDashboard: React.FC = () => {
 
     const handleNewProposal = (data: any) => {
       console.log("PROPOSAL CREATED EVENT FIRED", data);
-
+      const token = localStorage.getItem("access_token") || " ";
       const proposal = data.proposal || data;
       const postId = proposal.post_id || proposal.post;
 
       const currentPosts = postsRef.current;
-      const currentUserId = userId;
-
+      const currentUserId = JSON.parse(atob(token.split(".")[1])).user_id;
       // Check if the proposal concerns one of my posts
-      const isMyPost = currentPosts.some((p) => p.id === postId && p.seller === currentUserId);
+      const isMyPost = currentPosts.some((p) => p.seller === parseInt(currentUserId));
 
       if (!isMyPost) {
         setToastMsg(`DEBUG: Reçu une offre pr le post #${postId}, mais isMyPost est Faux (mon id=${currentUserId}).`);
@@ -203,9 +202,16 @@ const SellerDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const me = await authService.getMe();
-      setUserEmail(me.email);
-      setUserId(me.id);
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          setUserEmail(payload.username);
+          setUserId(payload.id || payload.sub || payload.user_id);
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
     };
 
     fetchUserProfile();
@@ -478,6 +484,7 @@ const SellerDashboard: React.FC = () => {
     listingsTrend: { text: "0%", positive: null },
   });
 
+  //UseEffect Inutile : Hking
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -515,12 +522,13 @@ const SellerDashboard: React.FC = () => {
 
           setRecentPosts(posts);
 
-          let sumEarnings = 0;
+          let sumEarnings = await authService.getSellerBalance();
+
           let sumWeight = 0;
           let activeCount = 0;
 
           posts.forEach((post: any) => {
-            if (post.price) sumEarnings += Number(post.price);
+            //if (post.price) sumEarnings += Number(post.price);
 
             if (post.quantity) sumWeight += parseFloat(post.quantity);
 

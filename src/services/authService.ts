@@ -43,9 +43,9 @@ export const authService = {
     return data;
   },
 
-   /**
-   * Get stored access token
-   */
+  /**
+  * Get stored access token
+  */
   getAccessToken: () => {
     return localStorage.getItem("access_token");
   },
@@ -244,7 +244,44 @@ export const authService = {
       throw new Error("Failed to fetch user info");
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data;
+
+  },
+
+  /**
+   * Get seller balance
+   */
+  getSellerBalance: async () => {
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/auth/ping/seller/balance/`, {
+        method: "GET",
+        headers: await getAuthHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authService.logout();
+      }
+      throw new Error("Failed to fetch user info");
+    }
+
+    const data = await response.json();
+    return data.balance;
+
   },
 
   /**
@@ -297,8 +334,8 @@ export const authService = {
     }
   },
 
- 
-  
+
+
 
   /**
    * Get stored user role
