@@ -5,8 +5,7 @@
  * No authentication is required for the guest "report" endpoint.
  */
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+import { API_BASE_URL as API_BASE } from "../config/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,11 +77,11 @@ export const depositService = {
       let errorData: any = {};
       try {
         errorData = JSON.parse(errorText);
-      } catch {}
+      } catch { }
       throw new Error(
         errorData.detail ||
-          errorData.message ||
-          `Image upload failed (HTTP ${response.status})`,
+        errorData.message ||
+        `Image upload failed (HTTP ${response.status})`,
       );
     }
 
@@ -134,11 +133,11 @@ export const depositService = {
       let errorData: any = {};
       try {
         errorData = JSON.parse(errorText);
-      } catch {}
+      } catch { }
       throw new Error(
         errorData.detail ||
-          errorData.message ||
-          `Report failed (HTTP ${response.status})`,
+        errorData.message ||
+        `Report failed (HTTP ${response.status})`,
       );
     }
 

@@ -14,10 +14,13 @@ import {
   CATEGORY_LABEL,
   CATEGORY_COLORS,
   CATEGORY_EMOJI,
-} from "../contexts/constants/constants";
+} from "../hooks/constants/constants";
 import { wasteService } from "../services/wasteService";
+import { authService } from "../services/authService";
 
 import PaymentPanel from "../components/Customer/PaymentPanel";
+import { useWebSocket } from "../WebSocketProvider";
+import { createProposal } from "../services/ProposalAPI";
 
 declare global {
   interface Window {
@@ -37,6 +40,7 @@ function toMarketPoint(p: WastePost): MarketPoint {
     lng: parseFloat(p.longitude) || 0,
     label: p.title?.trim() || `Post #${p.id}`,
     category: cat,
+    status: p.status,
     description: p.description?.trim() || "",
     fixedPrice: p.price ?? 0,
     fixedWeight: parseFloat(p.quantity) || 0,
@@ -47,9 +51,10 @@ function toMarketPoint(p: WastePost): MarketPoint {
 }
 
 async function fetchWastePosts(): Promise<MarketPoint[]> {
+  // 1. Published posts visible to everyone
   const data = await wasteService.getWastePosts();
   return data
-    .filter((p) => p.status === "PUBLISHED" && p.latitude && p.longitude)
+    .filter((p) => (p.status === "PUBLISHED" || p.status === "RESERVED") && p.latitude && p.longitude)
     .map(toMarketPoint)
     .filter((p) => p.lat !== 0 && p.lng !== 0);
 }
@@ -68,7 +73,7 @@ const CustToast = ({ msg }: { msg: string }) => (
 
 const Ring = ({ x, y, color }: { x: number; y: number; color: string }) => (
   <div
-    className="fixed pointer-events-none z-[1800] rounded-full border-2"
+    className="fixed pointer-events-none z-1800 rounded-full border-2"
     style={{
       left: x - 22,
       top: y - 22,
@@ -86,6 +91,7 @@ export const CustomerMap = () => {
   const leafRef = useRef<any>(null);
   const markersRef = useRef<Record<number, any>>({});
   const pointsRef = useRef<MarketPoint[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const uiRefs = {
     stats: useRef<HTMLDivElement>(null),
@@ -107,6 +113,10 @@ export const CustomerMap = () => {
     { id: string; x: number; y: number; color: string }[]
   >([]);
   const [toast, setToast] = useState<string | null>(null);
+
+  const visiblePoints = selectedCategory
+    ? points.filter((point) => point.category === selectedCategory)
+    : points;
 
   pointsRef.current = points;
 
@@ -148,6 +158,8 @@ export const CustomerMap = () => {
   useEffect(() => {
     loadPoints();
   }, [loadPoints]);
+
+
 
   useEffect(() => {
     if (window.L) {
@@ -204,14 +216,21 @@ export const CustomerMap = () => {
     Object.values(markersRef.current).forEach((m: any) => m.remove());
     markersRef.current = {};
 
-    points.forEach((pt) => {
-      const color = CATEGORY_COLORS[pt.category] || "#94a3b8";
+    visiblePoints.forEach((pt) => {
+      const isMyAccepted = pt.status === "RESERVED";
+      const color = isMyAccepted ? "#f59e0b" : CATEGORY_COLORS[pt.category] || "#94a3b8";
+      const rippleColor = isMyAccepted ? "#f59e0b44" : `${color}22`;
+      const badge = isMyAccepted
+        ? `<div style="position:absolute;top:-10px;right:-10px;font-size:13px;line-height:1;z-index:3;">⭐</div>`
+        : "";
+
       const icon = L.divIcon({
         className: "",
         html: `
           <div style="position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-            <div style="position:absolute;width:38px;height:38px;border-radius:50%;background:${color}22;animation:ripple2 2.4s ease-out infinite;"></div>
+            <div style="position:absolute;width:38px;height:38px;border-radius:50%;background:${rippleColor};animation:ripple2 2.4s ease-out infinite;"></div>
             <div style="width:22px;height:22px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 3px 14px ${color}77,0 1px 4px rgba(0,0,0,.15);position:relative;z-index:2;"></div>
+            ${badge}
           </div>`,
         iconSize: [56, 56],
         iconAnchor: [28, 28],
@@ -230,7 +249,19 @@ export const CustomerMap = () => {
       });
       markersRef.current[pt.id] = marker;
     });
-  }, [points, leafReady]);
+
+    if (visiblePoints.length > 0) {
+      const bounds = L.latLngBounds(
+        visiblePoints.map((point) => [point.lat, point.lng]),
+      );
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    }
+  }, [visiblePoints, leafReady]);
+
+  useEffect(() => {
+    setPopup(null);
+    setPayment(null);
+  }, [selectedCategory]);
 
   useEffect(() => {
     MapEventBus.registerStateProvider(() => ({
@@ -267,6 +298,104 @@ export const CustomerMap = () => {
     setToast(msg);
     setTimeout(() => setToast(null), 2800);
   }, []);
+
+  const { postsWs, proposalsWs, proposalWs } = useWebSocket();
+
+  useEffect(() => {
+    if (!postsWs) return;
+
+    const handleNewPost = (data: any) => {
+      console.log("[WS] Nouveau/Mise à jour post reçu:", data);
+
+      const post = data.post || data;
+
+      if (post && post.status === "PUBLISHED" && post.latitude && post.longitude) {
+        setPoints(prev => {
+          if (!prev.find(p => p.id === post.id)) {
+            return [...prev, toMarketPoint(post)];
+          }
+          return prev;
+        });
+      }
+
+      loadPoints();
+
+      // Si c'est juste publié, on peut montrer un toast, sinon silencieux
+      if (data.type === "post.created" || data.type === "post_created") {
+        showToast("Nouveau lot de déchets disponible !");
+      }
+    };
+
+    const handlePostList = (data: any) => {
+      console.log("[WS] Liste initiale de posts reçue:", data);
+      if (data.posts && Array.isArray(data.posts)) {
+        const pts = data.posts
+          .filter((p: any) => p.status === "PUBLISHED" && p.latitude && p.longitude)
+          .map(toMarketPoint);
+        setPoints(pts);
+      }
+    };
+
+    const handleProposalUpdate = (data: any) => {
+      console.log("[WS] Mise à jour proposition reçue:", data);
+
+      const proposal = data.proposal || data;
+      const status = proposal.status || data.status;
+      const customerId = proposal.customer?.id || data.customer?.id || proposal.customer_id;
+
+      // On récupère l'ID de l'utilisateur actuel depuis le token
+      const token = authService.getAccessToken();
+      let currentUserId = null;
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          currentUserId = payload.user_id || payload.id || payload.sub;
+        } catch (e) { }
+      }
+
+      console.log(`[WS] Checking ID: current=${currentUserId}, target=${customerId}, status=${status}`);
+
+      if (status === "ACCEPTED" && String(customerId) === String(currentUserId)) {
+        const postId = proposal.post_id || proposal.post || data.post_id;
+        const pt = pointsRef.current.find((p) => p.id === postId);
+        if (pt) {
+          setPayment(pt);
+          showToast("Votre offre a été acceptée ! Finalisez le paiement.");
+        } else {
+          const title = proposal.post_title || proposal.title || "votre lot";
+          showToast(`Félicitations ! Votre offre pour "${title}" a été acceptée !`);
+        }
+      } else if ((status === "REJECTED" || status === "CANCELLED") && String(customerId) === String(currentUserId)) {
+        const title = proposal.post_title || proposal.title || "un lot";
+        showToast(`Désolé, votre offre pour "${title}" a été refusée.`);
+      }
+    };
+
+    postsWs.on("post.created", handleNewPost);
+    postsWs.on("post_created", handleNewPost);
+    postsWs.on("post.updated", handleNewPost);
+    postsWs.on("post_updated", handleNewPost);
+    postsWs.on("post_list", handlePostList);
+
+    // Ecouter sur proposalsWs
+    if (proposalsWs) {
+      proposalsWs.on("proposal.updated", handleProposalUpdate);
+      proposalsWs.on("proposal_updated", handleProposalUpdate);
+    }
+
+    return () => {
+      postsWs.off("post.created", handleNewPost);
+      postsWs.off("post_created", handleNewPost);
+      postsWs.off("post.updated", handleNewPost);
+      postsWs.off("post_updated", handleNewPost);
+      postsWs.off("post_list", handlePostList);
+
+      if (proposalsWs) {
+        proposalsWs.off("proposal.updated", handleProposalUpdate);
+        proposalsWs.off("proposal_updated", handleProposalUpdate);
+      }
+    };
+  }, [postsWs, proposalsWs, loadPoints, showToast]);
 
   useEffect(() => {
     const unsub = MapEventBus.onCommand((cmd) => {
@@ -307,18 +436,31 @@ export const CustomerMap = () => {
     return unsub;
   }, [flashRing, showToast]);
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     if (!popup) return;
-    PurchaseBus.setState({
-      phase: "selecting",
-      pointId: popup.point.id,
-      qty: 1,
-    });
-    setPayment(popup.point);
+    const pt = popup.point;
+
+    // If this is an already-accepted proposal → skip straight to payment
+    if (pt.status === "RESERVED") {
+      setPopup(null);
+      setPayment(pt);
+      return;
+    }
+
+    try {
+      const { alreadyExists } = await createProposal(pt.id);
+      if (alreadyExists) {
+        showToast("Votre proposition a deja été transmise au vendeur ! Patientez qu'il accepte votre offre.");
+      } else {
+        showToast("Votre proposition a été transmise au vendeur !");
+      }
+    } catch (e: any) {
+      showToast("Erreur lors de l'envoi de la proposition.");
+    }
     setPopup(null);
   };
 
-  const totalWeight = points.reduce((s, p) => s + p.fixedWeight, 0);
+  const totalWeight = visiblePoints.reduce((s, p) => s + p.fixedWeight, 0);
 
   return (
     <div
@@ -346,8 +488,9 @@ export const CustomerMap = () => {
       {fetchError && !loading && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1400 
-                        bg-white p-8 rounded-xl border border-red-100 shadow-2xl shadow-red-500/10 
-                        text-center max-w-xs animate-in zoom-in duration-300"
+                        w-[calc(100vw-2rem)] max-w-xs bg-white p-5 sm:p-8 rounded-2xl sm:rounded-xl 
+                        border border-red-100 shadow-2xl shadow-red-500/10 text-center animate-in 
+                        zoom-in duration-300"
         >
           <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center mx-auto mb-4 border border-red-100">
             <p className="text-xl">⚠️</p>
@@ -371,8 +514,9 @@ export const CustomerMap = () => {
       {!loading && !fetchError && points.length === 0 && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-500 
-                        bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] border border-brand-green/10 
-                        shadow-2xl shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
+                        w-[calc(100vw-2rem)] max-w-sm bg-white/90 backdrop-blur-xl p-5 sm:p-8 
+                        rounded-3xl sm:rounded-[2.5rem] border border-brand-green/10 shadow-2xl 
+                        shadow-brand-green/10 text-center animate-in fade-in zoom-in duration-500"
         >
           <div className="text-4xl mb-4">📦</div>
           <p className="text-xl font-black text-slate-800 mb-1 leading-tight">
@@ -388,35 +532,38 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.stats}
-          className="absolute top-6 left-6 z-1000 bg-white/90 backdrop-blur-xl border border-brand-green/15 
-                     rounded-xl p-5 flex gap-8 items-center shadow-2xl shadow-black/5 opacity-0 scale-95"
+          className="absolute top-18 left-4 right-4 sm:left-6 sm:right-auto sm:top-4 z-1000 bg-white/90
+                     backdrop-blur-xl border border-brand-green/15 rounded-2xl sm:rounded-xl p-3 sm:p-5 
+                     flex flex-row flex-wrap sm:flex-nowrap gap-x-4 gap-y-3 sm:gap-8 items-center 
+                     justify-between sm:justify-start shadow-2xl shadow-black/5 opacity-0 scale-95
+                     max-w-2/4 sm:max-w-none"
         >
-          <div>
-            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+          <div className="min-w-0">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
               Lots
             </p>
-            <p className="text-3xl font-black text-brand-green leading-none">
+            <p className="text-xl sm:text-3xl font-black text-brand-green leading-none">
               {points.length}
-              <span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
+              <span className="text-[10px] sm:text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
                 dispo
               </span>
             </p>
           </div>
-          <div className="w-px h-10 bg-slate-200/50" />
-          <div>
-            <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+          <div className="hidden sm:block w-px h-10 bg-slate-200/50" />
+          <div className="min-w-0">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
               Poids Total
             </p>
-            <p className="text-3xl font-black text-blue-500 leading-none">
+            <p className="text-xl sm:text-3xl font-black text-blue-500 leading-none">
               {totalWeight.toFixed(0)}
-              <span className="text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
+              <span className="text-[10px] sm:text-[11px] text-slate-300 font-bold ml-1 uppercase tracking-tighter">
                 kg
               </span>
             </p>
           </div>
           <button
             onClick={loadPoints}
-            className="w-10 h-10 rounded-lg bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
+            className="ml-auto w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-brand-green/5 border border-brand-green/10 flex items-center justify-center
                        text-brand-green hover:bg-brand-green hover:text-white transition-all active:scale-90"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -428,28 +575,58 @@ export const CustomerMap = () => {
       {!loading && !fetchError && (
         <div
           ref={uiRefs.legend}
-          className="absolute top-6 right-6 z-1000 bg-white/90 backdrop-blur-xl border border-slate-200/50 
-                     rounded-xl p-5 flex flex-col gap-3 shadow-2xl shadow-black/5 opacity-0 scale-95"
+          className="absolute top-40 sm:top-30 left-4 right-auto z-1000 bg-white/90 
+                     backdrop-blur-xl border border-slate-200/50 rounded-2xl sm:rounded-xl p-3.5 sm:p-4 
+                     flex flex-col gap-3 sm:gap-3.5 shadow-2xl shadow-black/5 opacity-0 scale-95 
+                     w-46 sm:w-50 max-w-[calc(100vw-2rem)]"
         >
-          <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
-            Catégories
-          </p>
-          {Object.entries(CATEGORY_COLORS)
-            .filter(([c]) => c !== "Autre")
-            .map(([cat, color]) => (
-              <div key={cat} className="flex items-center gap-4 group">
-                <div
-                  className="w-3 h-3 rounded-full shadow-lg transition-transform group-hover:scale-125"
-                  style={{
-                    background: color,
-                    boxShadow: `0 0 10px ${color}66`,
-                  }}
-                />
-                <span className="text-sm text-slate-600 font-semibold tracking-tight">
-                  {CATEGORY_EMOJI[cat]} {cat}
-                </span>
-              </div>
-            ))}
+          <div>
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">
+              Catégories
+            </p>
+            <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
+              Choisissez une catégorie pour n&apos;afficher que ses lots.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 max-h-[48vh] overflow-y-auto pr-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory(null)}
+              className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${selectedCategory === null
+                ? "bg-brand-green text-white border-brand-green shadow-lg shadow-brand-green/20"
+                : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+                }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-brand-green/80 shrink-0" />
+              <span>Tous</span>
+            </button>
+            {Object.entries(CATEGORY_COLORS)
+              .filter(([c]) => c !== "Autre")
+              .map(([cat, color]) => {
+                const active = selectedCategory === cat;
+
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(active ? null : cat)}
+                    className={`w-full rounded-xl px-3 py-2 text-left text-[11px] sm:text-xs font-bold transition-all border flex items-center gap-2 ${active
+                      ? "text-white shadow-lg shadow-black/10"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-brand-green/30 hover:text-brand-green"
+                      }`}
+                    style={active ? { backgroundColor: color, borderColor: color } : {}}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}66` }}
+                    />
+                    <span>
+                      {CATEGORY_EMOJI[cat]} {cat}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
         </div>
       )}
 
@@ -468,7 +645,7 @@ export const CustomerMap = () => {
           point={payment}
           onClose={() => setPayment(null)}
           onComplete={() => {
-            setTimeout(() => setPayment(null), 3500);
+            setTimeout(() => setPayment(null), 5000);
           }}
         />
       )}

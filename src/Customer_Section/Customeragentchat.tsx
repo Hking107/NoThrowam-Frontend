@@ -26,7 +26,7 @@ import CustMsgBubble from "../components/Customer/CustomerMessageBubble";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { PurchaseBus } from "../services/eventBus";
-
+import { authService } from "../services/authService";
 async function callAgent(
   message: string,
   state: MapStateSnapshot,
@@ -34,19 +34,33 @@ async function callAgent(
 ): Promise<AgentResult> {
   const userId = localStorage.getItem("user_id");
 
-  const res = await fetch("/api/v0/agents/agentic-message/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "ngrok-skip-browser-warning": "69420",
-    },
-    body: JSON.stringify({
-      message,
-      ...(userId ? { user_id: parseInt(userId) } : {}),
-    }),
-  });
+  const makeRequest = async () => {
+    return fetch("/api/v0/agents/agentic-message/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${authService.getAccessToken() || ""}`,
+        "ngrok-skip-browser-warning": "69420",
+      },
+      body: JSON.stringify({
+        message,
+        ...(userId ? { user_id: parseInt(userId) } : {}),
+      }),
+    });
+  };
+
+  let res = await makeRequest();
+  if (res.status === 401) {
+    try {
+      await authService.refresh();
+      res = await makeRequest();
+    } catch (err) {
+      console.error("Refresh token failed", err);
+      authService.logout();
+      throw new Error("Session expired. Please login again.");
+    }
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

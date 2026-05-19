@@ -14,6 +14,19 @@
   --color-eco-border: rgba(0, 0, 0, 0.05);
 }
 
+/* Masquer la barre de défilement globalement sur l'élément racine */
+:root, html, body {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+/* Chrome, Safari, Edge, Opera */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 @layer base {
   html.lenis,
   html.lenis body {
@@ -38,6 +51,17 @@
 
   body {
     @apply bg-[#fcfdfb] text-brand-text font-sans antialiased;
+  }
+
+  /* Force hide scrollbar globally */
+  html, body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar, 
+  body::-webkit-scrollbar {
+    display: none;
   }
 }
 

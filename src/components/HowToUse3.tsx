@@ -2,7 +2,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 // Import icons that represent your steps (Adjust these to match your actual steps)
 import { Download, Camera, MapPin, Recycle, CheckCircle } from "lucide-react";
 
@@ -59,9 +59,22 @@ export function HowToUse() {
         ease: "none",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top top",
+          start: "top center", // Starts growing before it pins
           end: `+=${scrollDistance()}`,
           scrub: true,
+        },
+      });
+
+      // Entrance animation for the Header and Left Timeline
+      gsap.from(".how-to-anim", {
+        y: 60,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 90%", // Triggers as soon as the section comes into view
         },
       });
 
@@ -163,11 +176,11 @@ export function HowToUse() {
     <section
       ref={containerRef}
       id="about"
-      className="h-screen w-full flex flex-col justify-center bg-brand-surface overflow-hidden relative py-12"
+      className="h-screen w-full flex flex-col justify-center space-y-12 bg-brand-surface overflow-hidden relative py-12"
     >
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col h-full">
+      <div className="max-w-7xl w-full mt-8 mx-auto px-4 sm:px-6 lg:px-8 flex flex-col h-full">
         {/* Header */}
-        <div className="text-center mb-6 md:mb-6 shrink-0">
+        <div className="how-to-anim text-center mb-6 md:mb-6 shrink-0">
           <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4">
             {sectionTitle}
           </h2>
@@ -179,7 +192,7 @@ export function HowToUse() {
         {/* Split Layout */}
         <div className="flex flex-col lg:flex-row gap-12 flex-1 items-center relative">
           {/* Left Column: The Interactive Timeline */}
-          <div className="hidden lg:flex w-full lg:w-1/3 h-[400px] md:h-[500px] relative items-center justify-center">
+          <div className="how-to-anim hidden lg:flex w-full lg:w-1/3 h-[400px] md:h-[500px] relative items-center justify-center">
             {/* Wrapper for the timeline line and icons */}
             <div className="relative h-full py-8 flex flex-col justify-between items-center w-full">
               {/* The Static Background Thread */}

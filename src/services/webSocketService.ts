@@ -1,4 +1,6 @@
 
+import { authService } from "./authService";
+
 type MessageHandler = (message: any) => void;
 
 export class WebSocketService {
@@ -14,16 +16,17 @@ export class WebSocketService {
     this.url = url;
   }
 
+  // Connecter au WebSocket
   public connect() {
     this.intentionalDisconnect = false;
-    
-    const token = localStorage.getItem('token');
+
+    const token = authService.getAccessToken();
     let finalUrl = this.url;
 
     if (token) {
       try {
         const urlObj = new URL(this.url);
-        urlObj.searchParams.set('token', token); 
+        urlObj.searchParams.set('token', token);
         finalUrl = urlObj.toString();
       } catch (e) {
         console.error("[WS] Erreur lors de la construction de l'URL", e);
@@ -42,12 +45,13 @@ export class WebSocketService {
     this.ws.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);
-        
+        console.log(`[WS] Message reçu sur ${this.url}:`, parsed);
+
         const eventType = parsed.type;
         const typeHandlers = this.handlers.get(eventType) || [];
-        
+
         typeHandlers.forEach(fn => fn(parsed));
-        
+
       } catch (e) {
         console.error("[WS] Erreur parsing message", event.data);
       }
@@ -64,33 +68,39 @@ export class WebSocketService {
 
     this.ws.onerror = (err) => {
       console.error(` [WS] Erreur sur ${this.url}:`, err);
-      };
+    };
   }
 
+  // Envoyer un événement au serveur
   public sendEvent(type: string, payload?: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, payload }));
+      console.log(`\n======================\nMessage sent : ${JSON.stringify({ type, payload })}\n======================\n`)
     } else {
       console.warn(`[WS] Impossible d'envoyer '${type}', WebSocket non connecté.`);
     }
   }
 
+  // Enregistrer un handler pour un type d'événement
   public on(type: string, handler: MessageHandler) {
     const current = this.handlers.get(type) || [];
     this.handlers.set(type, [...current, handler]);
   }
 
+  // Retirer un handler pour un type d'événement
   public off(type: string, handler: MessageHandler) {
     const current = this.handlers.get(type) || [];
     this.handlers.set(type, current.filter(h => h !== handler));
   }
 
+  // Déconnecter proprement
   public disconnect() {
     this.intentionalDisconnect = true;
     this.stopHeartbeat();
     this.ws?.close();
   }
 
+  // Gérer la reconnexion
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
@@ -99,14 +109,16 @@ export class WebSocketService {
     }
   }
 
+  // Démarrer le heartbeat
   private startHeartbeat() {
     this.pingInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: "ping" }));
       }
-    }, 30000);
+    }, 60000);
   }
 
+  // Arrêter le heartbeat
   private stopHeartbeat() {
     if (this.pingInterval) clearInterval(this.pingInterval);
   }

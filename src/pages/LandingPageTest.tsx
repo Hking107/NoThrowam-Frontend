@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "../components/Navbar";
-import { Hero } from "../components/Hero";
+import { HeroTest } from "../components/HeroTest";
 import { HowToUse } from "../components/HowToUse3";
 import { SuccessStories } from "../components/SuccessStories2";
 import { ActorCards } from "../components/ActorCards";
@@ -23,14 +23,14 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text no-scrollbar">
+    <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text">
       {/* 1. Header & Navigation */}
       <Navbar onContactClick={() => setIsContactModalOpen(true)} />
 
       {/* Main Content Area */}
       <main data-nav-bg="" className="grow">
         {/* 2. Hero Section (Guest Flow) */}
-        <Hero data-nav-bg="bg-[#004d3a]" />
+        <HeroTest />
 
         {/* 3. How To Use (Scroll Animation) */}
         <HowToUse data-nav-bg="bg-[#004d3a]" />

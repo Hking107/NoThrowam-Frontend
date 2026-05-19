@@ -1,14 +1,13 @@
-const API_BASE =
-  import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+import { API_BASE_URL as API_BASE } from "../config/api";
 
 const headers = {
   "Content-Type": "application/json",
   "ngrok-skip-browser-warning": "69420",
 };
 
-const getAuthHeaders = () => ({
+const getAuthHeaders = async () => ({
   ...headers,
-  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  Authorization: `Bearer ${await authService.getAccessToken()}`,
 });
 
 export const authService = {
@@ -42,6 +41,13 @@ export const authService = {
     sessionStorage.setItem("pending_email", userData.email);
     sessionStorage.setItem("pending_role", userData.role);
     return data;
+  },
+
+   /**
+   * Get stored access token
+   */
+  getAccessToken: () => {
+    return localStorage.getItem("access_token");
   },
 
   /**
@@ -212,10 +218,24 @@ export const authService = {
    * Get current user info
    */
   getMe: async () => {
-    const response = await fetch(`${API_BASE}/api/v0/auth/me/`, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/auth/me/`, {
+        method: "GET",
+        headers: await getAuthHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -265,7 +285,7 @@ export const authService = {
    * Check if user is authenticated
    */
   isAuthenticated: () => {
-    const token = localStorage.getItem("access_token");
+    const token = authService.getAccessToken();
     if (!token) return false;
 
     // Check if token is expired
@@ -277,10 +297,8 @@ export const authService = {
     }
   },
 
-  /**
-   * Get stored access token
-   */
-  getAccessToken: () => localStorage.getItem("access_token"),
+ 
+  
 
   /**
    * Get stored user role

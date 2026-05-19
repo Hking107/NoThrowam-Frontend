@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Menu, X, UserPlus } from "lucide-react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
 import gsap from "gsap";
@@ -56,7 +56,7 @@ export function Navbar({ onContactClick }: { onContactClick: () => void }) {
     <nav
       className={`navbar-anim sticky top-0 z-50 w-full border-b border-black/5 transition-colors duration-300 ${navBg}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section (Left) */}
           <div className="shrink-0">

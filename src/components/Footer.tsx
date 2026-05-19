@@ -1,5 +1,5 @@
 import { Logo } from "./Logo";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 import {
   Facebook,
   Twitter,

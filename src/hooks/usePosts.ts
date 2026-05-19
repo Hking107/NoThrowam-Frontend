@@ -2,45 +2,49 @@ import { useEffect, useState } from 'react';
 import { useWebSocket } from '../WebSocketProvider';
 
 export const usePosts = () => {
-  const webSocketService = useWebSocket();
+  const { postsWs } = useWebSocket();
   const [posts, setPosts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Si la connexion n'est pas prête, on ne fait rien
-    if (!webSocketService) return;
+    if (!postsWs) return;
 
-    // On crée une fonction pour écouter tous les messages entrants
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const msg = JSON.parse(event.data);
-        
-        // Adapte ces conditions selon la forme exacte des données envoyées par ton Django
-        if (msg.posts || msg.type === 'posts_list') {
-          setPosts(msg.posts || msg.data);
-        } else if (msg.post || msg.type === 'post.created') {
-          setPosts((prev) => [...prev, msg.post || msg.data]);
-        } else if (msg.message && msg.type === 'error') {
-          setError(msg.message);
-        }
-      } catch (err) {
-        console.error("Erreur de parsing WebSocket:", err);
-      }
+    const handleInitialList = (msg: any) => {
+      setPosts(msg.posts || msg.data);
     };
 
-    const socketInstance = (webSocketService as any).socket; 
-    
-    if (socketInstance) {
-        socketInstance.addEventListener('message', handleMessage);
-    }
+    const handleNewPost = (msg: any) => {
+      const post = msg.post || msg.data || msg;
+      setPosts((prev) => [post, ...prev]);
+    };
 
-    // Nettoyage quand le composant est démonté
+    const handleUpdatePost = (msg: any) => {
+      const updatedPost = msg.post || msg.data || msg;
+      setPosts((prev) => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+    };
+
+    const handleError = (msg: any) => {
+      setError(msg.message || "Unknown error");
+    };
+
+    postsWs.on('post_list', handleInitialList);
+    postsWs.on('posts_list', handleInitialList);
+    postsWs.on('post.created', handleNewPost);
+    postsWs.on('post_created', handleNewPost);
+    postsWs.on('post.updated', handleUpdatePost);
+    postsWs.on('post_updated', handleUpdatePost);
+    postsWs.on('error', handleError);
+
     return () => {
-      if (socketInstance) {
-          socketInstance.removeEventListener('message', handleMessage);
-      }
+      postsWs.off('post_list', handleInitialList);
+      postsWs.off('posts_list', handleInitialList);
+      postsWs.off('post.created', handleNewPost);
+      postsWs.off('post_created', handleNewPost);
+      postsWs.off('post.updated', handleUpdatePost);
+      postsWs.off('post_updated', handleUpdatePost);
+      postsWs.off('error', handleError);
     };
-  }, [webSocketService]);
+  }, [postsWs]);
 
   const getMyListings = () => {
     const myUserId = parseInt(localStorage.getItem('user_id') || "0");

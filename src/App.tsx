@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { LandingPage } from "./pages/LandingPage";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { LandingPage } from "./pages/LandingPageTest";
 import { SignIn } from "./pages/SignIn";
 import { Signup } from "./pages/Signup";
 import { WebSocketProvider } from "./WebSocketProvider";
@@ -13,24 +13,47 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import CustomerMain from "./Customer_Section/CustomerMain";
 import ManagerMain from "./Manager_Section/ManagerMain";
 import SellerDashboard from "./Seller_Section/SellerDashboard";
-<<<<<<< HEAD
 import { ReportWaste } from "./pages/ReportWaste";
 import { NotFound } from "./pages/NotFound";
 import { Unauthorized } from "./pages/Unauthorized";
 import { SmoothScroll } from "./components/SmoothScroll";
-=======
-//import { ReportWaste } from "./pages/ReportWaste";
->>>>>>> 1cf1b7e (subchanges)
+import { useAuth } from "./contexts/AuthContext";
+import { useEffect } from "react";
+
+const RoleBasedRedirect = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      const path = location.pathname;
+      // Only redirect if on landing page or auth pages
+      if (path === "/" ) {
+        if (user.role === "CUSTOMER") {  
+          navigate("/dashboard_customer");
+        } else if (user.role === "MANAGER") {
+          navigate("/manager");
+        } else if (user.role === "SELLER") {
+          navigate("/dashboard_seller");
+        }
+      }
+    }
+  }, [isLoading, isAuthenticated, user, navigate, location.pathname]);
+
+  return null;
+};
 
 function App() {
   return (
     <WebSocketProvider>
       <Router>
+        <RoleBasedRedirect />
         <SmoothScroll>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/signin" element={<SignIn />} />
-            
+
             {/* Must be placed in a protected Route later on */}
             <Route path="/report-waste" element={<ReportWaste />} />
 
@@ -44,7 +67,7 @@ function App() {
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            
+
             {/* Protected Dashboard Routes */}
             <Route
               path="/dashboard_customer"

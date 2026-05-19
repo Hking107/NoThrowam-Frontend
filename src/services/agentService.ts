@@ -1,13 +1,14 @@
+import { authService } from "./authService";
 import type { AgentApiResponse } from "../types/AgentAPIResponse";
-import type { 
-  AgentResult, 
-  AgentStep, 
-  MapCommand, 
-  MapStateSnapshot, 
-  PurchaseState 
+import type {
+  AgentResult,
+  AgentStep,
+  MapCommand,
+  MapStateSnapshot,
+  PurchaseState
 } from "../types/AIMessage";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+import { API_BASE_URL as API_BASE } from "../config/api";
 
 function mkStep(label: string): AgentStep {
   return { id: Math.random().toString(36).slice(2), label, done: true };
@@ -17,24 +18,38 @@ export const agentService = {
   callAgent: async (
     message: string,
     state: MapStateSnapshot,
-    currentPurchase: PurchaseState 
+    currentPurchase: PurchaseState
   ): Promise<AgentResult> => {
-    
+
     const userId = localStorage.getItem("user_id");
 
-    const res = await fetch(`${API_BASE}/api/v0/agents/agentic-message/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
-        "ngrok-skip-browser-warning": "69420",
-      },
-      body: JSON.stringify({
-        message,
-        ...(userId ? { user_id: parseInt(userId, 10) } : {}),
-      }),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/agents/agentic-message/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${authService.getAccessToken() || ""}`,
+          "ngrok-skip-browser-warning": "69420",
+        },
+        body: JSON.stringify({
+          message,
+          ...(userId ? { user_id: parseInt(userId, 10) } : {}),
+        }),
+      });
+    };
+
+    let res = await makeRequest();
+    if (res.status === 401) {
+      try {
+        await authService.refresh();
+        res = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

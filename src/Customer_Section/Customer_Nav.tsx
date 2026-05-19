@@ -7,27 +7,28 @@ import {
 import { CustomerMap } from "./Customer_Map";
 import { CustomerAgentChat } from "./Customeragentchat";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 import { Sidebar } from "../components/Dashboard/Sidebar";
 import { MobileNav } from "../components/Dashboard/MobileNav";
 import { DashboardLayout } from "../components/Dashboard/DashboardLayout";
 
 export const Customer_Nav = () => {
-  const [active, setActive]         = useState("map");
-  const [collapsed, setCollapsed]   = useState(false);
+  const [active, setActive] = useState("map");
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [agentOpen, setAgentOpen]   = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
 
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    authService.logout();
-    navigate("/");
+    logout();
+    navigate("/signin");
   };
 
   const navItems = [
-    { id: "map",   label: "Carte",        Icon: LayoutDashboard },
-    { id: "cart",  label: "Mon panier",   Icon: ShoppingCart    },
+    { id: "map", label: "Carte", Icon: LayoutDashboard },
+    { id: "cart", label: "Mon panier", Icon: ShoppingCart },
     { id: "agent", label: "Assistant IA", Icon: Bot, badge: "IA" },
   ];
 
@@ -57,7 +58,7 @@ export const Customer_Nav = () => {
         />
       }
       mobileNav={
-        <MobileNav 
+        <MobileNav
           items={navItems}
           activeId={agentOpen ? "agent" : active}
           isOpen={mobileOpen}
