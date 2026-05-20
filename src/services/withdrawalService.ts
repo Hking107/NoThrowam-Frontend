@@ -239,7 +239,7 @@ export const withdrawalService = {
           status: "PENDING",
           created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
           updated_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        }
+        },
       ];
     }
 

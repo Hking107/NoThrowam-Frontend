@@ -82,31 +82,36 @@ const WalletModal: React.FC<WalletModalProps> = ({
     return `237${digits}`;
   };
 
+  // Live Validation
+  let validationError: string | null = null;
+  const parsedAmount = parseFloat(withdrawalAmount);
+  const isAmountValid = withdrawalAmount ? (!isNaN(parsedAmount) && parsedAmount > 0 && parsedAmount <= balance) : false;
+  const currentNormalizedPhone = getNormalizedPhoneNumber();
+  const isPhoneValid = phoneNumber ? /^2376\d{8}$/.test(currentNormalizedPhone) : false;
+
+  if (step === "AMOUNT") {
+    if (withdrawalAmount && !isAmountValid) {
+      validationError = parsedAmount > balance 
+        ? `Insufficient balance. Available: ${balance.toLocaleString()} FCFA`
+        : "Please enter a valid amount.";
+    } else if (phoneNumber && phoneNumber.replace(/\D/g, "").length >= 9 && !isPhoneValid) {
+      validationError = "Please enter a valid Cameroon mobile money phone number.";
+    }
+  }
+
+  const isFormValid = isAmountValid && isPhoneValid;
+  const displayError = error || validationError;
+
   // Step 1: Initiate Withdrawal
   const handleInitiate = async () => {
     setError(null);
-    const amount = parseFloat(withdrawalAmount);
-    const normalizedPhoneNumber = getNormalizedPhoneNumber();
-    
-    // Validation
-    if (isNaN(amount) || amount <= 0) {
-      setError("Please enter a valid amount.");
-      return;
-    }
-    if (amount > balance) {
-      setError(`Insufficient balance. Available: ${balance.toLocaleString()} FCFA`);
-      return;
-    }
-    if (!/^2376\d{8}$/.test(normalizedPhoneNumber)) {
-      setError("Please enter a valid Cameroon mobile money phone number.");
-      return;
-    }
+    if (!isFormValid) return;
 
     setIsLoading(true);
     try {
       const response = await withdrawalService.initiate({
-        amount: amount.toFixed(2),
-        phone_number: normalizedPhoneNumber,
+        amount: parsedAmount.toFixed(2),
+        phone_number: currentNormalizedPhone,
         operator,
       });
       setChallengeId(response.challenge_id);
@@ -368,10 +373,10 @@ const WalletModal: React.FC<WalletModalProps> = ({
                       </div>
                     </div>
 
-                    {error && (
+                    {displayError && (
                       <div className="flex items-center gap-2 text-red-500 bg-red-50 p-4 rounded-2xl animate-[fadeIn_0.2s_ease-out]">
                         <AlertCircle size={18} />
-                        <p className="text-sm font-bold">{error}</p>
+                        <p className="text-sm font-bold">{displayError}</p>
                       </div>
                     )}
 
@@ -392,9 +397,9 @@ const WalletModal: React.FC<WalletModalProps> = ({
                     </div>
 
                     <button
-                      disabled={isLoading || !withdrawalAmount || !phoneNumber}
+                      disabled={isLoading || !isFormValid}
                       onClick={handleInitiate}
-                      className="w-full group flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-[1.5rem] transition-all shadow-xl shadow-emerald-200/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full group flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-[1.5rem] transition-all shadow-xl shadow-emerald-200/50 active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none disabled:hover:bg-gray-200"
                     >
                       {isLoading ? (
                         <Loader2 className="animate-spin" size={24} />
@@ -496,7 +501,8 @@ const WalletModal: React.FC<WalletModalProps> = ({
 
             {step === "OTP" && (
               /* OTP VERIFICATION STEP */
-              <div className="max-w-md mx-auto py-10 space-y-8 animate-[fadeIn_0.3s_ease-out]">
+              <div className="glass-card rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 max-w-md mx-auto space-y-8 bg-white border border-gray-100 shadow-sm relative overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10"></div>
                 <div className="text-center space-y-4">
                   <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner text-emerald-600">
                     <ShieldCheck size={40} />
