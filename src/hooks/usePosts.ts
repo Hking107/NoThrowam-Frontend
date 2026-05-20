@@ -18,6 +18,11 @@ export const usePosts = () => {
       setPosts((prev) => [post, ...prev]);
     };
 
+    const handleUpdatePost = (msg: any) => {
+      const updatedPost = msg.post || msg.data || msg;
+      setPosts((prev) => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+    };
+
     const handleError = (msg: any) => {
       setError(msg.message || "Unknown error");
     };
@@ -26,6 +31,8 @@ export const usePosts = () => {
     postsWs.on('posts_list', handleInitialList);
     postsWs.on('post.created', handleNewPost);
     postsWs.on('post_created', handleNewPost);
+    postsWs.on('post.updated', handleUpdatePost);
+    postsWs.on('post_updated', handleUpdatePost);
     postsWs.on('error', handleError);
 
     return () => {
@@ -33,6 +40,8 @@ export const usePosts = () => {
       postsWs.off('posts_list', handleInitialList);
       postsWs.off('post.created', handleNewPost);
       postsWs.off('post_created', handleNewPost);
+      postsWs.off('post.updated', handleUpdatePost);
+      postsWs.off('post_updated', handleUpdatePost);
       postsWs.off('error', handleError);
     };
   }, [postsWs]);

@@ -35,6 +35,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { usePosts } from "../hooks/usePosts";
 import { useLenis } from "../contexts/LenisContext";
 import { WS_SELLER_PAYMENTS_URL } from "../config/api";
+import { useWebSocket } from "../WebSocketProvider";
 import {
   withdrawalService,
   type SellerPayment,
@@ -42,14 +43,26 @@ import {
 
 type PaymentSocketMessage =
   | {
-      type: "payments_list";
-      payments?: SellerPayment[];
-    }
+    type: "payments_list";
+    payments?: SellerPayment[];
+  }
   | {
-      type: "payment.updated";
-      payment?: SellerPayment;
-      data?: SellerPayment;
-    };
+    type: "payment.updated";
+    payment?: SellerPayment;
+    data?: SellerPayment;
+  };
+
+const CustToast = ({ msg }: { msg: string }) => (
+  <div
+    className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[20000] px-5 py-2.5
+                  bg-white/90 backdrop-blur-xl border border-emerald-200 rounded-lg
+                  shadow-2xl shadow-emerald-500/10 text-emerald-600 font-bold text-sm
+                  flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500"
+  >
+    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+    {msg}
+  </div>
+);
 
 const SellerDashboard: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>("");
@@ -65,6 +78,50 @@ const SellerDashboard: React.FC = () => {
   const { logout } = useAuth();
   // Lenis control for modal scrolling
   const { disableLenis, enableLenis } = useLenis();
+
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const { proposalsWs } = useWebSocket();
+  const postsRef = useRef(posts);
+  const userIdRef = useRef(userId);
+
+  useEffect(() => {
+    postsRef.current = posts;
+    userIdRef.current = userId;
+  }, [posts, userId]);
+
+  useEffect(() => {
+    if (!proposalsWs) return;
+
+    const handleNewProposal = (data: any) => {
+      console.log("PROPOSAL CREATED EVENT FIRED", data);
+
+      const proposal = data.proposal || data;
+      const postId = proposal.post_id || proposal.post;
+
+      const currentPosts = postsRef.current;
+      const currentUserId = userId;
+
+      // Check if the proposal concerns one of my posts
+      const isMyPost = currentPosts.some((p) => p.id === postId && p.seller === currentUserId);
+
+      if (!isMyPost) {
+        setToastMsg(`DEBUG: Reçu une offre pr le post #${postId}, mais isMyPost est Faux (mon id=${currentUserId}).`);
+        setTimeout(() => setToastMsg(null), 5000);
+        return;
+      }
+
+      if (isMyPost) {
+        const buyerName = proposal.customer?.username || proposal.customer_name || "un client";
+        setToastMsg(`Vous avez reçu une nouvelle offre de ${buyerName} !`);
+        setTimeout(() => setToastMsg(null), 5000);
+      }
+    };
+
+    proposalsWs.on("proposal.created", handleNewProposal);
+    return () => {
+      proposalsWs.off("proposal.created", handleNewProposal);
+    };
+  }, [proposalsWs]);
 
   // Disable Lenis when any modal is open
   useEffect(() => {
@@ -144,68 +201,11 @@ const SellerDashboard: React.FC = () => {
     window.location.href = "/signin";
   };
 
-  // useEffect(() => {
-  //   const fetchUserProfile = async () => {
-  //     try {
-  //       const token = localStorage.getItem("access_token");
-  //       if (!token) {
-  //         setUserEmail("Non connecté");
-  //         return;
-  //       }
-
-  //       const response = await fetch("/api/v0/auth/me/", {
-  //         method: "GET",
-  //         headers: {
-  //           "accept": "application/json",
-  //           "Authorization": `Bearer ${token}`,
-  //           "ngrok-skip-browser-warning": "69420"
-  //         }
-  //       });
-
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         setUserEmail(data.email || data.username || "Utilisateur");
-  //       } else {
-  //         setUserEmail("Erreur de session");
-  //       }
-  //     } catch (error) {
-  //       console.error("Erreur réseau :", error);
-  //       setUserEmail("Erreur réseau");
-  //     }
-  //   };
-
-  //   fetchUserProfile();
-  // }, []);
-
   useEffect(() => {
     const fetchUserProfile = async () => {
-      try {
-        const token = authService.getAccessToken();
-        if (!token) {
-          setUserEmail("Non connecté");
-          return;
-        }
-
-        const response = await fetch("/api/v0/auth/me/", {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUserEmail(data.email || data.username || "Utilisateur");
-          setUserId(data.id);
-        } else {
-          setUserEmail("Erreur de session");
-        }
-      } catch (error) {
-        console.error("Erreur réseau :", error);
-        setUserEmail("Erreur réseau");
-      }
+      const me = await authService.getMe();
+      setUserEmail(me.email);
+      setUserId(me.id);
     };
 
     fetchUserProfile();
@@ -481,17 +481,34 @@ const SellerDashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = authService.getAccessToken();
-        if (!token) return;
+        const makeRequest = async () => {
+          const token = authService.getAccessToken();
+          if (!token) return null;
+          return fetch("/api/v0/waste-posts/my/", {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "69420",
+            },
+          });
+        };
 
-        const response = await fetch("/api/v0/waste-posts/my/", {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "69420",
-          },
-        });
+        let response = await makeRequest();
+        if (!response) return;
+
+        if (response.status === 401) {
+          try {
+            await authService.refresh();
+            response = await makeRequest();
+            if (!response) return;
+          } catch (err) {
+            console.error("Refresh token failed", err);
+            authService.logout();
+            setDashboardStats((prev: any) => ({ ...prev, isLoading: false }));
+            return;
+          }
+        }
 
         if (response.ok) {
           const posts = await response.json();
@@ -626,6 +643,7 @@ const SellerDashboard: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-[#fcfdfb] font-sans text-gray-800 selection:bg-emerald-100 selection:text-emerald-900">
+      {toastMsg && <CustToast msg={toastMsg} />}
       {isModalOpen && (
         <WasteScannerModal onClose={() => setIsModalOpen(false)} />
       )}
@@ -648,15 +666,13 @@ const SellerDashboard: React.FC = () => {
       {/* --- SIDEBAR --- */}
       <aside
         ref={sidebarRef}
-        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${
-          isMobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0"
-        } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${
-          anyModalOpen
+        className={`glass-sidebar flex flex-col justify-between fixed md:sticky top-0 h-screen z-50 transition-all duration-500 ease-in-out w-72 ${isMobileMenuOpen
+          ? "translate-x-0"
+          : "-translate-x-full md:translate-x-0"
+          } ${isSidebarCollapsed ? "md:w-20" : "md:w-72"} ${anyModalOpen
             ? "opacity-40 scale-[0.98] blur-[1px] pointer-events-none grayscale-[0.2]"
             : ""
-        }`}
+          }`}
       >
         {/* Collapse pill — desktop only */}
         <button
@@ -868,22 +884,20 @@ const SellerDashboard: React.FC = () => {
 
       {/* Overlay for mobile menu */}
       <div
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-500 ${
-          isMobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-500 ${isMobileMenuOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
       {/* --- MAIN CONTENT --- */}
       <main
         ref={mainRef}
-        className={`flex-1 w-full transition-all duration-500 ${
-          anyModalOpen
-            ? "opacity-40 scale-[0.99] blur-[1px] pointer-events-none grayscale-[0.2]"
-            : ""
-        }`}
+        className={`flex-1 w-full transition-all duration-500 ${anyModalOpen
+          ? "opacity-40 scale-[0.99] blur-[1px] pointer-events-none grayscale-[0.2]"
+          : ""
+          }`}
       >
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-30">
@@ -1013,13 +1027,12 @@ const SellerDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                      chartData.trend?.positive === true
-                        ? "bg-emerald-50 text-emerald-600"
-                        : chartData.trend?.positive === false
-                          ? "bg-red-50 text-red-600"
-                          : "bg-gray-50 text-gray-400"
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${chartData.trend?.positive === true
+                      ? "bg-emerald-50 text-emerald-600"
+                      : chartData.trend?.positive === false
+                        ? "bg-red-50 text-red-600"
+                        : "bg-gray-50 text-gray-400"
+                      }`}
                   >
                     {chartData.trend?.positive === true && (
                       <TrendingUp size={14} />
@@ -1244,13 +1257,12 @@ const SellerDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-5">
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
-                              payment.status === "SUCCESSFUL"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : payment.status === "PENDING"
-                                  ? "bg-amber-50 text-amber-700"
-                                  : "bg-red-50 text-red-700"
-                            }`}
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${payment.status === "SUCCESSFUL"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : payment.status === "PENDING"
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-red-50 text-red-700"
+                              }`}
                           >
                             {payment.status}
                           </span>

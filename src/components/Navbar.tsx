@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Menu, X, UserPlus } from "lucide-react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
 import gsap from "gsap";

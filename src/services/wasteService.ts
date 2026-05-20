@@ -22,33 +22,76 @@ const getAuthHeader = async () => {
 export const wasteService = {
 
   getWastePosts: async (): Promise<WastePost[]> => {
-    const token = await authService.getAccessToken();
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/`, {
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token || ""}`,
-        'ngrok-skip-browser-warning': '69420',
-      },
-    });
+    const makeRequest = async () => {
+      const token = await authService.getAccessToken();
+      return fetch(`${API_BASE}/api/v0/waste-posts/`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token || ""}`,
+          'ngrok-skip-browser-warning': '69420',
+        },
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json();
   },
 
   getProposals: async (listingId: number | string) => {
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/${listingId}/proposals/`, {
-      method: 'GET',
-      headers: await getHeaders(),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/waste-posts/${listingId}/proposals/`, {
+        method: 'GET',
+        headers: await getHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to fetch proposals");
     const data = await response.json();
     return data.proposals;
   },
 
-  acceptProposal: async (proposalId: number | string) => {
-    const response = await fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
-      method: 'POST',
-      headers: await getHeaders(),
-    });
+  acceptProposal: async (proposalId: number | string, status: string = 'ACCEPTED') => {
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/proposals/${proposalId}/accept/`, {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify({ status })
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to accept proposal");
     return response.json();
   },
@@ -64,40 +107,95 @@ export const wasteService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/upload-image/`, {
-      method: 'POST',
-      headers: await getAuthHeader(),
-      body: formData,
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/waste-posts/upload-image/`, {
+        method: 'POST',
+        headers: await getAuthHeader(),
+        body: formData,
+      });
+    };
 
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to upload image");
     return response.json();
   },
 
   hCreatePost: async (payload: any) => {
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/create/`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify(payload),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/waste-posts/create/`, {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify(payload),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to create post");
     return response.json();
   },
 
   getMyListing: async () => {
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
-      method: 'GET',
-      headers: await getHeaders(),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
+        method: 'GET',
+        headers: await getHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to fetch my listings");
     return response.json();
   },
 
   analyzePost: async (postId: number | string) => {
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/${postId}/analyze/`, {
-      method: 'POST',
-      headers: await getHeaders(),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/waste-posts/${postId}/analyze/`, {
+        method: 'POST',
+        headers: await getHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
     if (!response.ok) throw new Error("Failed to analyze post");
     return response.json();
   },
@@ -111,12 +209,26 @@ export const wasteService = {
   },
 
   getMyListings: async () => {
-    const token = await authService.getAccessToken();
-    const response = await fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const makeRequest = async () => {
+      const token = await authService.getAccessToken();
+      return fetch(`${API_BASE}/api/v0/waste-posts/my/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
       }
-    });
+    }
     if (!response.ok) throw new Error("Erreur");
     return response.json();
   },

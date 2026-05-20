@@ -1,5 +1,5 @@
 import { X, Mail, Phone, MapPin, Send } from "lucide-react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";

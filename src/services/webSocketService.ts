@@ -75,6 +75,7 @@ export class WebSocketService {
   public sendEvent(type: string, payload?: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, payload }));
+      console.log(`\n======================\nMessage sent : ${JSON.stringify({ type, payload })}\n======================\n`)
     } else {
       console.warn(`[WS] Impossible d'envoyer '${type}', WebSocket non connecté.`);
     }

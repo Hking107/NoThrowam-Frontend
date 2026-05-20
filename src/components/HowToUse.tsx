@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 
 gsap.registerPlugin(ScrollTrigger);
 

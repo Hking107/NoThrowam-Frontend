@@ -10,7 +10,7 @@ import {
 import {
   CATEGORY_COLORS,
   CATEGORY_EMOJI,
-} from "../../contexts/constants/constants";
+} from "../../hooks/constants/constants";
 import type { MarketPoint } from "../../types/MarketPoint";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -36,6 +36,8 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
   const imgs = point.images ?? [];
   const color = CATEGORY_COLORS[point.category] || "#22c55e";
   const emoji = CATEGORY_EMOJI[point.category] || "📦";
+  const vw = window.innerWidth;
+  const W = Math.min(320, vw - 24);
 
   useGSAP(() => {
     gsap.fromTo(
@@ -71,11 +73,14 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
     }, 260);
   };
 
-  const W = 320;
-  const vw = window.innerWidth,
-    vh = window.innerHeight;
+  const vh = window.innerHeight;
   let left = origin.x + 32,
     top = origin.y - 180;
+
+  if (vw < 640) {
+    left = 12;
+    top = Math.max(12, Math.min(top, vh - 452));
+  }
 
   if (left + W > vw - 16) left = origin.x - W - 32;
   if (top < 16) top = 16;
@@ -87,7 +92,7 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
     <div
       ref={containerRef}
       onClick={(e) => e.stopPropagation()}
-      className="fixed z-3000 rounded-4xl bg-white shadow-2xl overflow-hidden border border-white/90"
+      className="fixed z-3000 rounded-4xl bg-white shadow-2xl overflow-hidden border border-white/90 max-w-[calc(100vw-1rem)]"
       style={{ left, top, width: W, transformOrigin: `${originSide} center` }}
     >
       {/* Image Section */}
@@ -96,13 +101,12 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
           <img
             src={imgs[idx].url}
             alt={point.label}
-            className={`w-full h-full object-cover transition-all duration-300 ${
-              animating
-                ? direction === "right"
-                  ? "-translate-x-4 opacity-0"
-                  : "translate-x-4 opacity-0"
-                : "translate-x-0 opacity-100"
-            }`}
+            className={`w-full h-full object-cover transition-all duration-300 ${animating
+              ? direction === "right"
+                ? "-translate-x-4 opacity-0"
+                : "translate-x-4 opacity-0"
+              : "translate-x-0 opacity-100"
+              }`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">
@@ -161,6 +165,26 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
 
       {/* Content Section */}
       <div className="p-6 space-y-5">
+        {/* Proposal status badge */}
+        {point.status === "RESERVED" && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+            <span className="text-lg">⭐</span>
+            <div>
+              <p className="text-xs font-black text-amber-700">Offre acceptée !</p>
+              <p className="text-[10px] text-amber-600">Votre offre a ete valide par le vendeur. Finalisez le paiement.</p>
+            </div>
+          </div>
+        )}
+        {point.status === "PENDING" && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-xl">
+            <span className="text-lg">⏳</span>
+            <div>
+              <p className="text-xs font-black text-indigo-700">Offre en attente</p>
+              <p className="text-[10px] text-indigo-600">Votre proposition est en cours d'examen par le vendeur.</p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <Package size={14} className="text-brand-green" />
@@ -205,16 +229,27 @@ const MarketPopup: React.FC<MarketPopupProps> = ({
         </div>
 
         {/* CTA Button */}
-        <button
-          onClick={onBuy}
-          className="w-full h-14 bg-linear-to-br from-brand-green to-emerald-600 rounded-2xl
-                     flex items-center justify-center gap-3 text-white font-black text-sm
-                     shadow-xl shadow-brand-green/20 hover:shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <ShoppingCart size={18} />
-          Faire une offre — {point.fixedPrice?.toLocaleString()}{" "}
-          {point.currency}
-        </button>
+        {point.status === "PENDING" ? (
+          <button
+            disabled
+            className="w-full h-14 bg-indigo-100 rounded-2xl flex items-center justify-center gap-3 text-indigo-400 font-black text-sm cursor-not-allowed"
+          >
+            Offre en attente de validation…
+          </button>
+        ) : (
+          <button
+            onClick={onBuy}
+            className="w-full h-14 bg-linear-to-br from-brand-green to-emerald-600 rounded-2xl
+                       flex items-center justify-center gap-3 text-white font-black text-sm
+                       shadow-xl shadow-brand-green/20 hover:shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            {point.status === "RESERVED" ? (
+              <>Finaliser le paiement</>
+            ) : (
+              <><ShoppingCart size={18} /> Faire une offre</>
+            )}
+          </button>
+        )}
 
         <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
           <Info size={12} />

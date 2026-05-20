@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 import { useNavigate } from "react-router-dom";
 
 // Register GSAP plugins if needed (none needed for basic animations here)

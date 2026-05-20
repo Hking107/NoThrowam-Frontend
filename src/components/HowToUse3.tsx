@@ -2,7 +2,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { landingData } from "../contexts/constants/landingData";
+import { landingData } from "../hooks/constants/landingData";
 // Import icons that represent your steps (Adjust these to match your actual steps)
 import { Download, Camera, MapPin, Recycle, CheckCircle } from "lucide-react";
 

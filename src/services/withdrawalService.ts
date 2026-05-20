@@ -106,11 +106,25 @@ export const withdrawalService = {
       };
     }
 
-    const response = await fetch(`${API_PAYMENTS_URL}/withdrawals/initiate/`, {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_PAYMENTS_URL}/withdrawals/initiate/`, {
+        method: "POST",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!response.ok) {
       throw new Error(
@@ -165,11 +179,25 @@ export const withdrawalService = {
       }
     }
 
-    const response = await fetch(`${API_PAYMENTS_URL}/withdrawals/confirm/`, {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_PAYMENTS_URL}/withdrawals/confirm/`, {
+        method: "POST",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!response.ok) {
       throw new Error(
@@ -215,13 +243,24 @@ export const withdrawalService = {
       ];
     }
 
-    const response = await fetch(
-      `${API_PAYMENTS_URL}/seller/${sellerId}/payments/`,
-      {
+    const makeRequest = async () => {
+      return fetch(`${API_PAYMENTS_URL}/seller/${sellerId}/payments/`, {
         method: "GET",
         headers: await getAuthHeaders(),
-      },
-    );
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!response.ok) {
       throw new Error(

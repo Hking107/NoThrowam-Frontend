@@ -218,10 +218,24 @@ export const authService = {
    * Get current user info
    */
   getMe: async () => {
-    const response = await fetch(`${API_BASE}/api/v0/auth/me/`, {
-      method: "GET",
-      headers: await getAuthHeaders(),
-    });
+    const makeRequest = async () => {
+      return fetch(`${API_BASE}/api/v0/auth/me/`, {
+        method: "GET",
+        headers: await getAuthHeaders(),
+      });
+    };
+
+    let response = await makeRequest();
+    if (response.status === 401) {
+      try {
+        await authService.refresh();
+        response = await makeRequest();
+      } catch (err) {
+        console.error("Refresh token failed", err);
+        authService.logout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
 
     if (!response.ok) {
       if (response.status === 401) {
