@@ -3,7 +3,7 @@
  * L'URL backend principale est récupérée via VITE_API_BASE.
  */
 
-const rawBase = import.meta.env.VITE_API_BASE || "https://no-throwam-backend.onrender.com";
+const rawBase = import.meta.env.VITE_API_BASE || "http://10.128.2.194:8000";
 
 // Validation et normalisation de l'URL pour la sécuriser et éviter les appels relatifs par erreur
 // Si l'utilisateur a rentré "127.0.0.1:8000" sans http://, le navigateur le traitera comme une route relative.

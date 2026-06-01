@@ -7,8 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: 'http://172.17.0.1:8000',
-        target: "https://no-throwam-backend.onrender.com",
+        target: "http://10.128.2.194:8000",
+        //target: "https://no-throwam-backend.onrender.com",
         changeOrigin: true,
         secure: false,
       },

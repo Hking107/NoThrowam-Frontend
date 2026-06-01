@@ -8,18 +8,18 @@ interface LogoProps {
   hideText?: boolean;
 }
 
-export function Logo({
+export function LogoTransparent({
   color = "text-brand-green",
-  size = 120,
-  width = 270,
+  size = 64,
+  width = 64,
   className = "",
   src,
   alt = "NoThrowam logo",
   hideText = true,
 }: LogoProps) {
-  const colorClass = color.startsWith("text-") ? color : "";
+//   const colorClass = color.startsWith("text-") ? color : "";
   const colorStyle = !color.startsWith("text-") ? { color } : {};
-  const logoSrc = src ?? "/Logo%20green.png";
+  const logoSrc = src ?? "/Logo%20transparent.png";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

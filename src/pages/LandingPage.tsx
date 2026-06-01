@@ -25,7 +25,12 @@ export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col w-full selection:bg-brand-green/20 selection:text-brand-text no-scrollbar">
       {/* 1. Header & Navigation */}
-      <Navbar onContactClick={() => setIsContactModalOpen(true)} />
+      <Navbar
+        onContactClick={() => setIsContactModalOpen(true)}
+        logoSrc="/Logo%20green.png"
+        logoAlt="NoThrowam green logo"
+        hideLogoText
+      />
 
       {/* Main Content Area */}
       <main data-nav-bg="" className="grow">
@@ -48,9 +53,9 @@ export function LandingPage() {
       <Footer />
 
       {/* Global Modals */}
-      <ContactModal 
-        isOpen={isContactModalOpen} 
-        onClose={() => setIsContactModalOpen(false)} 
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
       />
     </div>
   );

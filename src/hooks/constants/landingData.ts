@@ -1,6 +1,6 @@
 export const landingData = {
   header: {
-    logoText: "NoThrowam",
+    logoText: "",
     links: [
       { name: "Home", href: "#hero" },
       { name: "About", href: "#about" },

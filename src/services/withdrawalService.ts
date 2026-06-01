@@ -2,7 +2,7 @@ import { API_PAYMENTS_URL } from "../config/api";
 import { authService } from "./authService";
 
 // Toggle this to true for development/testing when the backend is not ready
-const SIMULATE = false;
+const SIMULATE = true;
 const SIMULATED_STARTING_BALANCE = 50000;
 const simulatedChallenges = new Map<
   string,

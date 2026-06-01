@@ -5,7 +5,17 @@ import { useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-export function Navbar({ onContactClick }: { onContactClick: () => void }) {
+export function Navbar({
+  onContactClick,
+  logoSrc,
+  logoAlt,
+  hideLogoText,
+}: {
+  onContactClick: () => void;
+  logoSrc?: string;
+  logoAlt?: string;
+  hideLogoText?: boolean;
+}) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navBg, setNavBg] = useState<string>(
@@ -61,7 +71,7 @@ export function Navbar({ onContactClick }: { onContactClick: () => void }) {
           {/* Logo Section (Left) */}
           <div className="shrink-0">
             <a href="#" className="focus:outline-none">
-              <Logo />
+              <Logo src={logoSrc} alt={logoAlt} hideText={hideLogoText} />
             </a>
           </div>
 
