@@ -2,11 +2,11 @@ import React, { useRef } from "react";
 import { 
   Menu, 
   X, 
-  LogOut,
-  ShoppingCart
+  LogOut
 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { LogoTransparent } from "../Seller/LogoTransparent";
 
 interface NavItem {
   id: string;
@@ -66,7 +66,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                           flex items-center justify-center shadow-lg shadow-brand-green/20">
-            <ShoppingCart size={16} className="text-white" />
+            <LogoTransparent size={20} width={20} />
           </div>
           <div>
             <p className="text-brand-green font-black text-sm tracking-tight leading-none uppercase">

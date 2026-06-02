@@ -9,6 +9,7 @@ import { CtaSection } from "../components/CtaSection";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Testimonials } from "../components/Testimonials";
 import { ContactModal } from "../components/ContactModal";
+import { TeamMembers } from "../components/TeamMembers";
 
 export function LandingPage() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -44,13 +45,14 @@ export function LandingPage() {
 
       {/* Standard Footer */}
       <Testimonials />
+      <TeamMembers />
       <CtaSection onContactClick={() => setIsContactModalOpen(true)} />
       <Footer />
 
       {/* Global Modals */}
-      <ContactModal 
-        isOpen={isContactModalOpen} 
-        onClose={() => setIsContactModalOpen(false)} 
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
       />
     </div>
   );

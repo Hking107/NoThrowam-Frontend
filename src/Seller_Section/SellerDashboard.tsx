@@ -10,7 +10,6 @@ import {
   DollarSign,
   Scale,
   FileText,
-  Recycle,
   Filter,
   LogOut,
   Search,
@@ -26,6 +25,7 @@ import { gsap } from "gsap";
 import WasteScannerModal from "./WasteScannerModal";
 import MyListingsModal from "./MyListing";
 import ProductModal from "./ProductModal";
+import { LogoTransparent } from "../components/Seller/LogoTransparent";
 import MaterialMixChart from "../components/Seller/MaterialMix";
 import { StatCard } from "../components/Seller/StatCards";
 import { TableRow } from "../components/Seller/TableRows";
@@ -699,7 +699,7 @@ const SellerDashboard: React.FC = () => {
             className={`flex items-center gap-4 transition-all duration-500 p-8 ${isSidebarCollapsed ? "md:p-4 md:justify-center" : ""}`}
           >
             <div className="bg-emerald-600 text-white p-2.5 rounded-2xl shadow-lg shadow-emerald-200/50 shrink-0">
-              <Recycle size={26} strokeWidth={2.5} />
+              <LogoTransparent size={26} width={26} />
             </div>
             <div
               className={`transition-all duration-500 overflow-hidden ${isSidebarCollapsed ? "md:w-0 md:opacity-0" : "w-auto opacity-100"}`}
@@ -909,7 +909,7 @@ const SellerDashboard: React.FC = () => {
               <Menu size={22} />
             </button>
             <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
-              <Recycle size={18} strokeWidth={2.5} />
+              <LogoTransparent size={18} width={18} />
             </div>
             <span className="font-black tracking-tight">NoThrowam</span>
           </div>

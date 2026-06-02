@@ -8,6 +8,7 @@ import { Footer } from "../components/Footer";
 import { CtaSection } from "../components/CtaSection";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Testimonials } from "../components/Testimonials";
+import { TeamMembers } from "../components/TeamMembers";
 import { ContactModal } from "../components/ContactModal";
 
 export function LandingPage() {
@@ -49,6 +50,7 @@ export function LandingPage() {
 
       {/* Standard Footer */}
       <Testimonials />
+      <TeamMembers />
       <CtaSection onContactClick={() => setIsContactModalOpen(true)} />
       <Footer />
 

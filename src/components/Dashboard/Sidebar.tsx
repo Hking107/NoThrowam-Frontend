@@ -3,11 +3,11 @@ import {
   ChevronLeft, 
   ChevronRight, 
   LogOut,
-  Recycle,
   User
 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { LogoTransparent } from "../Seller/LogoTransparent";
 // import { Logo } from "../Logo";
 interface NavItem {
   id: string;
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={`flex items-center gap-3 mb-8 px-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
         <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-[#005f48] 
                         flex items-center justify-center shadow-lg shadow-brand-green/20">
-          <Recycle color="white" size={24} className="scale-100" />
+          <LogoTransparent size={24} width={24} />
         </div>
         {!isCollapsed && (
           <div className="overflow-hidden whitespace-nowrap">
@@ -105,7 +105,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              ref={el => itemsRef.current[index] = el}
+              ref={(el) => {
+                itemsRef.current[index] = el;
+              }}
               onClick={() => onItemClick(item.id)}
               className={`
                 group relative flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300
