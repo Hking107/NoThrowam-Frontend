@@ -3,59 +3,13 @@ import { Linkedin, Mail } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { landingData } from "../hooks/constants/landingData";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const teamMembers = [
-  {
-    id: 1,
-    name: "Maya Fotso",
-    role: "Product Lead",
-    location: "Douala, Cameroon",
-    bio: "Shapes the platform experience for sellers, buyers, and city teams.",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 2,
-    name: "Daniel Ekani",
-    role: "Operations Manager",
-    location: "Yaounde, Cameroon",
-    bio: "Coordinates collection workflows and keeps field activity moving.",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 3,
-    name: "Arielle Nsame",
-    role: "Community Builder",
-    location: "Bafoussam, Cameroon",
-    bio: "Works with neighborhoods and partners to grow local participation.",
-    image:
-      "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 4,
-    name: "Samuel Talla",
-    role: "Engineering Lead",
-    location: "Buea, Cameroon",
-    bio: "Builds the tools behind reports, listings, payments, and routing.",
-    image:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 5,
-    name: "Nadia Mbarga",
-    role: "Impact Analyst",
-    location: "Garoua, Cameroon",
-    bio: "Turns platform data into insight for cleaner, smarter communities.",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
-  },
-];
-
 export function TeamMembers() {
   const containerRef = useRef<HTMLElement>(null);
+  const { teamMembers } = landingData;
 
   useGSAP(
     () => {
